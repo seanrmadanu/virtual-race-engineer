@@ -1,3 +1,4 @@
+import CoreVideo
 import AVFoundation
 import Combine
 import Foundation
@@ -5,11 +6,27 @@ import Foundation
 final class CaptureSessionManager:
     NSObject,
     ObservableObject,
-    AVCaptureVideoDataOutputSampleBufferDelegate,
-    AVCaptureAudioDataOutputSampleBufferDelegate {
+    AVCaptureVideoDataOutputSampleBufferDelegate {
 
     let session =
         AVCaptureSession()
+
+    let frameAnalyzer =
+        FrameAnalyzer(
+            targetSpeedAnalysisFPS:
+                15.0,
+            targetMinimapAnalysisFPS:
+                30.0
+        )
+
+    let minimapDatasetRecorder =
+        MinimapDatasetRecorder(
+            sampleInterval:
+                1.0,
+            minimumFrameDifference:
+                0.015
+        )
+
 
     private let audioSession =
         AVCaptureSession()
@@ -60,29 +77,11 @@ final class CaptureSessionManager:
                 .userInteractive
         )
 
-    private let audioOutputQueue =
-        DispatchQueue(
-            label:
-                "com.racingtrainer.audio-output",
-            qos:
-                .userInitiated
-        )
-
     private let videoOutput =
         AVCaptureVideoDataOutput()
 
-    /*
-     This output provides the sound that the user hears.
-     */
     private let audioPreviewOutput =
         AVCaptureAudioPreviewOutput()
-
-    /*
-     This output lets the app verify that real audio
-     sample buffers are arriving from the capture card.
-     */
-    private let audioDataOutput =
-        AVCaptureAudioDataOutput()
 
     private var currentVideoInput:
         AVCaptureDeviceInput?
@@ -105,63 +104,14 @@ final class CaptureSessionManager:
     private var latestVideoRequestNumber = 0
     private var latestAudioRequestNumber = 0
 
-    // MARK: Video Frame State
-
-    private let videoFrameStateLock =
+    private let frameStateLock =
         NSLock()
 
     private var hasReceivedCurrentVideoFrame =
         false
 
-    private var acceptVideoFramesAfterUptime =
+    private var acceptFramesAfterUptime =
         0.0
-
-    // MARK: Audio Stream State
-
-    private let audioStateLock =
-        NSLock()
-
-    private var hasReceivedCurrentAudioSample =
-        false
-
-    private var audioStreamReady =
-        false
-
-    private var audioReadinessCheckPending =
-        false
-
-    private var acceptAudioSamplesAfterUptime =
-        0.0
-
-    private var lastAudioSampleUptime =
-        0.0
-
-    /*
-     Maximum gap between sample buffers before the
-     audio stream is considered stalled.
-     */
-    private let maximumHealthyAudioSampleGap:
-        TimeInterval = 2.5
-
-    private let audioStartupCheckDelay:
-        TimeInterval = 1.25
-
-    private let audioWatchdogInterval:
-        TimeInterval = 2.0
-
-    /*
-     These are bounded retries. The app will not
-     endlessly restart the capture card.
-     */
-    private let automaticAudioRecoveryDelays:
-        [TimeInterval] = [
-            0.25,
-            0.75,
-            1.50,
-            3.00
-        ]
-
-    // MARK: Audio Volume State
 
     private var desiredGameVolume:
         Float = 0.80
@@ -169,11 +119,13 @@ final class CaptureSessionManager:
     private var desiredGameMuted =
         false
 
-    private var audioVolumeRampToken =
-        0
-
     override init() {
         super.init()
+
+        videoOutput.videoSettings = [
+            kCVPixelBufferPixelFormatTypeKey as String:
+                Int(kCVPixelFormatType_32BGRA)
+        ]
 
         videoOutput
             .alwaysDiscardsLateVideoFrames =
@@ -185,25 +137,12 @@ final class CaptureSessionManager:
                 videoOutputQueue
         )
 
-        audioDataOutput.setSampleBufferDelegate(
-            self,
-            queue:
-                audioOutputQueue
-        )
-
-        /*
-         nil means the current macOS system-default
-         audio output.
-         */
         audioPreviewOutput
             .outputDeviceUniqueID =
             nil
 
-        /*
-         Keep preview muted until real audio sample
-         buffers are confirmed.
-         */
-        audioPreviewOutput.volume = 0
+        audioPreviewOutput.volume =
+            desiredGameVolume
     }
 
     // MARK: - Refresh All Sources
@@ -213,28 +152,79 @@ final class CaptureSessionManager:
         audioDevice: AVCaptureDevice?,
         audioOutputUniqueID: String?
     ) {
-        /*
-         Queue the selected output before restarting
-         the audio input.
-         */
+        configureVideo(
+            device: videoDevice,
+            forceRestart: true
+        )
+
+        // Apply the output route before restarting audio.
         setAudioOutputDevice(
             uniqueID:
                 audioOutputUniqueID
         )
 
-        configureVideo(
-            device:
-                videoDevice,
-            forceRestart:
-                true
-        )
-
         configureAudio(
-            device:
-                audioDevice,
-            forceRestart:
-                true
+            device: audioDevice,
+            forceRestart: true
         )
+    }
+
+    /// Temporarily stops hardware input while a local gameplay recording is
+    /// being used. Inputs remain configured so returning to live capture is
+    /// quick and still uses the device selected in Settings.
+    func pauseLiveSourcesForTestPlayback() {
+        _ = createVideoRequestNumber()
+        _ = createAudioRequestNumber()
+
+        frameStateLock.lock()
+
+        hasReceivedCurrentVideoFrame =
+            false
+
+        acceptFramesAfterUptime =
+            .greatestFiniteMagnitude
+
+        frameStateLock.unlock()
+
+        videoSessionQueue.async {
+            [weak self] in
+
+            guard let self else {
+                return
+            }
+
+            if self.session.isRunning {
+                self.session.stopRunning()
+            }
+
+            DispatchQueue.main.async {
+                self.isReceivingVideo =
+                    false
+
+                self.errorMessage =
+                    nil
+            }
+        }
+
+        audioSessionQueue.async {
+            [weak self] in
+
+            guard let self else {
+                return
+            }
+
+            if self.audioSession.isRunning {
+                self.audioSession.stopRunning()
+            }
+
+            DispatchQueue.main.async {
+                self.isGameAudioAvailable =
+                    false
+
+                self.audioErrorMessage =
+                    nil
+            }
+        }
     }
 
     // MARK: - Configure Video
@@ -273,7 +263,7 @@ final class CaptureSessionManager:
             self.requestedVideoDeviceID =
                 newDeviceID
 
-            self.resetVideoFrameState()
+            self.resetFrameState()
 
             DispatchQueue.main.async {
                 self.isReceivingVideo =
@@ -328,17 +318,9 @@ final class CaptureSessionManager:
                configurationError == nil {
 
                 do {
-                    let freshDevice =
-                        AVCaptureDevice(
-                            uniqueID:
-                                device.uniqueID
-                        ) ??
-                        device
-
                     let input =
                         try AVCaptureDeviceInput(
-                            device:
-                                freshDevice
+                            device: device
                         )
 
                     if self.session.canAddInput(
@@ -400,7 +382,7 @@ final class CaptureSessionManager:
                 return
             }
 
-            self.prepareForNewVideoFrames(
+            self.prepareForNewFrames(
                 ignoreDuration:
                     0.10
             )
@@ -423,12 +405,12 @@ final class CaptureSessionManager:
     private func addVideoOutputIfNeeded(
         error: inout Error?
     ) {
-        let alreadyAdded =
+        let hasVideoOutput =
             session.outputs.contains {
                 $0 === videoOutput
             }
 
-        guard !alreadyAdded else {
+        guard !hasVideoOutput else {
             return
         }
 
@@ -447,26 +429,11 @@ final class CaptureSessionManager:
         }
     }
 
-    // MARK: - Configure Audio
+    // MARK: - Configure Audio Input
 
     func configureAudio(
         device: AVCaptureDevice?,
         forceRestart: Bool = false
-    ) {
-        configureAudio(
-            device:
-                device,
-            forceRestart:
-                forceRestart,
-            recoveryAttempt:
-                0
-        )
-    }
-
-    private func configureAudio(
-        device: AVCaptureDevice?,
-        forceRestart: Bool,
-        recoveryAttempt: Int
     ) {
         let requestNumber =
             createAudioRequestNumber()
@@ -499,10 +466,6 @@ final class CaptureSessionManager:
             self.requestedAudioDeviceID =
                 newDeviceID
 
-            self.cancelAudioVolumeRamp()
-            self.audioPreviewOutput.volume = 0
-            self.resetAudioStreamState()
-
             DispatchQueue.main.async {
                 self.isGameAudioAvailable =
                     false
@@ -512,7 +475,8 @@ final class CaptureSessionManager:
             }
 
             if self.audioSession.isRunning {
-                self.audioSession.stopRunning()
+                self.audioSession
+                    .stopRunning()
             }
 
             guard self.isLatestAudioRequest(
@@ -538,7 +502,7 @@ final class CaptureSessionManager:
             var configurationError:
                 Error?
 
-            self.addAudioOutputsIfNeeded(
+            self.addAudioPreviewOutputIfNeeded(
                 error:
                     &configurationError
             )
@@ -547,22 +511,9 @@ final class CaptureSessionManager:
                configurationError == nil {
 
                 do {
-                    /*
-                     Reacquire the device object for every
-                     retry instead of reusing a stale USB
-                     device object.
-                     */
-                    let freshDevice =
-                        AVCaptureDevice(
-                            uniqueID:
-                                device.uniqueID
-                        ) ??
-                        device
-
                     let input =
                         try AVCaptureDeviceInput(
-                            device:
-                                freshDevice
+                            device: device
                         )
 
                     if self.audioSession
@@ -623,22 +574,10 @@ final class CaptureSessionManager:
                             .localizedDescription
                 }
 
-                self.scheduleAudioRecovery(
-                    expectedDeviceID:
-                        device.uniqueID,
-                    requestNumber:
-                        requestNumber,
-                    recoveryAttempt:
-                        recoveryAttempt
-                )
-
                 return
             }
 
-            self.prepareForNewAudioSamples(
-                ignoreDuration:
-                    0.05
-            )
+            self.applyGameAudioVolume()
 
             self.audioSession.startRunning()
 
@@ -648,97 +587,54 @@ final class CaptureSessionManager:
                 return
             }
 
-            guard self.audioSession.isRunning else {
-                DispatchQueue.main.async {
-                    self.configuredAudioDeviceID =
-                        nil
-
-                    self.isGameAudioAvailable =
-                        false
-
-                    self.audioErrorMessage =
-                        "The audio session did not start."
-                }
-
-                self.scheduleAudioRecovery(
-                    expectedDeviceID:
-                        device.uniqueID,
-                    requestNumber:
-                        requestNumber,
-                    recoveryAttempt:
-                        recoveryAttempt
-                )
-
-                return
-            }
+            let audioStarted =
+                self.audioSession.isRunning
 
             DispatchQueue.main.async {
                 self.configuredAudioDeviceID =
-                    device.uniqueID
-            }
+                    audioStarted
+                    ? device.uniqueID
+                    : nil
 
-            self.scheduleAudioWatchdog(
-                expectedDeviceID:
-                    device.uniqueID,
-                requestNumber:
-                    requestNumber,
-                recoveryAttempt:
-                    recoveryAttempt,
-                delay:
-                    self.audioStartupCheckDelay
-            )
+                self.isGameAudioAvailable =
+                    audioStarted
+
+                self.audioErrorMessage =
+                    audioStarted
+                    ? nil
+                    : "The selected audio input could not start its preview session."
+            }
         }
     }
 
-    private func addAudioOutputsIfNeeded(
+    private func addAudioPreviewOutputIfNeeded(
         error: inout Error?
     ) {
-        let hasAudioDataOutput =
-            audioSession.outputs.contains {
-                $0 === audioDataOutput
-            }
-
-        if !hasAudioDataOutput {
-            if audioSession.canAddOutput(
-                audioDataOutput
-            ) {
-                audioSession.addOutput(
-                    audioDataOutput
-                )
-            } else {
-                error =
-                    CaptureSessionError(
-                        message:
-                            "Racing Trainer could not create its audio monitoring output."
-                    )
-
-                return
-            }
-        }
-
-        let hasAudioPreviewOutput =
+        let hasOutput =
             audioSession.outputs.contains {
                 $0 === audioPreviewOutput
             }
 
-        if !hasAudioPreviewOutput {
-            if audioSession.canAddOutput(
+        guard !hasOutput else {
+            return
+        }
+
+        if audioSession.canAddOutput(
+            audioPreviewOutput
+        ) {
+            audioSession.addOutput(
                 audioPreviewOutput
-            ) {
-                audioSession.addOutput(
-                    audioPreviewOutput
+            )
+        } else {
+            error =
+                CaptureSessionError(
+                    message:
+                        "Racing Trainer could not create its game-audio preview output."
                 )
-            } else {
-                error =
-                    CaptureSessionError(
-                        message:
-                            "Racing Trainer could not create its game-audio preview output."
-                    )
-            }
         }
     }
 
-    // MARK: - Audio Output Device
+    // MARK: - Audio Output
 
     func setAudioOutputDevice(
         uniqueID: String?
@@ -763,9 +659,13 @@ final class CaptureSessionManager:
                 return
             }
 
-            if self.audioPreviewOutput
-                .outputDeviceUniqueID ==
-                normalizedUniqueID {
+            let routeAlreadySelected =
+                self.audioPreviewOutput
+                    .outputDeviceUniqueID ==
+                normalizedUniqueID
+
+            if routeAlreadySelected,
+               self.audioSession.isRunning {
 
                 DispatchQueue.main.async {
                     self
@@ -776,374 +676,45 @@ final class CaptureSessionManager:
                 return
             }
 
-            self.cancelAudioVolumeRamp()
-            self.audioPreviewOutput.volume = 0
+            let hadAudioInput =
+                self.currentAudioInput != nil
+
+            if self.audioSession.isRunning {
+                self.audioSession
+                    .stopRunning()
+            }
 
             self.audioPreviewOutput
                 .outputDeviceUniqueID =
                 normalizedUniqueID
 
+            self.applyGameAudioVolume()
+
+            if hadAudioInput {
+                self.audioSession
+                    .startRunning()
+            }
+
+            let audioStarted =
+                hadAudioInput &&
+                self.audioSession.isRunning
+
             DispatchQueue.main.async {
                 self
                     .configuredAudioOutputDeviceUID =
                     normalizedUniqueID
-            }
 
-            if self.isAudioStreamHealthy() {
-                self.audioSessionQueue.asyncAfter(
-                    deadline:
-                        .now() + 0.10
-                ) { [weak self] in
-                    self?
-                        .beginAudioVolumeRamp()
-                }
-            }
-        }
-    }
-
-    // MARK: - Audio Sample Handling
-
-    private func handleAudioSampleBuffer(
-        _ sampleBuffer:
-            CMSampleBuffer
-    ) {
-        guard CMSampleBufferDataIsReady(
-            sampleBuffer
-        ) else {
-            return
-        }
-
-        let shouldCheckPreview =
-            noteAudioSampleAndRequestReadinessCheck()
-
-        guard shouldCheckPreview else {
-            return
-        }
-
-        audioSessionQueue.async {
-            [weak self] in
-
-            guard let self else {
-                return
-            }
-
-            let previewConnectionReady =
-                self.audioSession.isRunning &&
-                self.currentAudioInput != nil &&
-                self.audioPreviewOutput
-                    .connection(
-                        with: .audio
-                    )?
-                    .isEnabled ==
-                true
-
-            let becameReady =
-                self.finishAudioReadinessCheck(
-                    previewConnectionReady:
-                        previewConnectionReady
-                )
-
-            guard becameReady else {
-                return
-            }
-
-            DispatchQueue.main.async {
-                self.isGameAudioAvailable =
-                    true
-
-                self.audioErrorMessage =
-                    nil
-            }
-
-            self.beginAudioVolumeRamp()
-        }
-    }
-
-    private func noteAudioSampleAndRequestReadinessCheck()
-        -> Bool {
-
-        let currentUptime =
-            ProcessInfo
-                .processInfo
-                .systemUptime
-
-        audioStateLock.lock()
-
-        guard currentUptime >=
-                acceptAudioSamplesAfterUptime else {
-
-            audioStateLock.unlock()
-            return false
-        }
-
-        hasReceivedCurrentAudioSample =
-            true
-
-        lastAudioSampleUptime =
-            currentUptime
-
-        guard !audioStreamReady,
-              !audioReadinessCheckPending else {
-
-            audioStateLock.unlock()
-            return false
-        }
-
-        audioReadinessCheckPending =
-            true
-
-        audioStateLock.unlock()
-
-        return true
-    }
-
-    private func finishAudioReadinessCheck(
-        previewConnectionReady:
-            Bool
-    ) -> Bool {
-        audioStateLock.lock()
-
-        audioReadinessCheckPending =
-            false
-
-        let shouldBecomeReady =
-            previewConnectionReady &&
-            hasReceivedCurrentAudioSample &&
-            !audioStreamReady
-
-        if shouldBecomeReady {
-            audioStreamReady =
-                true
-        }
-
-        audioStateLock.unlock()
-
-        return shouldBecomeReady
-    }
-
-    // MARK: - Audio Watchdog
-
-    private func scheduleAudioWatchdog(
-        expectedDeviceID: String,
-        requestNumber: Int,
-        recoveryAttempt: Int,
-        delay: TimeInterval
-    ) {
-        audioSessionQueue.asyncAfter(
-            deadline:
-                .now() + delay
-        ) { [weak self] in
-            guard let self,
-                  self.isLatestAudioRequest(
-                    requestNumber
-                  ),
-                  self.currentAudioInput?
-                    .device.uniqueID ==
-                    expectedDeviceID else {
-                return
-            }
-
-            if self.isAudioStreamHealthy() {
-                self.scheduleAudioWatchdog(
-                    expectedDeviceID:
-                        expectedDeviceID,
-                    requestNumber:
-                        requestNumber,
-                    recoveryAttempt:
-                        0,
-                    delay:
-                        self.audioWatchdogInterval
-                )
-
-                return
-            }
-
-            DispatchQueue.main.async {
-                self.isGameAudioAvailable =
-                    false
-
-                self.audioErrorMessage =
-                    nil
-            }
-
-            self.cancelAudioVolumeRamp()
-            self.audioPreviewOutput.volume = 0
-
-            self.scheduleAudioRecovery(
-                expectedDeviceID:
-                    expectedDeviceID,
-                requestNumber:
-                    requestNumber,
-                recoveryAttempt:
-                    recoveryAttempt
-            )
-        }
-    }
-
-    private func scheduleAudioRecovery(
-        expectedDeviceID: String,
-        requestNumber: Int,
-        recoveryAttempt: Int
-    ) {
-        guard isLatestAudioRequest(
-            requestNumber
-        ) else {
-            return
-        }
-
-        guard recoveryAttempt <
-                automaticAudioRecoveryDelays
-                    .count else {
-
-            let receivedSamples =
-                hasReceivedAnyAudioSamples()
-
-            DispatchQueue.main.async {
-                self.isGameAudioAvailable =
-                    false
-
-                if receivedSamples {
-                    self.audioErrorMessage =
-                        "Audio data arrived, but macOS could not create a playable preview connection. Press Refresh or reconnect the capture card."
-                } else {
-                    self.audioErrorMessage =
-                        "The capture card did not send audio data. Press Refresh or reconnect the capture card."
-                }
-            }
-
-            return
-        }
-
-        let retryDelay =
-            automaticAudioRecoveryDelays[
-                recoveryAttempt
-            ]
-
-        audioSessionQueue.asyncAfter(
-            deadline:
-                .now() + retryDelay
-        ) { [weak self] in
-            guard let self,
-                  self.isLatestAudioRequest(
-                    requestNumber
-                  ) else {
-                return
-            }
-
-            let refreshedDevice =
-                AVCaptureDevice(
-                    uniqueID:
-                        expectedDeviceID
-                ) ??
-                self.currentAudioInput?
-                    .device
-
-            guard let refreshedDevice,
-                  refreshedDevice.isConnected else {
-
-                DispatchQueue.main.async {
+                if hadAudioInput {
                     self.isGameAudioAvailable =
-                        false
+                        audioStarted
 
                     self.audioErrorMessage =
-                        "The selected audio input is no longer connected."
+                        audioStarted
+                        ? nil
+                        : "The selected audio output could not start the game-audio preview."
                 }
-
-                return
             }
-
-            self.configureAudio(
-                device:
-                    refreshedDevice,
-                forceRestart:
-                    true,
-                recoveryAttempt:
-                    recoveryAttempt + 1
-            )
         }
-    }
-
-    private func isAudioStreamHealthy()
-        -> Bool {
-
-        let currentUptime =
-            ProcessInfo
-                .processInfo
-                .systemUptime
-
-        audioStateLock.lock()
-
-        let healthy =
-            audioStreamReady &&
-            hasReceivedCurrentAudioSample &&
-            currentUptime -
-                lastAudioSampleUptime <=
-                maximumHealthyAudioSampleGap
-
-        audioStateLock.unlock()
-
-        return healthy
-    }
-
-    private func hasReceivedAnyAudioSamples()
-        -> Bool {
-
-        audioStateLock.lock()
-
-        let received =
-            hasReceivedCurrentAudioSample
-
-        audioStateLock.unlock()
-
-        return received
-    }
-
-    private func resetAudioStreamState() {
-        audioStateLock.lock()
-
-        hasReceivedCurrentAudioSample =
-            false
-
-        audioStreamReady =
-            false
-
-        audioReadinessCheckPending =
-            false
-
-        acceptAudioSamplesAfterUptime =
-            0
-
-        lastAudioSampleUptime =
-            0
-
-        audioStateLock.unlock()
-    }
-
-    private func prepareForNewAudioSamples(
-        ignoreDuration:
-            TimeInterval
-    ) {
-        audioStateLock.lock()
-
-        hasReceivedCurrentAudioSample =
-            false
-
-        audioStreamReady =
-            false
-
-        audioReadinessCheckPending =
-            false
-
-        lastAudioSampleUptime =
-            0
-
-        acceptAudioSamplesAfterUptime =
-            ProcessInfo
-                .processInfo
-                .systemUptime +
-            ignoreDuration
-
-        audioStateLock.unlock()
     }
 
     // MARK: - Volume and Mute
@@ -1176,76 +747,23 @@ final class CaptureSessionManager:
             self.desiredGameMuted =
                 muted
 
-            self.cancelAudioVolumeRamp()
             self.applyGameAudioVolume()
         }
     }
 
     private func applyGameAudioVolume() {
-        guard isAudioStreamHealthy() else {
-            audioPreviewOutput.volume = 0
-            return
-        }
-
         audioPreviewOutput.volume =
             desiredGameMuted
             ? 0
             : desiredGameVolume
     }
 
-    private func beginAudioVolumeRamp() {
-        cancelAudioVolumeRamp()
-
-        guard isAudioStreamHealthy(),
-              !desiredGameMuted,
-              desiredGameVolume > 0 else {
-
-            audioPreviewOutput.volume = 0
-            return
-        }
-
-        let rampToken =
-            audioVolumeRampToken
-
-        let targetVolume =
-            desiredGameVolume
-
-        audioPreviewOutput.volume = 0
-
-        let rampSteps:
-            [(delay: TimeInterval, amount: Float)] = [
-                (0.03, 0.20),
-                (0.07, 0.50),
-                (0.12, 1.00)
-            ]
-
-        for step in rampSteps {
-            audioSessionQueue.asyncAfter(
-                deadline:
-                    .now() + step.delay
-            ) { [weak self] in
-                guard let self,
-                      self.audioVolumeRampToken ==
-                        rampToken,
-                      self.isAudioStreamHealthy(),
-                      !self.desiredGameMuted else {
-                    return
-                }
-
-                self.audioPreviewOutput.volume =
-                    targetVolume *
-                    step.amount
-            }
-        }
-    }
-
-    private func cancelAudioVolumeRamp() {
-        audioVolumeRampToken += 1
-    }
-
     // MARK: - Stop
 
     func stop() {
+        minimapDatasetRecorder
+            .stopRecording()
+
         _ = createVideoRequestNumber()
         _ = createAudioRequestNumber()
 
@@ -1256,7 +774,7 @@ final class CaptureSessionManager:
                 return
             }
 
-            self.resetVideoFrameState()
+            self.resetFrameState()
 
             if self.session.isRunning {
                 self.session.stopRunning()
@@ -1298,12 +816,9 @@ final class CaptureSessionManager:
                 return
             }
 
-            self.cancelAudioVolumeRamp()
-            self.audioPreviewOutput.volume = 0
-            self.resetAudioStreamState()
-
             if self.audioSession.isRunning {
-                self.audioSession.stopRunning()
+                self.audioSession
+                    .stopRunning()
             }
 
             self.audioSession
@@ -1358,13 +873,13 @@ final class CaptureSessionManager:
     ) -> Bool {
         videoRequestLock.lock()
 
-        let latest =
+        let isLatest =
             requestNumber ==
             latestVideoRequestNumber
 
         videoRequestLock.unlock()
 
-        return latest
+        return isLatest
     }
 
     private func createAudioRequestNumber()
@@ -1387,16 +902,16 @@ final class CaptureSessionManager:
     ) -> Bool {
         audioRequestLock.lock()
 
-        let latest =
+        let isLatest =
             requestNumber ==
             latestAudioRequestNumber
 
         audioRequestLock.unlock()
 
-        return latest
+        return isLatest
     }
 
-    // MARK: - Output Delegates
+    // MARK: - Video Frames
 
     func captureOutput(
         _ output:
@@ -1406,28 +921,10 @@ final class CaptureSessionManager:
         from connection:
             AVCaptureConnection
     ) {
-        if output === videoOutput {
-            handleVideoSampleBuffer(
+        guard output === videoOutput,
+              CMSampleBufferDataIsReady(
                 sampleBuffer
-            )
-
-            return
-        }
-
-        if output === audioDataOutput {
-            handleAudioSampleBuffer(
-                sampleBuffer
-            )
-        }
-    }
-
-    private func handleVideoSampleBuffer(
-        _ sampleBuffer:
-            CMSampleBuffer
-    ) {
-        guard CMSampleBufferDataIsReady(
-            sampleBuffer
-        ) else {
+              ) else {
             return
         }
 
@@ -1436,68 +933,79 @@ final class CaptureSessionManager:
                 .processInfo
                 .systemUptime
 
-        videoFrameStateLock.lock()
+        frameStateLock.lock()
 
         guard currentUptime >=
-                acceptVideoFramesAfterUptime else {
+                acceptFramesAfterUptime else {
 
-            videoFrameStateLock.unlock()
+            frameStateLock.unlock()
             return
         }
 
-        let shouldPublish =
+        let shouldPublishVideoState =
             !hasReceivedCurrentVideoFrame
 
-        if shouldPublish {
+        if shouldPublishVideoState {
             hasReceivedCurrentVideoFrame =
                 true
         }
 
-        videoFrameStateLock.unlock()
+        frameStateLock.unlock()
 
-        guard shouldPublish else {
-            return
+        if shouldPublishVideoState {
+            DispatchQueue.main.async {
+                [weak self] in
+
+                self?.isReceivingVideo =
+                    true
+
+                self?.errorMessage =
+                    nil
+            }
         }
 
-        DispatchQueue.main.async {
-            [weak self] in
+        // Hand every valid frame to the analyzer.
+        // The analyzer performs its own throttling and
+        // moves actual work to a separate utility queue.
+        frameAnalyzer.receive(
+            sampleBuffer
+        )
 
-            self?.isReceivingVideo =
-                true
-
-            self?.errorMessage =
-                nil
-        }
+        minimapDatasetRecorder.receive(
+            sampleBuffer
+        )
     }
 
-    private func resetVideoFrameState() {
-        videoFrameStateLock.lock()
+    private func resetFrameState() {
+        frameStateLock.lock()
 
         hasReceivedCurrentVideoFrame =
             false
 
-        acceptVideoFramesAfterUptime =
+        acceptFramesAfterUptime =
             0
 
-        videoFrameStateLock.unlock()
+        frameStateLock.unlock()
+
+        frameAnalyzer.reset()
     }
 
-    private func prepareForNewVideoFrames(
+    private func prepareForNewFrames(
         ignoreDuration:
             TimeInterval
     ) {
-        videoFrameStateLock.lock()
+        frameStateLock.lock()
 
         hasReceivedCurrentVideoFrame =
             false
 
-        acceptVideoFramesAfterUptime =
+        acceptFramesAfterUptime =
             ProcessInfo
                 .processInfo
                 .systemUptime +
             ignoreDuration
 
-        videoFrameStateLock.unlock()
+        frameStateLock.unlock()
     }
 }
 
@@ -1511,6 +1019,7 @@ private struct CaptureSessionError:
 
     var errorDescription:
         String? {
+
         message
     }
 }
