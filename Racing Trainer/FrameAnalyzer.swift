@@ -21,11 +21,23 @@ private struct MinimapAnalyzerSnapshot {
     let minimapConfidence:
         Float
 
+    let playerDetectionConfidence:
+        Float
+
+    let rimStructureConfidence:
+        Float
+
     let routeDetected:
         Bool
 
     let routeConfidence:
         Float
+
+    let routeSource:
+        MinimapRouteSource
+
+    let diagnostic:
+        MinimapDetectionDiagnostic
 
     let cyanMarkerPixelCount:
         Int
@@ -36,6 +48,15 @@ private struct MinimapAnalyzerSnapshot {
     let yellowCandidatePixelCount:
         Int
 
+    let learnedCandidatePixelCount:
+        Int
+
+    let shortRouteCandidateFound:
+        Bool
+
+    let shortRouteVerifierConfidence:
+        Float
+
     let routeComponentCount:
         Int
 
@@ -44,6 +65,9 @@ private struct MinimapAnalyzerSnapshot {
 
     let routeMaskImage:
         CGImage?
+
+    let coach:
+        MinimapCoachSnapshot
 
     static let empty =
         MinimapAnalyzerSnapshot(
@@ -57,22 +81,38 @@ private struct MinimapAnalyzerSnapshot {
                 false,
             minimapConfidence:
                 0,
+            playerDetectionConfidence:
+                0,
+            rimStructureConfidence:
+                0,
             routeDetected:
                 false,
             routeConfidence:
                 0,
+            routeSource:
+                .none,
+            diagnostic:
+                .waiting,
             cyanMarkerPixelCount:
                 0,
             routeMaskPixelCount:
                 0,
             yellowCandidatePixelCount:
                 0,
+            learnedCandidatePixelCount:
+                0,
+            shortRouteCandidateFound:
+                false,
+            shortRouteVerifierConfidence:
+                0,
             routeComponentCount:
                 0,
             ignoredYellowComponentCount:
                 0,
             routeMaskImage:
-                nil
+                nil,
+            coach:
+                .empty
         )
 }
 
@@ -164,6 +204,34 @@ final class FrameAnalyzer:
             .routeConfidence
     }
 
+    var playerDetectionConfidence:
+        Float {
+
+        minimapSnapshot
+            .playerDetectionConfidence
+    }
+
+    var rimStructureConfidence:
+        Float {
+
+        minimapSnapshot
+            .rimStructureConfidence
+    }
+
+    var minimapRouteSource:
+        MinimapRouteSource {
+
+        minimapSnapshot
+            .routeSource
+    }
+
+    var minimapDiagnostic:
+        MinimapDetectionDiagnostic {
+
+        minimapSnapshot
+            .diagnostic
+    }
+
     var cyanMarkerPixelCount:
         Int {
 
@@ -185,6 +253,27 @@ final class FrameAnalyzer:
             .yellowCandidatePixelCount
     }
 
+    var learnedCandidatePixelCount:
+        Int {
+
+        minimapSnapshot
+            .learnedCandidatePixelCount
+    }
+
+    var shortRouteCandidateFound:
+        Bool {
+
+        minimapSnapshot
+            .shortRouteCandidateFound
+    }
+
+    var shortRouteVerifierConfidence:
+        Float {
+
+        minimapSnapshot
+            .shortRouteVerifierConfidence
+    }
+
     var routeComponentCount:
         Int {
 
@@ -204,6 +293,13 @@ final class FrameAnalyzer:
 
         minimapSnapshot
             .routeMaskImage
+    }
+
+    var coachSnapshot:
+        MinimapCoachSnapshot {
+
+        minimapSnapshot
+            .coach
     }
 
     // MARK: - Speed OCR
@@ -261,6 +357,9 @@ final class FrameAnalyzer:
     private let minimapRouteDetector =
         MinimapRouteDetector()
 
+    private let minimapCoachEngine =
+        MinimapDrivingCoachEngine()
+
     // MARK: - Shared State
 
     private let stateLock =
@@ -286,6 +385,9 @@ final class FrameAnalyzer:
     private var speedCompletionTimes:
         [TimeInterval] = []
 
+    private var recentSpeedSamples:
+        [MinimapSpeedSample] = []
+
     // MARK: - Minimap Scheduler
 
     private var minimapAnalyzedFrameCountStorage =
@@ -302,6 +404,15 @@ final class FrameAnalyzer:
 
     private var latestCompletedMinimapResultSequence =
         0
+
+    // While the full detector is busy, retain only the newest frame. After
+    // detection finishes, the lightweight tracker aligns the verified path
+    // to this frame instead of processing a queue of stale video frames.
+    private var pendingTrackingPixelBuffer:
+        CVPixelBuffer?
+
+    private var pendingTrackingFrameUptime =
+        0.0
 
     // A small tolerance prevents 30 FPS input timestamps that arrive a
     // fraction early from being needlessly cut down to 15 FPS.
@@ -441,6 +552,19 @@ final class FrameAnalyzer:
 
             minimapAnalysisInProgress =
                 true
+
+            pendingTrackingPixelBuffer =
+                nil
+
+            pendingTrackingFrameUptime =
+                0
+
+        } else if minimapAnalysisInProgress {
+            pendingTrackingPixelBuffer =
+                pixelBuffer
+
+            pendingTrackingFrameUptime =
+                currentUptime
         }
 
         stateLock.unlock()
@@ -454,6 +578,8 @@ final class FrameAnalyzer:
                         pixelBuffer,
                     capturedFrameCount:
                         currentCapturedFrameCount,
+                    sourceFrameUptime:
+                        currentUptime,
                     generation:
                         currentGeneration
                 )
@@ -467,6 +593,8 @@ final class FrameAnalyzer:
                 self?.analyzeMinimap(
                     pixelBuffer:
                         pixelBuffer,
+                    sourceFrameUptime:
+                        currentUptime,
                     generation:
                         currentGeneration
                 )
@@ -500,6 +628,9 @@ final class FrameAnalyzer:
         speedCompletionTimes =
             []
 
+        recentSpeedSamples =
+            []
+
         minimapAnalyzedFrameCountStorage =
             0
 
@@ -515,6 +646,12 @@ final class FrameAnalyzer:
         latestCompletedMinimapResultSequence =
             0
 
+        pendingTrackingPixelBuffer =
+            nil
+
+        pendingTrackingFrameUptime =
+            0
+
         stableSpeedStorage =
             nil
 
@@ -528,6 +665,12 @@ final class FrameAnalyzer:
             MotorfestHUDLayout.speedUnit
 
         stateLock.unlock()
+
+        minimapAnalysisQueue.async {
+            [weak self] in
+
+            self?.minimapCoachEngine.reset()
+        }
 
         DispatchQueue.main.async {
             [weak self] in
@@ -574,6 +717,8 @@ final class FrameAnalyzer:
             CVPixelBuffer,
         capturedFrameCount:
             Int,
+        sourceFrameUptime:
+            TimeInterval,
         generation currentGeneration:
             Int
     ) {
@@ -644,6 +789,33 @@ final class FrameAnalyzer:
             let stabilizedUnit =
                 detectedSpeedUnitStorage
 
+            if speedOCRResult.speed != nil,
+               let stabilizedSpeed {
+
+                recentSpeedSamples.append(
+                    MinimapSpeedSample(
+                        value:
+                            stabilizedSpeed,
+                        confidence:
+                            speedOCRResult.confidence,
+                        sourceFrameUptime:
+                            sourceFrameUptime
+                    )
+                )
+
+                recentSpeedSamples.removeAll {
+                    sourceFrameUptime -
+                    $0.sourceFrameUptime >
+                    2.0
+                }
+
+                if recentSpeedSamples.count > 24 {
+                    recentSpeedSamples.removeFirst(
+                        recentSpeedSamples.count - 24
+                    )
+                }
+            }
+
             speedAnalysisInProgress =
                 false
 
@@ -709,6 +881,8 @@ final class FrameAnalyzer:
     private func analyzeMinimap(
         pixelBuffer:
             CVPixelBuffer,
+        sourceFrameUptime:
+            TimeInterval,
         generation currentGeneration:
             Int
     ) {
@@ -723,6 +897,110 @@ final class FrameAnalyzer:
                     in:
                         pixelBuffer
                 )
+
+            let detectionCompletionUptime =
+                ProcessInfo
+                    .processInfo
+                    .systemUptime
+
+            stateLock.lock()
+
+            guard currentGeneration ==
+                    generation else {
+
+                stateLock.unlock()
+                return
+            }
+
+            let fullSpeedSample =
+                closestSpeedSampleLocked(
+                    to:
+                        sourceFrameUptime
+                )
+
+            stateLock.unlock()
+
+            var coachResult =
+                minimapCoachEngine
+                    .processFullDetection(
+                        result,
+                        sourceFrameUptime:
+                            sourceFrameUptime,
+                        completionUptime:
+                            detectionCompletionUptime,
+                        speedSample:
+                            fullSpeedSample
+                    )
+
+            // Pull the newest frame only after the expensive detector and
+            // centerline work finish. This skips every stale frame in between.
+            stateLock.lock()
+
+            guard currentGeneration ==
+                    generation else {
+
+                stateLock.unlock()
+                return
+            }
+
+            let trackingPixelBuffer =
+                pendingTrackingFrameUptime >
+                    sourceFrameUptime
+                ? pendingTrackingPixelBuffer
+                : nil
+
+            let trackingFrameUptime =
+                pendingTrackingFrameUptime
+
+            let trackingSpeedSample =
+                closestSpeedSampleLocked(
+                    to:
+                        trackingFrameUptime
+                )
+
+            pendingTrackingPixelBuffer =
+                nil
+
+            pendingTrackingFrameUptime =
+                0
+
+            stateLock.unlock()
+
+            if let trackingPixelBuffer,
+               trackingFrameUptime >
+                sourceFrameUptime {
+
+                let trackedResult =
+                    minimapCoachEngine
+                        .processTrackedFrame(
+                            pixelBuffer:
+                                trackingPixelBuffer,
+                            sourceFrameUptime:
+                                trackingFrameUptime,
+                            completionUptime:
+                                ProcessInfo
+                                    .processInfo
+                                    .systemUptime,
+                            speedSample:
+                                trackingSpeedSample
+                        )
+
+                if let trackedResult {
+                    coachResult =
+                        trackedResult
+
+                } else if coachResult.state ==
+                            .ready {
+
+                    coachResult =
+                        minimapCoachEngine
+                            .suppressGuidanceAfterTrackingFailure(
+                                coachResult,
+                                latestFrameUptime:
+                                    trackingFrameUptime
+                            )
+                }
+            }
 
             let completionUptime =
                 ProcessInfo
@@ -766,6 +1044,15 @@ final class FrameAnalyzer:
             minimapAnalysisInProgress =
                 false
 
+            // A frame may have arrived during the very short tracking pass.
+            // It is intentionally discarded; the next accepted frame starts a
+            // fresh full detection rather than extending a stale work queue.
+            pendingTrackingPixelBuffer =
+                nil
+
+            pendingTrackingFrameUptime =
+                0
+
             stateLock.unlock()
 
             DispatchQueue.main.async {
@@ -796,22 +1083,38 @@ final class FrameAnalyzer:
                             result.minimapVisible,
                         minimapConfidence:
                             result.minimapConfidence,
+                        playerDetectionConfidence:
+                            result.playerDetectionConfidence,
+                        rimStructureConfidence:
+                            result.rimStructureConfidence,
                         routeDetected:
                             result.routeDetected,
                         routeConfidence:
                             result.routeConfidence,
+                        routeSource:
+                            result.routeSource,
+                        diagnostic:
+                            result.diagnostic,
                         cyanMarkerPixelCount:
                             result.cyanPlayerPixelCount,
                         routeMaskPixelCount:
                             result.routeMaskPixelCount,
                         yellowCandidatePixelCount:
                             result.yellowCandidatePixelCount,
+                        learnedCandidatePixelCount:
+                            result.learnedCandidatePixelCount,
+                        shortRouteCandidateFound:
+                            result.shortRouteCandidateFound,
+                        shortRouteVerifierConfidence:
+                            result.shortRouteVerifierConfidence,
                         routeComponentCount:
                             result.routeComponentCount,
                         ignoredYellowComponentCount:
                             result.ignoredYellowComponentCount,
                         routeMaskImage:
-                            result.routeMaskImage
+                            result.routeMaskImage,
+                        coach:
+                            coachResult
                     )
             }
         }
@@ -827,8 +1130,28 @@ final class FrameAnalyzer:
                 pixelBuffer,
             normalizedCropRect:
                 MotorfestHUDLayout
-                    .minimapAnalysisRect
+                    .minimapAnalysisRect,
+            includeTrainingMask:
+                true
         )
+    }
+
+    /// Call only while `stateLock` is held.
+    private func closestSpeedSampleLocked(
+        to sourceFrameUptime:
+            TimeInterval
+    ) -> MinimapSpeedSample? {
+
+        recentSpeedSamples.min {
+            abs(
+                $0.sourceFrameUptime -
+                sourceFrameUptime
+            ) <
+            abs(
+                $1.sourceFrameUptime -
+                sourceFrameUptime
+            )
+        }
     }
 
     // MARK: - Rolling FPS

@@ -1,0 +1,270 @@
+{
+  "datasetAudit": {
+    "sampleCount": 582,
+    "positiveMaskCount": 526,
+    "emptyMaskCount": 56,
+    "dimensions": {
+      "347x352": 582
+    },
+    "maskValues": [
+      0,
+      255
+    ],
+    "exactDuplicateImageGroups": [],
+    "componentCountHistogram": {
+      "0": 56,
+      "1": 466,
+      "2": 40,
+      "3": 14,
+      "4": 5,
+      "5": 1
+    },
+    "roles": {
+      "train": 435,
+      "development": 108,
+      "sourceHoldoutTest": 39,
+      "sourceHoldoutNames": [
+        "BMW M4 Competition Coupe - The Crew Motorfest _ Thrustmaster TX - Gameplay Steeringwhee_1080p60.mp4"
+      ]
+    }
+  },
+  "trainingSampling": {
+    "positive": 71687,
+    "hardNegative": 214040,
+    "boundaryNegative": 133311,
+    "randomNegative": 304500,
+    "colorAugmented": 361650
+  },
+  "selectedModel": "mlp_20",
+  "development": {
+    "logistic": {
+      "threshold": 0.7317647058823529,
+      "raw": {
+        "threshold": 0.7317647058823529,
+        "pixel_precision": 0.8235485092798008,
+        "pixel_recall": 0.8849351706494564,
+        "pixel_f1": 0.8531390134529149,
+        "pixel_iou": 0.7438905180840665,
+        "tolerant_precision": 0.9062280179643959,
+        "tolerant_recall": 0.9795918367346939,
+        "tolerant_f1": 0.9414828955227377,
+        "mean_positive_iou": 0.7607776253031091,
+        "median_positive_iou": 0.7955801104972375,
+        "presence_accuracy": 0.9907407407407407,
+        "empty_specificity": 0.9230769230769231,
+        "false_positive_empty_frames": 1,
+        "positive_frames": 95,
+        "empty_frames": 13
+      },
+      "postprocessed": {
+        "threshold": 0.7317647058823529,
+        "pixel_precision": 0.8922324159021406,
+        "pixel_recall": 0.8481888481888482,
+        "pixel_f1": 0.8696533428716207,
+        "pixel_iou": 0.7693687041822689,
+        "tolerant_precision": 0.984954128440367,
+        "tolerant_recall": 0.9166230594802023,
+        "tolerant_f1": 0.949560893340268,
+        "mean_positive_iou": 0.7701178057886161,
+        "median_positive_iou": 0.8172043010752689,
+        "presence_accuracy": 0.9907407407407407,
+        "empty_specificity": 1.0,
+        "false_positive_empty_frames": 0,
+        "positive_frames": 95,
+        "empty_frames": 13
+      },
+      "trainingIterations": 61,
+      "trainingLoss": 0.0
+    },
+    "mlp_12": {
+      "threshold": 0.8671428571428571,
+      "raw": {
+        "threshold": 0.8671428571428571,
+        "pixel_precision": 0.8605709789816792,
+        "pixel_recall": 0.8903424617710332,
+        "pixel_f1": 0.8752036121510016,
+        "pixel_iou": 0.7780995934959349,
+        "tolerant_precision": 0.9260986849499832,
+        "tolerant_recall": 0.9802895517181232,
+        "tolerant_f1": 0.9524239053248147,
+        "mean_positive_iou": 0.7935636332640199,
+        "median_positive_iou": 0.8307692307692308,
+        "presence_accuracy": 0.9537037037037037,
+        "empty_specificity": 0.6153846153846154,
+        "false_positive_empty_frames": 5,
+        "positive_frames": 95,
+        "empty_frames": 13
+      },
+      "postprocessed": {
+        "threshold": 0.8671428571428571,
+        "pixel_precision": 0.9272994191612944,
+        "pixel_recall": 0.8447002732717018,
+        "pixel_f1": 0.884074727682103,
+        "pixel_iou": 0.7922347038935543,
+        "tolerant_precision": 0.9998723431416353,
+        "tolerant_recall": 0.8945868945868946,
+        "tolerant_f1": 0.9443039751088828,
+        "mean_positive_iou": 0.7927261162166711,
+        "median_positive_iou": 0.8484848484848485,
+        "presence_accuracy": 0.9907407407407407,
+        "empty_specificity": 1.0,
+        "false_positive_empty_frames": 0,
+        "positive_frames": 95,
+        "empty_frames": 13
+      },
+      "trainingIterations": 36,
+      "trainingLoss": 0.13711384934101437
+    },
+    "mlp_20": {
+      "threshold": 0.8445798319327731,
+      "raw": {
+        "threshold": 0.8445798319327731,
+        "pixel_precision": 0.8564850771108399,
+        "pixel_recall": 0.8976684690970406,
+        "pixel_f1": 0.8765933286018454,
+        "pixel_iou": 0.7802992014555746,
+        "tolerant_precision": 0.9276600465993565,
+        "tolerant_recall": 0.984417698703413,
+        "tolerant_f1": 0.9551964824608502,
+        "mean_positive_iou": 0.7936536457296415,
+        "median_positive_iou": 0.8223140495867769,
+        "presence_accuracy": 0.9814814814814815,
+        "empty_specificity": 0.8461538461538461,
+        "false_positive_empty_frames": 2,
+        "positive_frames": 95,
+        "empty_frames": 13
+      },
+      "postprocessed": {
+        "threshold": 0.8445798319327731,
+        "pixel_precision": 0.9199800573351614,
+        "pixel_recall": 0.8583057154485726,
+        "pixel_f1": 0.8880733944954129,
+        "pixel_iou": 0.7986798679867987,
+        "tolerant_precision": 0.997257883584694,
+        "tolerant_recall": 0.9064480493051922,
+        "tolerant_f1": 0.949687078883372,
+        "mean_positive_iou": 0.8000443962584467,
+        "median_positive_iou": 0.8415841584158416,
+        "presence_accuracy": 0.9907407407407407,
+        "empty_specificity": 1.0,
+        "false_positive_empty_frames": 0,
+        "positive_frames": 95,
+        "empty_frames": 13
+      },
+      "trainingIterations": 47,
+      "trainingLoss": 0.12422422778751664
+    },
+    "fixed_rgb_bootstrap": {
+      "threshold": 0.5,
+      "raw": {
+        "threshold": 0.5,
+        "pixel_precision": 0.797390298959423,
+        "pixel_recall": 0.8420838420838421,
+        "pixel_f1": 0.819127877382501,
+        "pixel_iou": 0.6936634896307294,
+        "tolerant_precision": 0.9037053350217475,
+        "tolerant_recall": 0.9730798302226874,
+        "tolerant_f1": 0.9371103845652655,
+        "mean_positive_iou": 0.7062311807669138,
+        "median_positive_iou": 0.7214611872146118,
+        "presence_accuracy": 0.9629629629629629,
+        "empty_specificity": 0.6923076923076923,
+        "false_positive_empty_frames": 4,
+        "positive_frames": 95,
+        "empty_frames": 13
+      },
+      "postprocessed": {
+        "threshold": 0.5,
+        "pixel_precision": 0.8781546982188936,
+        "pixel_recall": 0.8112680969823827,
+        "pixel_f1": 0.8433873307543519,
+        "pixel_iou": 0.7291873530180298,
+        "tolerant_precision": 0.9954056265340802,
+        "tolerant_recall": 0.9139484853770568,
+        "tolerant_f1": 0.9529394877894325,
+        "mean_positive_iou": 0.7273860310856848,
+        "median_positive_iou": 0.7521367521367521,
+        "presence_accuracy": 0.9907407407407407,
+        "empty_specificity": 1.0,
+        "false_positive_empty_frames": 0,
+        "positive_frames": 95,
+        "empty_frames": 13
+      }
+    }
+  },
+  "sourceHoldoutTest": {
+    "mlp_20": {
+      "raw": {
+        "threshold": 0.8445798319327731,
+        "pixel_precision": 0.9771573604060914,
+        "pixel_recall": 0.8369565217391305,
+        "pixel_f1": 0.9016393442622951,
+        "pixel_iou": 0.8208955223880597,
+        "tolerant_precision": 0.9982428738773916,
+        "tolerant_recall": 0.9633779264214046,
+        "tolerant_f1": 0.9805005633652135,
+        "mean_positive_iou": 0.7852620708877188,
+        "median_positive_iou": 0.861003861003861,
+        "presence_accuracy": 1.0,
+        "empty_specificity": 0.0,
+        "false_positive_empty_frames": 0,
+        "positive_frames": 39,
+        "empty_frames": 0
+      },
+      "postprocessed": {
+        "threshold": 0.8445798319327731,
+        "pixel_precision": 0.9792215393620135,
+        "pixel_recall": 0.8392976588628762,
+        "pixel_f1": 0.9038764576110937,
+        "pixel_iou": 0.8246118458884416,
+        "tolerant_precision": 1.0,
+        "tolerant_recall": 0.9566053511705686,
+        "tolerant_f1": 0.977821460621341,
+        "mean_positive_iou": 0.7822585085831693,
+        "median_positive_iou": 0.8636363636363636,
+        "presence_accuracy": 0.9230769230769231,
+        "empty_specificity": 0.0,
+        "false_positive_empty_frames": 0,
+        "positive_frames": 39,
+        "empty_frames": 0
+      }
+    },
+    "fixed_rgb_bootstrap": {
+      "raw": {
+        "threshold": 0.5,
+        "pixel_precision": 0.9134131242261659,
+        "pixel_recall": 0.9252508361204014,
+        "pixel_f1": 0.9192938733125648,
+        "pixel_iou": 0.8506418633253902,
+        "tolerant_precision": 0.9853074700784152,
+        "tolerant_recall": 0.9668896321070234,
+        "tolerant_f1": 0.9760116703276672,
+        "mean_positive_iou": 0.8137118160249831,
+        "median_positive_iou": 0.8886138613861386,
+        "presence_accuracy": 1.0,
+        "empty_specificity": 0.0,
+        "false_positive_empty_frames": 0,
+        "positive_frames": 39,
+        "empty_frames": 0
+      },
+      "postprocessed": {
+        "threshold": 0.5,
+        "pixel_precision": 0.9247257807920958,
+        "pixel_recall": 0.9234113712374582,
+        "pixel_f1": 0.9240681086056144,
+        "pixel_iou": 0.8588537211291702,
+        "tolerant_precision": 1.0,
+        "tolerant_recall": 0.959866220735786,
+        "tolerant_f1": 0.9795221843003413,
+        "mean_positive_iou": 0.8099287141249489,
+        "median_positive_iou": 0.8913043478260869,
+        "presence_accuracy": 0.9230769230769231,
+        "empty_specificity": 0.0,
+        "false_positive_empty_frames": 0,
+        "positive_frames": 39,
+        "empty_frames": 0
+      }
+    }
+  },
+  "elapsedSeconds": 67.10393654800282
+}

@@ -45,6 +45,9 @@ final class MinimapDatasetRecorder:
     let metadataStore:
         DatasetMetadataStore
 
+    let routeMaskDatasetStore:
+        RouteMaskDatasetStore
+
     var datasetFolderPath:
         String {
 
@@ -67,6 +70,9 @@ final class MinimapDatasetRecorder:
                 nil
         )
 
+    private let routeDetector =
+        MinimapRouteDetector()
+
     // MARK: - Thread State
 
     private let stateLock =
@@ -86,6 +92,14 @@ final class MinimapDatasetRecorder:
 
     private var recordingGeneration =
         0
+
+    private var sourceDescriptor =
+        RouteMaskSourceDescriptor
+            .liveCapture
+
+    private var captureSessionID =
+        UUID()
+            .uuidString
 
     // Only accessed from recorderQueue.
     private var nextImageIndex =
@@ -150,6 +164,12 @@ final class MinimapDatasetRecorder:
 
         metadataStore =
             DatasetMetadataStore(
+                rawFolderURL:
+                    rawFolderURL
+            )
+
+        routeMaskDatasetStore =
+            RouteMaskDatasetStore(
                 rawFolderURL:
                     rawFolderURL
             )
@@ -224,10 +244,17 @@ final class MinimapDatasetRecorder:
 
             self.metadataStore.refresh()
 
+            self.routeMaskDatasetStore
+                .refresh()
+
             self.stateLock.lock()
 
             self.recordingGeneration +=
                 1
+
+            self.captureSessionID =
+                UUID()
+                    .uuidString
 
             self.recordingStorage =
                 true
@@ -292,6 +319,64 @@ final class MinimapDatasetRecorder:
         }
     }
 
+    // MARK: - Source Metadata
+
+    func setSource(
+        kind:
+            RouteMaskSourceKind,
+        displayName:
+            String,
+        stableIdentifier:
+            String
+    ) {
+        let trimmedName =
+            displayName
+                .trimmingCharacters(
+                    in:
+                        .whitespacesAndNewlines
+                )
+
+        let trimmedIdentifier =
+            stableIdentifier
+                .trimmingCharacters(
+                    in:
+                        .whitespacesAndNewlines
+                )
+
+        stateLock.lock()
+
+        sourceDescriptor =
+            RouteMaskSourceDescriptor(
+                kind:
+                    kind,
+                displayName:
+                    trimmedName.isEmpty
+                    ? "Unknown Source"
+                    : trimmedName,
+                stableIdentifier:
+                    trimmedIdentifier.isEmpty
+                    ? UUID().uuidString
+                    : trimmedIdentifier
+            )
+
+        captureSessionID =
+            UUID()
+                .uuidString
+
+        stateLock.unlock()
+    }
+
+    func useLiveCaptureSource() {
+        setSource(
+            kind:
+                .liveCapture,
+            displayName:
+                "Live Capture",
+            stableIdentifier:
+                "live-\(UUID().uuidString)"
+        )
+    }
+
     // MARK: - Receive Frame
 
     func receive(
@@ -309,14 +394,31 @@ final class MinimapDatasetRecorder:
             return
         }
 
+        let presentationTime =
+            CMSampleBufferGetPresentationTimeStamp(
+                sampleBuffer
+            )
+
+        let timeSeconds =
+            presentationTime
+                .isValid &&
+            presentationTime
+                .isNumeric
+            ? presentationTime.seconds
+            : nil
+
         receive(
-            pixelBuffer
+            pixelBuffer,
+            sourceTimeSeconds:
+                timeSeconds
         )
     }
 
     func receive(
         _ pixelBuffer:
-            CVPixelBuffer
+            CVPixelBuffer,
+        sourceTimeSeconds:
+            Double? = nil
     ) {
 
         let currentUptime =
@@ -356,6 +458,12 @@ final class MinimapDatasetRecorder:
         let currentGeneration =
             recordingGeneration
 
+        let currentSource =
+            sourceDescriptor
+
+        let currentCaptureSessionID =
+            captureSessionID
+
         stateLock.unlock()
 
         recorderQueue.async {
@@ -364,7 +472,13 @@ final class MinimapDatasetRecorder:
             self?.processFrame(
                 pixelBuffer,
                 generation:
-                    currentGeneration
+                    currentGeneration,
+                source:
+                    currentSource,
+                captureSessionID:
+                    currentCaptureSessionID,
+                sourceTimeSeconds:
+                    sourceTimeSeconds
             )
         }
     }
@@ -375,7 +489,13 @@ final class MinimapDatasetRecorder:
         _ pixelBuffer:
             CVPixelBuffer,
         generation:
-            Int
+            Int,
+        source:
+            RouteMaskSourceDescriptor,
+        captureSessionID:
+            String,
+        sourceTimeSeconds:
+            Double?
     ) {
         autoreleasepool {
             guard isGenerationActive(
@@ -480,6 +600,38 @@ final class MinimapDatasetRecorder:
                 return
             }
 
+            let routeAnalysis =
+                routeDetector
+                    .analyze(
+                        pixelBuffer:
+                            pixelBuffer,
+                        normalizedCropRect:
+                            MotorfestHUDLayout
+                                .minimapAnalysisRect,
+                        includeTrainingMask:
+                            true
+                    )
+
+            guard let routeMask =
+                    routeAnalysis
+                        .routeMask else {
+
+                publishError(
+                    "Could not create the automatic route mask."
+                )
+
+                finishWrite()
+                return
+            }
+
+            guard isGenerationActive(
+                generation
+            ) else {
+
+                finishWrite()
+                return
+            }
+
             let imageIndex =
                 nextImageIndex
 
@@ -499,12 +651,82 @@ final class MinimapDatasetRecorder:
                         filename
                     )
 
+            let predictedMaskURL =
+                routeMaskDatasetStore
+                    .predictedFolderURL
+                    .appendingPathComponent(
+                        filename
+                    )
+
             do {
                 try writePNG(
                     croppedImage,
                     to:
                         outputURL
                 )
+
+                try writeMaskPNG(
+                    routeMask,
+                    to:
+                        predictedMaskURL
+                )
+
+                let sampleID =
+                    outputURL
+                        .deletingPathExtension()
+                        .lastPathComponent
+
+                let sourceGroupID =
+                    Self.sourceGroupID(
+                        for:
+                            source,
+                        captureSessionID:
+                            captureSessionID
+                    )
+
+                let record =
+                    RouteMaskSampleRecord(
+                        id:
+                            sampleID,
+                        imageFileName:
+                            filename,
+                        predictedMaskFileName:
+                            filename,
+                        sourceKind:
+                            source.kind,
+                        sourceName:
+                            source.displayName,
+                        sourceGroupID:
+                            sourceGroupID,
+                        captureSessionID:
+                            captureSessionID,
+                        sourceTimeSeconds:
+                            sourceTimeSeconds,
+                        width:
+                            routeMask.width,
+                        height:
+                            routeMask.height,
+                        minimapVisible:
+                            routeAnalysis
+                                .minimapVisible,
+                        minimapConfidence:
+                            routeAnalysis
+                                .minimapConfidence,
+                        routeDetected:
+                            routeAnalysis
+                                .routeDetected,
+                        routeConfidence:
+                            routeAnalysis
+                                .routeConfidence,
+                        routeMaskPixelCount:
+                            routeAnalysis
+                                .routeMaskPixelCount
+                    )
+
+                routeMaskDatasetStore
+                    .registerCapturedSample(
+                        record
+                    )
 
                 previousSavedSignature =
                     signature
@@ -914,6 +1136,86 @@ final class MinimapDatasetRecorder:
         }
     }
 
+    private func writeMaskPNG(
+        _ mask:
+            MinimapRouteMask,
+        to url:
+            URL
+    ) throws {
+
+        guard mask.width > 0,
+              mask.height > 0,
+              mask.pixels.count ==
+                mask.width *
+                mask.height,
+              let provider =
+                CGDataProvider(
+                    data:
+                        mask.pixels
+                        as CFData
+                ),
+              let image =
+                CGImage(
+                    width:
+                        mask.width,
+                    height:
+                        mask.height,
+                    bitsPerComponent:
+                        8,
+                    bitsPerPixel:
+                        8,
+                    bytesPerRow:
+                        mask.width,
+                    space:
+                        CGColorSpaceCreateDeviceGray(),
+                    bitmapInfo:
+                        CGBitmapInfo(
+                            rawValue:
+                                CGImageAlphaInfo
+                                    .none
+                                    .rawValue
+                        ),
+                    provider:
+                        provider,
+                    decode:
+                        nil,
+                    shouldInterpolate:
+                        false,
+                    intent:
+                        .defaultIntent
+                ),
+              let destination =
+                CGImageDestinationCreateWithURL(
+                    url as CFURL,
+                    UTType.png.identifier
+                        as CFString,
+                    1,
+                    nil
+                ) else {
+
+            throw MinimapDatasetRecorderError(
+                message:
+                    "Could not create predicted mask PNG."
+            )
+        }
+
+        CGImageDestinationAddImage(
+            destination,
+            image,
+            nil
+        )
+
+        guard CGImageDestinationFinalize(
+            destination
+        ) else {
+
+            throw MinimapDatasetRecorderError(
+                message:
+                    "Could not save predicted route mask."
+            )
+        }
+    }
+
     // MARK: - Folder
 
     func revealDatasetFolder() {
@@ -934,6 +1236,9 @@ final class MinimapDatasetRecorder:
                     )
 
                 self.metadataStore.refresh()
+
+                self.routeMaskDatasetStore
+                    .refresh()
 
                 DispatchQueue.main.async {
                     NSWorkspace.shared.open(
@@ -1129,6 +1434,58 @@ final class MinimapDatasetRecorder:
 
         return largestIndex +
             1
+    }
+
+    private static func sourceGroupID(
+        for source:
+            RouteMaskSourceDescriptor,
+        captureSessionID:
+            String
+    ) -> String {
+
+        var hash:
+            UInt64 =
+                14_695_981_039_346_656_037
+
+        let groupIdentifier =
+            source.kind ==
+                .liveCapture
+            ? captureSessionID
+            : source.stableIdentifier
+
+        let value =
+            "\(source.kind.rawValue):\(groupIdentifier)"
+
+        for byte in value.utf8 {
+            hash ^=
+                UInt64(
+                    byte
+                )
+
+            hash &*=
+                1_099_511_628_211
+        }
+
+        let hashText =
+            String(
+                hash,
+                radix:
+                    16
+            )
+
+        let padding =
+            String(
+                repeating:
+                    "0",
+                count:
+                    max(
+                        16 -
+                        hashText.count,
+                        0
+                    )
+            )
+
+        return "source_\(padding)\(hashText)"
     }
 }
 

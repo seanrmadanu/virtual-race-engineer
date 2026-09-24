@@ -93,25 +93,14 @@ final class CaptureDeviceManager:
         let audioDeviceTypes:
             [AVCaptureDevice.DeviceType]
 
-        if #available(macOS 14.0, *) {
-            videoDeviceTypes = [
-                .external
-            ]
+        videoDeviceTypes = [
+            .external
+        ]
 
-            audioDeviceTypes = [
-                .microphone,
-                .external
-            ]
-        } else {
-            videoDeviceTypes = [
-                .externalUnknown
-            ]
-
-            audioDeviceTypes = [
-                .builtInMicrophone,
-                .externalUnknown
-            ]
-        }
+        audioDeviceTypes = [
+            .microphone,
+            .external
+        ]
 
         videoDiscoverySession =
             AVCaptureDevice.DiscoverySession(
@@ -1479,16 +1468,8 @@ final class CaptureDeviceManager:
         _ device:
             AVCaptureDevice
     ) -> Bool {
-        if #available(
-            macOS 14.0,
-            *
-        ) {
-            return device.deviceType ==
-                .external
-        }
-
         return device.deviceType ==
-            .externalUnknown
+            .external
     }
 
     private func searchableText(

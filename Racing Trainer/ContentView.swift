@@ -307,7 +307,10 @@ struct ContentView: View {
                     onFullscreenToggle:
                         exitVideoFullscreen
                 )
-                .ignoresSafeArea()
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity
+                )
 
             } else {
                 normalLayout
@@ -393,7 +396,7 @@ struct ContentView: View {
 
         .onChange(
             of: gameVolume
-        ) { newVolume in
+        ) { _, newVolume in
             captureSession.setGameAudio(
                 volume:
                     newVolume,
@@ -411,7 +414,7 @@ struct ContentView: View {
 
         .onChange(
             of: gameMuted
-        ) { newMutedValue in
+        ) { _, newMutedValue in
             captureSession.setGameAudio(
                 volume:
                     gameVolume,
@@ -523,6 +526,7 @@ struct ContentView: View {
                     onFullscreenToggle:
                         enterVideoFullscreen
                 )
+                .layoutPriority(1)
 
                 Divider()
 
@@ -571,10 +575,17 @@ struct ContentView: View {
                 maxWidth: .infinity,
                 maxHeight: .infinity
             )
+            .clipped()
+            .layoutPriority(0)
 
             Divider()
 
             bottomPanel
+                .fixedSize(
+                    horizontal: false,
+                    vertical: true
+                )
+                .layoutPriority(1)
         }
         .background(
             Color(
@@ -608,7 +619,9 @@ struct ContentView: View {
                         )
                     )
                     .lineLimit(1)
+                    .truncationMode(.middle)
             }
+            .layoutPriority(1)
 
             Spacer(
                 minLength:
@@ -694,6 +707,7 @@ struct ContentView: View {
                 horizontal: true,
                 vertical: false
             )
+            .layoutPriority(2)
         }
         .padding(
             .horizontal,
@@ -712,6 +726,7 @@ struct ContentView: View {
                     .controlBackgroundColor
             )
         )
+        .clipped()
     }
 
     // MARK: - Preview Controls
@@ -1081,203 +1096,256 @@ struct GameplayPreview: View {
     private var previewContent:
         some View {
 
-        ZStack(
-            alignment:
-                .bottomTrailing
-        ) {
-            Color.black
-
-            if isUsingVideoFile {
-                VideoFilePreview(
-                    player:
-                        videoFilePlayback
-                            .player
-                )
-            } else {
-                CaptureVideoPreview(
-                    session:
-                        captureSession
-                            .session
-                )
-            }
-
-            if showsAnalyzerDebug,
-               isReceivingVideo {
-
-                MinimapRouteMaskOverlay(
-                    analyzer:
-                        frameAnalyzer,
-                    normalizedRect:
-                        MotorfestHUDLayout
-                            .minimapAnalysisRect
-                )
-                .allowsHitTesting(
-                    false
-                )
-            }
-
-            if showsHUDRegions,
-               isReceivingVideo {
-
-                HUDRegionOverlay(
-                    frameWidth:
-                        frameAnalyzer.frameWidth,
-                    frameHeight:
-                        frameAnalyzer.frameHeight,
-                    regions:
-                        MotorfestHUDLayout
-                            .debugRegions
-                )
-                .allowsHitTesting(false)
-            }
-
-            if let errorMessage {
-                CaptureErrorView(
-                    message:
-                        errorMessage
-                )
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity,
-                    alignment: .center
+        GeometryReader { geometry in
+            let availablePanelHeight =
+                max(
+                    180,
+                    geometry.size.height - 32
                 )
 
-            } else if
-                !hasAvailableInputSource {
+            ZStack(
+                alignment:
+                    .bottomTrailing
+            ) {
+                Color.black
 
-                BouncingNoConnectionView(
-                    animator:
-                        animator
-                )
+                if isUsingVideoFile {
+                    VideoFilePreview(
+                        player:
+                            videoFilePlayback
+                                .player
+                    )
+                } else {
+                    CaptureVideoPreview(
+                        session:
+                            captureSession
+                                .session
+                    )
+                }
 
-            } else if
-                !isReceivingVideo {
+                if showsAnalyzerDebug,
+                   isReceivingVideo {
 
-                ConnectingSourceView()
+                    MinimapRouteMaskOverlay(
+                        analyzer:
+                            frameAnalyzer,
+                        normalizedRect:
+                            MotorfestHUDLayout
+                                .minimapAnalysisRect
+                    )
+                    .allowsHitTesting(
+                        false
+                    )
+                }
+
+                if showsHUDRegions,
+                   isReceivingVideo {
+
+                    HUDRegionOverlay(
+                        frameWidth:
+                            frameAnalyzer.frameWidth,
+                        frameHeight:
+                            frameAnalyzer.frameHeight,
+                        regions:
+                            MotorfestHUDLayout
+                                .debugRegions
+                    )
+                    .allowsHitTesting(false)
+                }
+
+                if let errorMessage {
+                    CaptureErrorView(
+                        message:
+                            errorMessage
+                    )
                     .frame(
                         maxWidth: .infinity,
                         maxHeight: .infinity,
                         alignment: .center
                     )
-            }
 
-            if showsAnalyzerDebug {
-                FrameDebugView(
-                    analyzer:
-                        frameAnalyzer
-                )
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity,
-                    alignment: .topLeading
-                )
-                .padding(16)
+                } else if
+                    !hasAvailableInputSource {
 
-                if isFullscreen {
-                    DatasetMetadataCounterView(
-                        store:
-                            minimapDatasetRecorder
-                                .metadataStore,
-                        isOverlay:
-                            true
-                    )
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: .topTrailing
-                    )
-                    .padding(16)
-                }
-            }
-
-            if showsAnalyzerDebug,
-               isReceivingVideo {
-
-                VStack(spacing: 8) {
-                    RouteDetectionStatusBadge(
-                        analyzer:
-                            frameAnalyzer
+                    BouncingNoConnectionView(
+                        animator:
+                            animator
                     )
 
-                    if isUsingVideoFile,
-                       let formatWarning =
-                        videoFilePlayback
-                            .formatWarning {
+                } else if
+                    !isReceivingVideo {
 
-                        VideoFormatWarningView(
-                            message:
-                                formatWarning
+                    ConnectingSourceView()
+                        .frame(
+                            maxWidth: .infinity,
+                            maxHeight: .infinity,
+                            alignment: .center
                         )
+                }
+
+                if showsAnalyzerDebug {
+                    if isFullscreen {
+                        DraggableFullscreenPanel(
+                            containerSize:
+                                geometry.size,
+                            initialAlignment:
+                                .topLeading
+                        ) {
+                            FrameDebugView(
+                                analyzer:
+                                    frameAnalyzer,
+                                maximumHeight:
+                                    min(
+                                        620,
+                                        availablePanelHeight
+                                    ),
+                                allowsDragging:
+                                    true
+                            )
+                        }
+                        .zIndex(20)
+
+                        DraggableFullscreenPanel(
+                            containerSize:
+                                geometry.size,
+                            initialAlignment:
+                                .topTrailing
+                        ) {
+                            DatasetMetadataCounterView(
+                                store:
+                                    minimapDatasetRecorder
+                                        .routeMaskDatasetStore,
+                                isOverlay:
+                                    true
+                            )
+                        }
+                        .zIndex(20)
+
+                    } else {
+                        FrameDebugView(
+                            analyzer:
+                                frameAnalyzer,
+                            maximumHeight:
+                                availablePanelHeight,
+                            allowsDragging:
+                                false
+                        )
+                        .padding(16)
+                        .frame(
+                            maxWidth: .infinity,
+                            maxHeight: .infinity,
+                            alignment: .topLeading
+                        )
+                        .zIndex(20)
                     }
                 }
-                .frame(
-                    maxWidth: 440
-                )
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity,
-                    alignment: .top
-                )
-                .padding(
-                    .top,
-                    16
-                )
-                .padding(
-                    .horizontal,
-                    16
-                )
-            }
 
-            if isUsingVideoFile,
-               videoFilePlayback
-                .isReady {
+                if isReceivingVideo {
 
-                VideoFilePlaybackControls(
-                    playback:
-                        videoFilePlayback
-                )
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity,
-                    alignment: .bottom
-                )
-                .padding(
-                    .horizontal,
-                    110
-                )
-                .padding(
-                    .bottom,
-                    68
-                )
-            }
+                    VStack(spacing: 8) {
+                        DrivingCoachHUD(
+                            analyzer:
+                                frameAnalyzer
+                        )
 
-            if isFullscreen {
-                sourceStatusOverlay
+                        if showsAnalyzerDebug {
+                            RouteDetectionStatusBadge(
+                                analyzer:
+                                    frameAnalyzer
+                            )
+
+                            if isUsingVideoFile,
+                               let formatWarning =
+                                videoFilePlayback
+                                    .formatWarning {
+
+                                VideoFormatWarningView(
+                                    message:
+                                        formatWarning
+                                )
+                            }
+                        }
+                    }
+                    .frame(
+                        maxWidth:
+                            min(
+                                440,
+                                max(
+                                    240,
+                                    geometry.size.width - 32
+                                )
+                            )
+                    )
+                    .padding(
+                        .top,
+                        16
+                    )
+                    .padding(
+                        .horizontal,
+                        16
+                    )
                     .frame(
                         maxWidth: .infinity,
                         maxHeight: .infinity,
-                        alignment: .bottomLeading
+                        alignment: .top
                     )
-                    .padding(16)
-            }
+                    .zIndex(10)
+                }
 
-            previewControlButtons
-                .frame(
-                    maxWidth: .infinity,
-                    maxHeight: .infinity,
-                    alignment:
-                        isFullscreen
-                        ? .bottomTrailing
-                        : .bottomTrailing
-                )
-                .padding(
-                    .trailing,
-                    18
-                )
-                .padding(
-                    .bottom,
-                    18
-                )
+                if isUsingVideoFile,
+                   videoFilePlayback
+                    .isReady {
+
+                    VideoFilePlaybackControls(
+                        playback:
+                            videoFilePlayback
+                    )
+                    .padding(
+                        .bottom,
+                        68
+                    )
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity,
+                        alignment: .bottom
+                    )
+                    .zIndex(30)
+                }
+
+                if isFullscreen {
+                    sourceStatusOverlay
+                        .padding(16)
+                        .frame(
+                            maxWidth: .infinity,
+                            maxHeight: .infinity,
+                            alignment: .bottomLeading
+                        )
+                        .zIndex(30)
+                }
+
+                previewControlButtons
+                    .padding(
+                        .trailing,
+                        18
+                    )
+                    .padding(
+                        .bottom,
+                        18
+                    )
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: .infinity,
+                        alignment: .bottomTrailing
+                    )
+                    .zIndex(30)
+            }
+            .frame(
+                width:
+                    geometry.size.width,
+                height:
+                    geometry.size.height
+            )
+            .clipped()
         }
     }
 
@@ -1511,6 +1579,327 @@ struct GameplayPreview: View {
             )
         }
         .fixedSize()
+    }
+}
+
+// MARK: - Draggable Fullscreen Panels
+
+private enum FullscreenPanelAnchor {
+    case topLeading
+    case topTrailing
+}
+
+private struct DraggablePanelSizePreferenceKey:
+    PreferenceKey {
+
+    static var defaultValue:
+        CGSize = .zero
+
+    static func reduce(
+        value:
+            inout CGSize,
+        nextValue:
+            () -> CGSize
+    ) {
+        let nextSize =
+            nextValue()
+
+        if nextSize != .zero {
+            value = nextSize
+        }
+    }
+}
+
+private struct DraggableFullscreenPanel<Content: View>:
+    View {
+
+    let containerSize:
+        CGSize
+
+    let initialAlignment:
+        FullscreenPanelAnchor
+
+    let margin:
+        CGFloat
+
+    private let content:
+        Content
+
+    @State private var panelSize:
+        CGSize = .zero
+
+    @State private var restingPosition:
+        CGPoint?
+
+    @GestureState private var dragTranslation:
+        CGSize = .zero
+
+    init(
+        containerSize:
+            CGSize,
+        initialAlignment:
+            FullscreenPanelAnchor,
+        margin:
+            CGFloat = 16,
+        @ViewBuilder content:
+            () -> Content
+    ) {
+        self.containerSize =
+            containerSize
+
+        self.initialAlignment =
+            initialAlignment
+
+        self.margin =
+            margin
+
+        self.content =
+            content()
+    }
+
+    private var displayedPosition:
+        CGPoint {
+
+        let startingPosition =
+            restingPosition ??
+            initialPosition(
+                inside:
+                    containerSize,
+                panelSize:
+                    panelSize
+            )
+
+        return clampedPosition(
+            CGPoint(
+                x:
+                    startingPosition.x +
+                    dragTranslation.width,
+                y:
+                    startingPosition.y +
+                    dragTranslation.height
+            ),
+            inside:
+                containerSize,
+            panelSize:
+                panelSize
+        )
+    }
+
+    var body:
+        some View {
+
+        content
+            .background {
+                GeometryReader { geometry in
+                    Color.clear
+                        .preference(
+                            key:
+                                DraggablePanelSizePreferenceKey.self,
+                            value:
+                                geometry.size
+                        )
+                }
+            }
+            .overlay(
+                alignment:
+                    .top
+            ) {
+                Capsule()
+                    .fill(
+                        Color.white.opacity(0.38)
+                    )
+                    .frame(
+                        width: 28,
+                        height: 3
+                    )
+                    .padding(
+                        .top,
+                        5
+                    )
+                    .allowsHitTesting(false)
+            }
+            .contentShape(Rectangle())
+            .position(displayedPosition)
+            .simultaneousGesture(
+                DragGesture(
+                    minimumDistance:
+                        4
+                )
+                .updating(
+                    $dragTranslation
+                ) { value, state, _ in
+                    state =
+                        value.translation
+                }
+                .onEnded { value in
+                    let startingPosition =
+                        restingPosition ??
+                        initialPosition(
+                            inside:
+                                containerSize,
+                            panelSize:
+                                panelSize
+                        )
+
+                    restingPosition =
+                        clampedPosition(
+                            CGPoint(
+                                x:
+                                    startingPosition.x +
+                                    value.translation.width,
+                                y:
+                                    startingPosition.y +
+                                    value.translation.height
+                            ),
+                            inside:
+                                containerSize,
+                            panelSize:
+                                panelSize
+                        )
+                }
+            )
+            .onPreferenceChange(
+                DraggablePanelSizePreferenceKey.self
+            ) { newPanelSize in
+                panelSize =
+                    newPanelSize
+
+                if let restingPosition {
+                    self.restingPosition =
+                        clampedPosition(
+                            restingPosition,
+                            inside:
+                                containerSize,
+                            panelSize:
+                                newPanelSize
+                        )
+                }
+            }
+            .onChange(
+                of:
+                    containerSize
+            ) { _, newContainerSize in
+                if let restingPosition {
+                    self.restingPosition =
+                        clampedPosition(
+                            restingPosition,
+                            inside:
+                                newContainerSize,
+                            panelSize:
+                                panelSize
+                        )
+                }
+            }
+            .help(
+                "Drag to reposition this panel"
+            )
+    }
+
+    private func initialPosition(
+        inside containerSize:
+            CGSize,
+        panelSize:
+            CGSize
+    ) -> CGPoint {
+
+        let proposedX:
+            CGFloat
+
+        switch initialAlignment {
+        case .topLeading:
+            proposedX =
+                margin +
+                panelSize.width / 2
+
+        case .topTrailing:
+            proposedX =
+                containerSize.width -
+                margin -
+                panelSize.width / 2
+        }
+
+        return clampedPosition(
+            CGPoint(
+                x:
+                    proposedX,
+                y:
+                    margin +
+                    panelSize.height / 2
+            ),
+            inside:
+                containerSize,
+            panelSize:
+                panelSize
+        )
+    }
+
+    private func clampedPosition(
+        _ proposedPosition:
+            CGPoint,
+        inside containerSize:
+            CGSize,
+        panelSize:
+            CGSize
+    ) -> CGPoint {
+
+        let minimumX =
+            margin +
+            panelSize.width / 2
+
+        let maximumX =
+            containerSize.width -
+            margin -
+            panelSize.width / 2
+
+        let minimumY =
+            margin +
+            panelSize.height / 2
+
+        let maximumY =
+            containerSize.height -
+            margin -
+            panelSize.height / 2
+
+        let clampedX:
+            CGFloat
+
+        if minimumX <= maximumX {
+            clampedX =
+                min(
+                    max(
+                        proposedPosition.x,
+                        minimumX
+                    ),
+                    maximumX
+                )
+        } else {
+            clampedX =
+                containerSize.width / 2
+        }
+
+        let clampedY:
+            CGFloat
+
+        if minimumY <= maximumY {
+            clampedY =
+                min(
+                    max(
+                        proposedPosition.y,
+                        minimumY
+                    ),
+                    maximumY
+                )
+        } else {
+            clampedY =
+                containerSize.height / 2
+        }
+
+        return CGPoint(
+            x:
+                clampedX,
+            y:
+                clampedY
+        )
     }
 }
 
@@ -1784,6 +2173,9 @@ struct MinimapRouteMaskOverlay:
                 )
 
             if analyzer.yellowRouteDetected,
+               !analyzer
+                .coachSnapshot
+                .trackingApplied,
                let routeMaskImage =
                 analyzer.routeMaskImage {
 
@@ -1814,6 +2206,108 @@ struct MinimapRouteMaskOverlay:
                 .accessibilityHidden(
                     true
                 )
+            }
+
+            let coachPath =
+                analyzer
+                    .coachSnapshot
+                    .orderedPath
+
+            if coachPath.count >= 2 {
+                Path { path in
+                    guard let first =
+                            coachPath.first else {
+                        return
+                    }
+
+                    path.move(
+                        to:
+                            CGPoint(
+                                x:
+                                    displayedRect.minX +
+                                    first.x *
+                                    displayedRect.width,
+                                y:
+                                    displayedRect.minY +
+                                    first.y *
+                                    displayedRect.height
+                            )
+                    )
+
+                    for point in
+                        coachPath.dropFirst() {
+
+                        path.addLine(
+                            to:
+                                CGPoint(
+                                    x:
+                                        displayedRect.minX +
+                                        point.x *
+                                        displayedRect.width,
+                                    y:
+                                        displayedRect.minY +
+                                        point.y *
+                                        displayedRect.height
+                                )
+                        )
+                    }
+                }
+                .stroke(
+                    Color.green,
+                    style:
+                        StrokeStyle(
+                            lineWidth:
+                                max(
+                                    2,
+                                    displayedRect.width *
+                                    0.012
+                                ),
+                            lineCap:
+                                .round,
+                            lineJoin:
+                                .round
+                        )
+                )
+                .shadow(
+                    color:
+                        Color.black
+                            .opacity(0.75),
+                    radius:
+                        1
+                )
+
+                if let turnStart =
+                    analyzer
+                        .coachSnapshot
+                        .turnStartPoint {
+
+                    Circle()
+                        .fill(Color.orange)
+                        .overlay(
+                            Circle()
+                                .stroke(
+                                    Color.black,
+                                    lineWidth:
+                                        1
+                                )
+                        )
+                        .frame(
+                            width:
+                                9,
+                            height:
+                                9
+                        )
+                        .position(
+                            x:
+                                displayedRect.minX +
+                                turnStart.x *
+                                displayedRect.width,
+                            y:
+                                displayedRect.minY +
+                                turnStart.y *
+                                displayedRect.height
+                        )
+                }
             }
         }
     }
@@ -1916,6 +2410,292 @@ struct MinimapRouteMaskOverlay:
                 normalizedRect.height *
                 frameRect.height
         )
+    }
+}
+
+// MARK: - Driving Coach HUD
+
+struct DrivingCoachHUD:
+    View {
+
+    @ObservedObject var analyzer:
+        FrameAnalyzer
+
+    var body:
+        some View {
+
+        TimelineView(
+            .periodic(
+                from:
+                    .now,
+                by:
+                    0.10
+            )
+        ) { _ in
+            coachContent(
+                currentUptime:
+                    ProcessInfo
+                        .processInfo
+                        .systemUptime
+            )
+        }
+        .allowsHitTesting(false)
+    }
+
+    @ViewBuilder
+    private func coachContent(
+        currentUptime:
+            TimeInterval
+    ) -> some View {
+
+        let snapshot =
+            analyzer
+                .coachSnapshot
+
+        let displayedState =
+            snapshot.displayedState(
+                at:
+                    currentUptime
+            )
+
+        VStack(spacing: 5) {
+            HStack(spacing: 8) {
+                Image(
+                    systemName:
+                        systemImage(
+                            for:
+                                displayedState,
+                            action:
+                                snapshot.action
+                        )
+                )
+
+                Text(
+                    displayedState == .ready
+                    ? snapshot.action.title
+                    : displayedState.title
+                )
+                .font(
+                    .system(
+                        size:
+                            18,
+                        weight:
+                            .black,
+                        design:
+                            .rounded
+                    )
+                )
+                .lineLimit(1)
+
+                if displayedState == .ready {
+                    Text(
+                        String(
+                            format:
+                                "%.0f%%",
+                            snapshot
+                                .overallConfidence *
+                            100
+                        )
+                    )
+                    .font(
+                        .system(
+                            size:
+                                11,
+                            weight:
+                                .bold,
+                            design:
+                                .monospaced
+                        )
+                    )
+                    .padding(
+                        .horizontal,
+                        6
+                    )
+                    .padding(
+                        .vertical,
+                        3
+                    )
+                    .background(
+                        Color.black
+                            .opacity(0.28),
+                        in:
+                            Capsule()
+                    )
+                }
+            }
+
+            if displayedState == .ready {
+                Text(
+                    "\(snapshot.direction.title)  •  \(snapshot.severity.title)  •  \(snapshot.timing.title)"
+                )
+                .font(
+                    .system(
+                        size:
+                            12,
+                        weight:
+                            .bold,
+                        design:
+                            .monospaced
+                    )
+                )
+                .lineLimit(1)
+
+                Text(
+                    "STEERING: \(snapshot.steering.title)"
+                )
+                .font(
+                    .system(
+                        size:
+                            11,
+                        weight:
+                            .semibold,
+                        design:
+                            .monospaced
+                    )
+                )
+                .opacity(0.88)
+
+            } else {
+                Text(
+                    displayedState == .stale
+                    ? "Waiting for a fresh route result."
+                    : snapshot.reason
+                )
+                .font(
+                    .system(
+                        size:
+                            11,
+                        weight:
+                            .medium
+                    )
+                )
+                .lineLimit(2)
+                .multilineTextAlignment(.center)
+                .opacity(0.90)
+            }
+        }
+        .foregroundStyle(.white)
+        .padding(
+            .horizontal,
+            16
+        )
+        .padding(
+            .vertical,
+            10
+        )
+        .frame(
+            minWidth:
+                270,
+            maxWidth:
+                430
+        )
+        .background(
+            statusColor(
+                for:
+                    displayedState,
+                action:
+                    snapshot.action
+            )
+            .opacity(0.90),
+            in:
+                RoundedRectangle(
+                    cornerRadius:
+                        12
+                )
+        )
+        .overlay(
+            RoundedRectangle(
+                cornerRadius:
+                    12
+            )
+            .stroke(
+                Color.white
+                    .opacity(0.24),
+                lineWidth:
+                    1
+            )
+        )
+        .shadow(
+            color:
+                Color.black
+                    .opacity(0.40),
+            radius:
+                8,
+            y:
+                3
+        )
+    }
+
+    private func statusColor(
+        for state:
+            MinimapCoachState,
+        action:
+            DrivingCoachAction
+    ) -> Color {
+
+        guard state == .ready else {
+            switch state {
+            case .noWaypoint:
+                return .orange
+            case .routeUncertain, .stale:
+                return .yellow.opacity(0.78)
+            case .analyzing:
+                return .blue
+            case .minimapUnavailable:
+                return .gray
+            case .ready:
+                return .gray
+            }
+        }
+
+        switch action {
+        case .brake:
+            return .red
+        case .accelerateIfClear:
+            return .green
+        case .hold:
+            return .blue
+        case .unavailable, .setWaypoint:
+            return .gray
+        }
+    }
+
+    private func systemImage(
+        for state:
+            MinimapCoachState,
+        action:
+            DrivingCoachAction
+    ) -> String {
+
+        guard state == .ready else {
+            switch state {
+            case .analyzing:
+                return "waveform.path.ecg"
+            case .noWaypoint:
+                return "location.slash.fill"
+            case .minimapUnavailable:
+                return "map"
+            case .routeUncertain:
+                return "exclamationmark.triangle.fill"
+            case .stale:
+                return "clock.badge.exclamationmark"
+            case .ready:
+                return "checkmark.circle.fill"
+            }
+        }
+
+        switch action {
+        case .brake:
+            return "exclamationmark.octagon.fill"
+        case .hold:
+            return "equal.circle.fill"
+        case .accelerateIfClear:
+            return "arrow.up.circle.fill"
+        case .unavailable:
+            return "questionmark.circle.fill"
+        case .setWaypoint:
+            return "location.slash.fill"
+        }
     }
 }
 
@@ -2267,7 +3047,7 @@ struct VideoFilePlaybackControls:
         .onChange(
             of:
                 playback.currentTime
-        ) { newTime in
+        ) { _, newTime in
             guard !isScrubbing else {
                 return
             }
@@ -2317,6 +3097,24 @@ struct VideoFilePlaybackControls:
 struct FrameDebugView: View {
     @ObservedObject var analyzer:
         FrameAnalyzer
+
+    let maximumHeight:
+        CGFloat
+
+    let allowsDragging:
+        Bool
+
+    @State private var showsPerformanceDetails =
+        false
+
+    @State private var showsMinimapDetails =
+        false
+
+    @State private var showsCoachDetails =
+        false
+
+    @State private var showsSpeedDetails =
+        false
 
     private static let timeFormatter:
         DateFormatter = {
@@ -2382,226 +3180,481 @@ struct FrameDebugView: View {
         )
     }
 
+    private var preferredPanelHeight:
+        CGFloat {
+
+        var height:
+            CGFloat = 214
+
+        if showsPerformanceDetails {
+            height += 176
+        }
+
+        if showsMinimapDetails {
+            height += 300
+        }
+
+        if showsCoachDetails {
+            height += 190
+        }
+
+        if showsSpeedDetails {
+            height += 154
+        }
+
+        return min(
+            max(
+                maximumHeight,
+                180
+            ),
+            height
+        )
+    }
+
     var body: some View {
         VStack(
             alignment: .leading,
-            spacing: 7
+            spacing: 8
         ) {
-            Text("FRAME ANALYZER")
-                .font(
-                    .system(
-                        size: 12,
-                        weight: .bold,
-                        design: .monospaced
+            HStack(spacing: 8) {
+                Text("FRAME ANALYZER")
+                    .font(
+                        .system(
+                            size: 12,
+                            weight: .bold,
+                            design: .monospaced
+                        )
                     )
-                )
-                .foregroundStyle(.white)
+
+                Spacer()
+
+                if allowsDragging {
+                    Image(
+                        systemName:
+                            "arrow.up.and.down.and.arrow.left.and.right"
+                    )
+                    .font(
+                        .system(
+                            size: 10,
+                            weight: .semibold
+                        )
+                    )
+                    .foregroundStyle(
+                        Color.white.opacity(0.62)
+                    )
+                    .help(
+                        "Drag this panel to move it"
+                    )
+                }
+            }
+            .foregroundStyle(.white)
 
             Divider()
                 .overlay(
                     Color.white.opacity(0.25)
                 )
 
-            debugRow(
-                title: "Resolution",
-                value: resolutionText
-            )
+            ScrollView(
+                .vertical,
+                showsIndicators:
+                    true
+            ) {
+                VStack(spacing: 7) {
+                    debugSection(
+                        title:
+                            "PERFORMANCE",
+                        systemImage:
+                            "gauge.with.dots.needle.67percent",
+                        isExpanded:
+                            $showsPerformanceDetails
+                    ) {
+                        debugRow(
+                            title: "Resolution",
+                            value: resolutionText
+                        )
 
-            debugRow(
-                title: "Frame Count",
-                value:
-                    "\(analyzer.capturedFrameCount)"
-            )
+                        debugRow(
+                            title: "Frame Count",
+                            value:
+                                "\(analyzer.capturedFrameCount)"
+                        )
 
-            debugRow(
-                title: "Speed Frames",
-                value:
-                    "\(analyzer.speedAnalyzedFrameCount)"
-            )
+                        debugRow(
+                            title: "Speed Frames",
+                            value:
+                                "\(analyzer.speedAnalyzedFrameCount)"
+                        )
 
-            debugRow(
-                title: "Speed FPS",
-                value:
-                    String(
-                        format:
-                            "%.2f / %.1f",
-                        analyzer.speedAnalysisFPS,
-                        analyzer.targetSpeedAnalysisFPS
-                    )
-            )
+                        debugRow(
+                            title: "Speed FPS",
+                            value:
+                                String(
+                                    format:
+                                        "%.2f / %.1f",
+                                    analyzer.speedAnalysisFPS,
+                                    analyzer.targetSpeedAnalysisFPS
+                                )
+                        )
 
-            debugRow(
-                title: "Map Frames",
-                value:
-                    "\(analyzer.minimapAnalyzedFrameCount)"
-            )
+                        debugRow(
+                            title: "Map Frames",
+                            value:
+                                "\(analyzer.minimapAnalyzedFrameCount)"
+                        )
 
-            debugRow(
-                title: "Map FPS",
-                value:
-                    String(
-                        format:
-                            "%.2f / %.1f",
-                        analyzer.minimapAnalysisFPS,
-                        analyzer.targetMinimapAnalysisFPS
-                    )
-            )
+                        debugRow(
+                            title: "Map FPS",
+                            value:
+                                String(
+                                    format:
+                                        "%.2f / %.1f",
+                                    analyzer.minimapAnalysisFPS,
+                                    analyzer.targetMinimapAnalysisFPS
+                                )
+                        )
 
-            debugRow(
-                title: "Map Time",
-                value:
-                    String(
-                        format:
-                            "%.2f ms",
-                        analyzer.minimapAnalysisMilliseconds
-                    )
-            )
+                        debugRow(
+                            title: "Map Time",
+                            value:
+                                String(
+                                    format:
+                                        "%.2f ms",
+                                    analyzer.minimapAnalysisMilliseconds
+                                )
+                        )
 
-            Divider()
-                .overlay(
-                    Color.white.opacity(0.25)
-                )
+                        debugRow(
+                            title: "Last Frame",
+                            value:
+                                lastFrameText
+                        )
+                    }
 
-            debugRow(
-                title:
-                    "Minimap",
-                value:
-                    analyzer.minimapVisible
-                    ? "VISIBLE"
-                    : "HIDDEN"
-            )
+                    debugSection(
+                        title:
+                            "MINIMAP / ROUTE",
+                        systemImage:
+                            "map",
+                        isExpanded:
+                            $showsMinimapDetails
+                    ) {
+                        debugRow(
+                            title:
+                                "Minimap",
+                            value:
+                                analyzer.minimapVisible
+                                ? "VISIBLE"
+                                : "HIDDEN"
+                        )
 
-            debugRow(
-                title:
-                    "Map Conf.",
-                value:
-                    String(
-                        format:
-                            "%.0f%%",
-                        analyzer.minimapConfidence *
-                        100
-                    )
-            )
+                        debugRow(
+                            title:
+                                "Map Conf.",
+                            value:
+                                String(
+                                    format:
+                                        "%.0f%%",
+                                    analyzer.minimapConfidence *
+                                    100
+                                )
+                        )
 
-            debugRow(
-                title:
-                    "GPS Route",
-                value:
-                    analyzer.yellowRouteDetected
-                    ? "YES"
-                    : "NO"
-            )
+                        debugRow(
+                            title:
+                                "Player Conf.",
+                            value:
+                                String(
+                                    format:
+                                        "%.0f%%",
+                                    analyzer.playerDetectionConfidence *
+                                    100
+                                )
+                        )
 
-            debugRow(
-                title:
-                    "Route Conf.",
-                value:
-                    String(
-                        format:
-                            "%.0f%%",
-                        analyzer.yellowRouteConfidence *
-                        100
-                    )
-            )
+                        debugRow(
+                            title:
+                                "Rim Conf.",
+                            value:
+                                String(
+                                    format:
+                                        "%.0f%%",
+                                    analyzer.rimStructureConfidence *
+                                    100
+                                )
+                        )
 
-            debugRow(
-                title:
-                    "Player Cyan",
-                value:
-                    "\(analyzer.cyanMarkerPixelCount)"
-            )
+                        debugRow(
+                            title:
+                                "GPS Route",
+                            value:
+                                analyzer.yellowRouteDetected
+                                ? "YES"
+                                : "NO"
+                        )
 
-            debugRow(
-                title:
-                    "Yellow Candidates",
-                value:
-                    "\(analyzer.yellowCandidatePixelCount)"
-            )
+                        debugRow(
+                            title:
+                                "Route Conf.",
+                            value:
+                                String(
+                                    format:
+                                        "%.0f%%",
+                                    analyzer.yellowRouteConfidence *
+                                    100
+                                )
+                        )
 
-            debugRow(
-                title:
-                    "Route Mask",
-                value:
-                    "\(analyzer.yellowRoutePixelCount)"
-            )
+                        debugRow(
+                            title:
+                                "Route Source",
+                            value:
+                                analyzer.minimapRouteSource.rawValue
+                        )
 
-            debugRow(
-                title:
-                    "Route Parts",
-                value:
-                    "\(analyzer.routeComponentCount)"
-            )
+                        debugRow(
+                            title:
+                                "Diagnostic",
+                            value:
+                                analyzer.minimapDiagnostic.rawValue
+                        )
 
-            debugRow(
-                title:
-                    "Rejected Parts",
-                value:
-                    "\(analyzer.ignoredYellowComponentCount)"
-            )
+                        debugRow(
+                            title:
+                                "Player Cyan",
+                            value:
+                                "\(analyzer.cyanMarkerPixelCount)"
+                        )
 
-            debugRow(
-                title: "Last Frame",
-                value:
-                    lastFrameText
-            )
+                        debugRow(
+                            title:
+                                "Yellow Candidates",
+                            value:
+                                "\(analyzer.yellowCandidatePixelCount)"
+                        )
 
-            Divider()
-                .overlay(
-                    Color.white.opacity(0.25)
-                )
+                        debugRow(
+                            title:
+                                "Learned Candidates",
+                            value:
+                                "\(analyzer.learnedCandidatePixelCount)"
+                        )
 
-            debugRow(
-                title: "Speed",
-                value:
-                    detectedSpeedText
-            )
+                        debugRow(
+                            title:
+                                "Short Candidate",
+                            value:
+                                analyzer.shortRouteCandidateFound
+                                ? "YES"
+                                : "NO"
+                        )
 
-            debugRow(
-                title: "Raw Speed",
-                value:
-                    rawDetectedSpeedText
-            )
+                        debugRow(
+                            title:
+                                "Short Verify",
+                            value:
+                                String(
+                                    format:
+                                        "%.0f%%",
+                                    analyzer.shortRouteVerifierConfidence *
+                                    100
+                                )
+                        )
 
-            debugRow(
-                title: "Unit",
-                value:
-                    analyzer.detectedSpeedUnit ??
-                    "Unknown"
-            )
+                        debugRow(
+                            title:
+                                "Route Mask",
+                            value:
+                                "\(analyzer.yellowRoutePixelCount)"
+                        )
 
-            debugRow(
-                title: "OCR Conf.",
-                value:
-                    String(
-                        format:
-                            "%.0f%%",
-                        analyzer.speedConfidence *
-                        100
-                    )
-            )
+                        debugRow(
+                            title:
+                                "Route Parts",
+                            value:
+                                "\(analyzer.routeComponentCount)"
+                        )
 
-            debugRow(
-                title: "OCR Time",
-                value:
-                    String(
-                        format:
-                            "%.0f ms",
-                        analyzer.speedOCRMilliseconds
-                    )
-            )
+                        debugRow(
+                            title:
+                                "Rejected Parts",
+                            value:
+                                "\(analyzer.ignoredYellowComponentCount)"
+                        )
+                    }
 
-            debugRow(
-                title: "OCR Text",
-                value:
-                    analyzer.rawSpeedOCRText
-                        .isEmpty
-                    ? "—"
-                    : analyzer.rawSpeedOCRText
-            )
+                    debugSection(
+                        title:
+                            "DRIVING COACH",
+                        systemImage:
+                            "steeringwheel",
+                        isExpanded:
+                            $showsCoachDetails
+                    ) {
+                        debugRow(
+                            title:
+                                "Coach State",
+                            value:
+                                analyzer
+                                    .coachSnapshot
+                                    .state
+                                    .rawValue
+                                    .uppercased()
+                        )
+
+                        debugRow(
+                            title:
+                                "Coach Conf.",
+                            value:
+                                String(
+                                    format:
+                                        "%.0f%%",
+                                    analyzer
+                                        .coachSnapshot
+                                        .overallConfidence *
+                                    100
+                                )
+                        )
+
+                        debugRow(
+                            title:
+                                "Map / Anchor / Mask",
+                            value:
+                                confidenceTriplet(
+                                    analyzer
+                                        .coachSnapshot
+                                        .confidence
+                                        .minimap,
+                                    analyzer
+                                        .coachSnapshot
+                                        .confidence
+                                        .playerAnchor,
+                                    analyzer
+                                        .coachSnapshot
+                                        .confidence
+                                        .routeMask
+                                )
+                        )
+
+                        debugRow(
+                            title:
+                                "Path / Geom / Stable",
+                            value:
+                                confidenceTriplet(
+                                    analyzer
+                                        .coachSnapshot
+                                        .confidence
+                                        .forwardPath,
+                                    analyzer
+                                        .coachSnapshot
+                                        .confidence
+                                        .geometry,
+                                    analyzer
+                                        .coachSnapshot
+                                        .confidence
+                                        .temporalStability
+                                )
+                        )
+
+                        debugRow(
+                            title:
+                                "Turn",
+                            value:
+                                "\(analyzer.coachSnapshot.direction.title) / \(analyzer.coachSnapshot.severity.title) / \(analyzer.coachSnapshot.timing.title)"
+                        )
+
+                        debugRow(
+                            title:
+                                "Command",
+                            value:
+                                analyzer
+                                    .coachSnapshot
+                                    .action
+                                    .title
+                        )
+
+                        debugRow(
+                            title:
+                                "Steering",
+                            value:
+                                analyzer
+                                    .coachSnapshot
+                                    .steering
+                                    .title
+                        )
+
+                        debugRow(
+                            title:
+                                "Path / Branches",
+                            value:
+                                "\(analyzer.coachSnapshot.pathPointCount) / \(analyzer.coachSnapshot.branchPointCount)\(analyzer.coachSnapshot.trackingApplied ? " · TRACKED" : "")"
+                        )
+                    }
+
+                    debugSection(
+                        title:
+                            "SPEED OCR",
+                        systemImage:
+                            "speedometer",
+                        isExpanded:
+                            $showsSpeedDetails
+                    ) {
+                        debugRow(
+                            title: "Speed",
+                            value:
+                                detectedSpeedText
+                        )
+
+                        debugRow(
+                            title: "Raw Speed",
+                            value:
+                                rawDetectedSpeedText
+                        )
+
+                        debugRow(
+                            title: "Unit",
+                            value:
+                                analyzer.detectedSpeedUnit ??
+                                "Unknown"
+                        )
+
+                        debugRow(
+                            title: "OCR Conf.",
+                            value:
+                                String(
+                                    format:
+                                        "%.0f%%",
+                                    analyzer.speedConfidence *
+                                    100
+                                )
+                        )
+
+                        debugRow(
+                            title: "OCR Time",
+                            value:
+                                String(
+                                    format:
+                                        "%.0f ms",
+                                    analyzer.speedOCRMilliseconds
+                                )
+                        )
+
+                        debugRow(
+                            title: "OCR Text",
+                            value:
+                                analyzer.rawSpeedOCRText
+                                    .isEmpty
+                                ? "—"
+                                : analyzer.rawSpeedOCRText
+                        )
+                    }
+                }
+            }
         }
         .padding(12)
         .frame(
             width: 300,
+            height:
+                preferredPanelHeight,
             alignment: .leading
         )
         .background(
@@ -2623,6 +3676,66 @@ struct FrameDebugView: View {
         .shadow(radius: 3)
     }
 
+    @ViewBuilder
+    private func debugSection<Content: View>(
+        title:
+            String,
+        systemImage:
+            String,
+        isExpanded:
+            Binding<Bool>,
+        @ViewBuilder content:
+            @escaping () -> Content
+    ) -> some View {
+
+        DisclosureGroup(
+            isExpanded:
+                isExpanded
+        ) {
+            VStack(spacing: 7) {
+                content()
+            }
+            .padding(
+                .top,
+                8
+            )
+        } label: {
+            Label(
+                title,
+                systemImage:
+                    systemImage
+            )
+            .font(
+                .system(
+                    size: 10,
+                    weight: .bold,
+                    design: .monospaced
+                )
+            )
+            .foregroundStyle(.white)
+        }
+        .tint(.white)
+        .padding(
+            .horizontal,
+            9
+        )
+        .padding(
+            .vertical,
+            8
+        )
+        .background(
+            Color.white.opacity(
+                isExpanded.wrappedValue
+                ? 0.08
+                : 0.045
+            ),
+            in:
+                RoundedRectangle(
+                    cornerRadius: 7
+                )
+        )
+    }
+
     private func debugRow(
         title: String,
         value: String
@@ -2638,6 +3751,7 @@ struct FrameDebugView: View {
             Text(value)
                 .foregroundStyle(.white)
                 .lineLimit(1)
+                .minimumScaleFactor(0.68)
         }
         .font(
             .system(
@@ -2646,6 +3760,24 @@ struct FrameDebugView: View {
             )
         )
         .monospacedDigit()
+    }
+
+    private func confidenceTriplet(
+        _ first:
+            Float,
+        _ second:
+            Float,
+        _ third:
+            Float
+    ) -> String {
+
+        String(
+            format:
+                "%.0f / %.0f / %.0f%%",
+            first * 100,
+            second * 100,
+            third * 100
+        )
     }
 }
 
@@ -3349,9 +4481,377 @@ struct MinimapDatasetControls:
 
 // MARK: - Dataset Metadata Counter
 
-// MARK: - Dataset Metadata Counter
-
 struct DatasetMetadataCounterView:
+    View {
+
+    @ObservedObject var store:
+        RouteMaskDatasetStore
+
+    let isOverlay:
+        Bool
+
+    private var primaryText:
+        Color {
+
+        isOverlay
+        ? .white
+        : .primary
+    }
+
+    private var secondaryText:
+        Color {
+
+        isOverlay
+        ? Color.white.opacity(
+            0.66
+        )
+        : .secondary
+    }
+
+    private var dividerColor:
+        Color {
+
+        isOverlay
+        ? Color.white.opacity(
+            0.22
+        )
+        : Color.secondary.opacity(
+            0.25
+        )
+    }
+
+    var body:
+        some View {
+
+        VStack(
+            alignment:
+                .leading,
+            spacing:
+                7
+        ) {
+
+            HStack(
+                spacing:
+                    8
+            ) {
+
+                Text(
+                    "ROUTE MASK DATASET"
+                )
+                .font(
+                    .system(
+                        size:
+                            12,
+                        weight:
+                            .bold,
+                        design:
+                            .monospaced
+                    )
+                )
+                .foregroundStyle(
+                    primaryText
+                )
+
+                Spacer()
+
+                if !isOverlay {
+                    RouteMaskEditorLaunchButton(
+                        store:
+                            store
+                    )
+                    .foregroundStyle(
+                        primaryText
+                    )
+                }
+
+                Button {
+                    store.refresh()
+                } label: {
+                    Image(
+                        systemName:
+                            "arrow.clockwise"
+                    )
+                    .font(
+                        .system(
+                            size:
+                                10,
+                            weight:
+                                .semibold
+                        )
+                    )
+                }
+                .buttonStyle(
+                    .plain
+                )
+                .foregroundStyle(
+                    primaryText
+                )
+                .help(
+                    "Refresh route-mask dataset counts"
+                )
+            }
+
+            Divider()
+                .overlay(
+                    dividerColor
+                )
+
+            datasetRow(
+                title:
+                    "Raw images",
+                value:
+                    store.rawImageCount,
+                color:
+                    primaryText
+            )
+
+            datasetRow(
+                title:
+                    "Pending review",
+                value:
+                    store.pendingCount,
+                color:
+                    .orange
+            )
+
+            datasetRow(
+                title:
+                    "Accepted",
+                value:
+                    store.acceptedCount,
+                color:
+                    .green
+            )
+
+            datasetRow(
+                title:
+                    "Corrected",
+                value:
+                    store.correctedCount,
+                color:
+                    .cyan
+            )
+
+            datasetRow(
+                title:
+                    "Rejected",
+                value:
+                    store.rejectedCount,
+                color:
+                    .red
+            )
+
+            Divider()
+                .overlay(
+                    dividerColor
+                )
+
+            HStack(
+                spacing:
+                    8
+            ) {
+
+                Text(
+                    "Verified seed goal"
+                )
+                .foregroundStyle(
+                    secondaryText
+                )
+
+                Spacer()
+
+                Text(
+                    "\(store.trainingReadyCount) / 100"
+                )
+                .foregroundStyle(
+                    primaryText
+                )
+                .fontWeight(
+                    .semibold
+                )
+            }
+            .font(
+                .system(
+                    size:
+                        10,
+                    design:
+                        .monospaced
+                )
+            )
+            .monospacedDigit()
+
+            ProgressView(
+                value:
+                    Double(
+                        min(
+                            store.trainingReadyCount,
+                            100
+                        )
+                    ),
+                total:
+                    100
+            )
+
+            if store.missingPredictionCount > 0 {
+                Label(
+                    "\(store.missingPredictionCount) older image(s) need predictions",
+                    systemImage:
+                        "exclamationmark.triangle.fill"
+                )
+                .font(
+                    .system(
+                        size:
+                            9,
+                        design:
+                            .monospaced
+                    )
+                )
+                .foregroundStyle(
+                    .orange
+                )
+            }
+
+            if let errorMessage =
+                    store
+                        .lastErrorMessage {
+
+                Text(
+                    errorMessage
+                )
+                .font(
+                    .system(
+                        size:
+                            9,
+                        design:
+                            .monospaced
+                    )
+                )
+                .foregroundStyle(
+                    .red
+                )
+                .lineLimit(
+                    3
+                )
+            }
+
+            Text(
+                isOverlay
+                ? "Open the reviewer from the windowed sidebar."
+                : "Use the paintbrush button to accept, reject, or correct automatic GPS-route masks."
+            )
+            .font(
+                .system(
+                    size:
+                        9,
+                    design:
+                        .monospaced
+                )
+            )
+            .foregroundStyle(
+                secondaryText
+            )
+            .fixedSize(
+                horizontal:
+                    false,
+                vertical:
+                    true
+            )
+            .padding(
+                .top,
+                2
+            )
+        }
+        .padding(
+            isOverlay
+            ? 12
+            : 0
+        )
+        .frame(
+            width:
+                isOverlay
+                ? 330
+                : nil,
+            alignment:
+                .leading
+        )
+        .background(
+            isOverlay
+            ? Color.black.opacity(
+                0.72
+            )
+            : Color.clear,
+            in:
+                RoundedRectangle(
+                    cornerRadius:
+                        10
+                )
+        )
+        .overlay(
+            RoundedRectangle(
+                cornerRadius:
+                    10
+            )
+            .stroke(
+                isOverlay
+                ? Color.white.opacity(
+                    0.18
+                )
+                : Color.clear,
+                lineWidth:
+                    1
+            )
+        )
+    }
+
+    private func datasetRow(
+        title:
+            String,
+        value:
+            Int,
+        color:
+            Color
+    ) -> some View {
+
+        HStack(
+            spacing:
+                8
+        ) {
+
+            Text(
+                title
+            )
+            .foregroundStyle(
+                secondaryText
+            )
+
+            Spacer()
+
+            Text(
+                "\(value)"
+            )
+            .foregroundStyle(
+                color
+            )
+            .fontWeight(
+                .semibold
+            )
+        }
+        .font(
+            .system(
+                size:
+                    10,
+                design:
+                    .monospaced
+            )
+        )
+        .monospacedDigit()
+    }
+}
+
+// Kept for compatibility with any older metadata already on disk. The new
+// route-mask workflow above is the user-facing dataset tool.
+
+struct LegacyDatasetMetadataCounterView:
     View {
 
     @ObservedObject var store:
@@ -3979,7 +5479,7 @@ struct AudioMixerView: View {
             DatasetMetadataCounterView(
                 store:
                     datasetRecorder
-                        .metadataStore,
+                        .routeMaskDatasetStore,
                 isOverlay:
                     false
             )

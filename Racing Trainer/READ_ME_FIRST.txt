@@ -1,3 +1,34 @@
+RACING TRAINER - HYBRID MINIMAP DETECTOR V6
+
+NEW:
+- LearnedRouteSegmenter.swift
+- LearnedRouteSegmenterWeights.swift
+- RouteComponentVerifier.swift
+- RouteComponentVerifierWeights.swift
+
+UPDATED:
+- MinimapRouteDetector.swift
+- FrameAnalyzer.swift
+- ContentView.swift
+- RouteMaskDatasetStore.swift
+
+What changed:
+- Validates a connected cyan player shape instead of trusting cyan pixel count.
+- Uses a reduced-confidence circular-rim fallback when the player arrow vanishes.
+- Keeps deterministic color + geometry as the primary route path.
+- Runs the reviewed-mask-trained segmenter only when primary geometry fails.
+- Uses a learned component verifier for valid short route stubs.
+- Keeps short-route verification independent of the full segmenter for speed.
+- Blocks objective-ring, OPEN CARA, and rejected-short learned re-entry cases.
+- Reports route source, explicit failure reason, and verifier confidence.
+- Repairs source-group validation selection for future dataset exports.
+
+Important:
+- Training reports and reproducible scripts are in the project-level Training folder.
+- Build with Product > Clean Build Folder, then Command-B.
+- Runtime and SDK validation still require Xcode on macOS.
+
+
 RACING TRAINER - DATASET AUDIT UPDATE
 
 Replace / add these files in Xcode:
@@ -125,3 +156,91 @@ How to verify:
 - Frame Analyzer's Map FPS row should end in / 30.0.
 - Compare the actual Map FPS and Map Time. Performance depends on the Mac.
 - The magenta mask should follow rotation with much smaller visible jumps.
+
+
+RACING TRAINER - ROUTE MASK DATASET V4
+
+NEW:
+- RouteMaskDatasetStore.swift
+- RouteMaskEditorView.swift
+
+UPDATED:
+- MinimapRouteDetector.swift
+- MinimapDatasetRecorder.swift
+- VideoFilePlaybackController.swift
+- ContentView.swift
+
+What changed:
+- Every saved minimap crop gets a same-sized predicted binary route mask.
+- Every pair gets source-video, timestamp, detector, and review metadata.
+- Older raw crops can receive predictions with Generate Missing.
+- The reviewer supports Accept, Reject, Brush, Eraser, Clear, Undo, and Redo.
+- A visible minimap with no waypoint can be approved as a valid blank mask.
+- Reviewed pairs export into train/images, train/masks, validation/images,
+  validation/masks, and manifest.json.
+- All frames from one source video remain in one split.
+
+How to test:
+1. Open a local Motorfest video.
+2. Start Minimap Dataset recording and let at least five distinct frames save.
+3. Stop recording.
+4. Press the paintbrush button under Route Mask Dataset.
+5. Confirm the raw image and magenta mask align.
+6. Accept one mask, correct one with Brush/Eraser, approve one blank no-route
+   sample if available, and reject one unusable frame.
+7. Export Reviewed Pairs and confirm paired PNG names exist in the export.
+
+Important:
+- The live magenta debug overlay can still look stepped during minimap rotation.
+  Dataset masks are generated from the exact frame being saved, so that visual
+  lag does not misalign the exported image/mask pairs.
+- Do not train on pending or rejected samples.
+- Collect at least 100 reviewed examples across multiple source videos before
+  treating model metrics as meaningful.
+
+
+RACING TRAINER - CONFIDENCE-GATED MINIMAP COACH V5
+
+NEW:
+- MinimapCoachModels.swift
+- MinimapGeometryAnalyzer.swift
+- MinimapMotionTracker.swift
+- MinimapDrivingCoachEngine.swift
+
+UPDATED:
+- MinimapRouteDetector.swift
+- FrameAnalyzer.swift
+- MotorfestHUDLayout.swift
+- ContentView.swift
+
+What it does:
+- Classifies minimap state before any driving command is allowed.
+- Keeps separate confidence for minimap, player anchor, route mask, forward
+  path, geometry, temporal stability, freshness, and motion tracking.
+- Converts the thick route mask into a thinned, ordered centerline.
+- Traverses from the cyan player marker and rejects ambiguous/short paths.
+- Reconnects only short, tangent-aligned checkpoint gaps.
+- Classifies STRAIGHT, LEFT, RIGHT, and left/right U-turns.
+- Classifies GENTLE, MEDIUM, SHARP, and NOW/SOON/LATER.
+- Synchronizes geometry with the nearest timestamped speed OCR sample.
+- Tracks the verified centerline onto the newest frame while the full detector
+  is busy; failed tracking suppresses guidance rather than using stale data.
+- Adds conservative BRAKE, HOLD, ACCELERATE IF CLEAR, and categorical steering
+  commands. Steering values are not presented as wheel degrees.
+
+How to test:
+1. Product > Clean Build Folder (Shift-Command-K), then Command-B.
+2. Open an uncropped 16:9 Motorfest recording with the default HUD.
+3. Leave the Analyzer button enabled for the magenta mask, green ordered
+   centerline, orange turn-onset point, and subsystem diagnostics.
+4. Test straight, left, right, sharp, U-turn, no-waypoint, hidden-HUD, menu,
+   and rotating-minimap footage.
+5. Treat ROUTE UNCERTAIN and GUIDANCE STALE as correct safe failures.
+
+Important:
+- This is an MVP geometry coach, not validated vehicle control.
+- BRAKE thresholds are conservative KM/H heuristics and still require unseen
+  video validation and vehicle-specific calibration.
+- ACCELERATE IF CLEAR does not account for traffic, lane position, grip,
+  elevation, or obstacles.
+- Test before committing. This environment cannot run the macOS Xcode build.

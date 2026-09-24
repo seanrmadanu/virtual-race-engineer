@@ -1,0 +1,78 @@
+{
+  "dataset": {
+    "reviewedPairs": 582,
+    "routeFrames": 526,
+    "noRouteFrames": 56,
+    "sourceHoldoutFrames": 39,
+    "sourceHoldoutNoRouteFrames": 0
+  },
+  "presenceAudit": {
+    "deterministicNormalGeometry": {
+      "truePositiveRouteFrames": 510,
+      "missedRouteFrames": 16,
+      "falsePositiveNoRouteFrames": 0,
+      "trueNegativeNoRouteFrames": 56,
+      "routeRecall": 0.969581749,
+      "noRouteSpecificity": 1.0
+    },
+    "hybridWithVerifiedShortRoutes": {
+      "truePositiveRouteFrames": 524,
+      "missedRouteFrames": 2,
+      "falsePositiveNoRouteFrames": 0,
+      "trueNegativeNoRouteFrames": 56,
+      "routeRecall": 0.996197719,
+      "noRouteSpecificity": 1.0
+    },
+    "sourceHoldout": {
+      "truePositiveRouteFrames": 39,
+      "missedRouteFrames": 0,
+      "routeRecall": 1.0,
+      "noRouteSpecificity": null,
+      "note": "The newer BMW source holdout contains no reviewed no-route frames, so holdout specificity cannot be claimed."
+    }
+  },
+  "shortRouteRecovery": {
+    "recoveredFrameCount": 14,
+    "recoveredSampleIDs": [
+      "map_000033",
+      "map_000034",
+      "map_000035",
+      "map_000036",
+      "map_000089",
+      "map_000090",
+      "map_000091",
+      "map_000092",
+      "map_000310",
+      "map_000314",
+      "map_000606",
+      "map_000607",
+      "map_000608",
+      "map_000609"
+    ],
+    "remainingMisses": [
+      "map_000032",
+      "map_000051"
+    ],
+    "reviewedHardNegativesRejected": [
+      "map_000052",
+      "map_000308",
+      "map_000520",
+      "map_000521"
+    ]
+  },
+  "deploymentPolicy": {
+    "componentModelThreshold": 0.45,
+    "maximumWhiteEndpointFraction": 0.055,
+    "shortRouteRunsFullSegmenter": false,
+    "learnedFallbackCanAuthorizeShortRoute": false,
+    "rejectedShortCandidateBlocksLearnedReentry": true,
+    "learnedFallbackProbeIntervalFrames": 8
+  },
+  "method": "Offline Python reproduction of the Swift player-anchor scoring, strict normal-route ROI, unrestricted near-player short-route mask, connected-component geometry, and component-verifier policy on all 582 reviewed pairs.",
+  "limitations": [
+    "The legacy data contains temporally adjacent frames and is not 582 independent driving situations.",
+    "The short-route policy was calibrated from a small number of normal-geometry failures.",
+    "The source holdout has no no-route frames, so unseen-source specificity remains unmeasured.",
+    "The authoritative compiler and real-time performance checks require Xcode and Motorfest footage on macOS."
+  ]
+}

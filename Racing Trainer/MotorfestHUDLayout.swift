@@ -1,7 +1,7 @@
 import CoreGraphics
 import Foundation
 
-struct GameplayHUDRegion:
+nonisolated struct GameplayHUDRegion:
     Identifiable,
     Equatable {
 
@@ -57,7 +57,7 @@ struct GameplayHUDRegion:
     }
 }
 
-enum MotorfestHUDLayout {
+nonisolated enum MotorfestHUDLayout {
 
     static let speedUnit =
         "KM/H"

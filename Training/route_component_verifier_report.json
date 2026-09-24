@@ -1,0 +1,274 @@
+{
+  "rowCounts": {
+    "train": 574,
+    "development": 121,
+    "sourceHoldout": 40
+  },
+  "classCounts": {
+    "trainPositive": 400,
+    "trainNegative": 174,
+    "developmentPositive": 95,
+    "developmentNegative": 26,
+    "sourceHoldoutPositive": 39,
+    "sourceHoldoutNegative": 1
+  },
+  "development": {
+    "threshold": 0.3686868686868687,
+    "precision": 0.9789473684210527,
+    "recall": 0.9789473684210527,
+    "f1": 0.9789473684210527,
+    "specificity": 0.9230769230769231,
+    "auc": 0.9910931174089068,
+    "falsePositiveCount": 2,
+    "falseNegativeCount": 2
+  },
+  "sourceHoldout": {
+    "threshold": 0.3686868686868687,
+    "precision": 0.975,
+    "recall": 1.0,
+    "f1": 0.9873417721518988,
+    "specificity": 0.0,
+    "auc": 0.8205128205128205,
+    "falsePositiveCount": 1,
+    "falseNegativeCount": 0
+  },
+  "sourceHoldoutPredictions": [
+    {
+      "sampleID": "map_000574",
+      "label": 1,
+      "probability": 0.9823009967803955
+    },
+    {
+      "sampleID": "map_000575",
+      "label": 1,
+      "probability": 0.9787852168083191
+    },
+    {
+      "sampleID": "map_000576",
+      "label": 1,
+      "probability": 0.9604358673095703
+    },
+    {
+      "sampleID": "map_000577",
+      "label": 1,
+      "probability": 0.9685238599777222
+    },
+    {
+      "sampleID": "map_000578",
+      "label": 1,
+      "probability": 0.9560962915420532
+    },
+    {
+      "sampleID": "map_000579",
+      "label": 1,
+      "probability": 0.9733494520187378
+    },
+    {
+      "sampleID": "map_000580",
+      "label": 1,
+      "probability": 0.9582381248474121
+    },
+    {
+      "sampleID": "map_000581",
+      "label": 1,
+      "probability": 0.9488372206687927
+    },
+    {
+      "sampleID": "map_000582",
+      "label": 1,
+      "probability": 0.9529325366020203
+    },
+    {
+      "sampleID": "map_000583",
+      "label": 1,
+      "probability": 0.969231128692627
+    },
+    {
+      "sampleID": "map_000584",
+      "label": 1,
+      "probability": 0.978847324848175
+    },
+    {
+      "sampleID": "map_000585",
+      "label": 1,
+      "probability": 0.8434541821479797
+    },
+    {
+      "sampleID": "map_000586",
+      "label": 1,
+      "probability": 0.8279601335525513
+    },
+    {
+      "sampleID": "map_000587",
+      "label": 1,
+      "probability": 0.879936933517456
+    },
+    {
+      "sampleID": "map_000588",
+      "label": 1,
+      "probability": 0.8591577410697937
+    },
+    {
+      "sampleID": "map_000589",
+      "label": 1,
+      "probability": 0.8711856007575989
+    },
+    {
+      "sampleID": "map_000590",
+      "label": 1,
+      "probability": 0.9184471964836121
+    },
+    {
+      "sampleID": "map_000591",
+      "label": 1,
+      "probability": 0.9401732087135315
+    },
+    {
+      "sampleID": "map_000592",
+      "label": 1,
+      "probability": 0.9721599817276001
+    },
+    {
+      "sampleID": "map_000593",
+      "label": 1,
+      "probability": 0.9705162644386292
+    },
+    {
+      "sampleID": "map_000594",
+      "label": 1,
+      "probability": 0.9670577645301819
+    },
+    {
+      "sampleID": "map_000595",
+      "label": 1,
+      "probability": 0.9479513168334961
+    },
+    {
+      "sampleID": "map_000596",
+      "label": 1,
+      "probability": 0.9045025110244751
+    },
+    {
+      "sampleID": "map_000597",
+      "label": 1,
+      "probability": 0.9578296542167664
+    },
+    {
+      "sampleID": "map_000598",
+      "label": 1,
+      "probability": 0.9611382484436035
+    },
+    {
+      "sampleID": "map_000599",
+      "label": 1,
+      "probability": 0.9800523519515991
+    },
+    {
+      "sampleID": "map_000600",
+      "label": 1,
+      "probability": 0.9808658361434937
+    },
+    {
+      "sampleID": "map_000601",
+      "label": 1,
+      "probability": 0.8865094184875488
+    },
+    {
+      "sampleID": "map_000601",
+      "label": 0,
+      "probability": 0.8475134968757629
+    },
+    {
+      "sampleID": "map_000602",
+      "label": 1,
+      "probability": 0.9468271136283875
+    },
+    {
+      "sampleID": "map_000603",
+      "label": 1,
+      "probability": 0.7523473501205444
+    },
+    {
+      "sampleID": "map_000604",
+      "label": 1,
+      "probability": 0.9259801506996155
+    },
+    {
+      "sampleID": "map_000606",
+      "label": 1,
+      "probability": 0.6137753129005432
+    },
+    {
+      "sampleID": "map_000607",
+      "label": 1,
+      "probability": 0.5296553373336792
+    },
+    {
+      "sampleID": "map_000608",
+      "label": 1,
+      "probability": 0.8417817950248718
+    },
+    {
+      "sampleID": "map_000609",
+      "label": 1,
+      "probability": 0.6121202111244202
+    },
+    {
+      "sampleID": "map_000610",
+      "label": 1,
+      "probability": 0.8808152675628662
+    },
+    {
+      "sampleID": "map_000611",
+      "label": 1,
+      "probability": 0.9247724413871765
+    },
+    {
+      "sampleID": "map_000612",
+      "label": 1,
+      "probability": 0.8976850509643555
+    },
+    {
+      "sampleID": "map_000613",
+      "label": 1,
+      "probability": 0.9175339341163635
+    }
+  ],
+  "knownHardNegatives": [
+    {
+      "sampleID": "map_000052",
+      "role": "development",
+      "probability": 0.5629147291183472
+    },
+    {
+      "sampleID": "map_000052",
+      "role": "development",
+      "probability": 0.1927172690629959
+    },
+    {
+      "sampleID": "map_000308",
+      "role": "train",
+      "probability": 0.5033941864967346
+    },
+    {
+      "sampleID": "map_000308",
+      "role": "train",
+      "probability": 0.18678589165210724
+    },
+    {
+      "sampleID": "map_000520",
+      "role": "train",
+      "probability": 0.3940351903438568
+    },
+    {
+      "sampleID": "map_000521",
+      "role": "train",
+      "probability": 0.43126100301742554
+    }
+  ],
+  "deploymentPolicy": {
+    "acceptanceThreshold": 0.45,
+    "maximumWhiteEndpointFraction": 0.055,
+    "purpose": "Frame-level short-route recovery after normal geometry fails; the white-endpoint gate blocks reviewed objective-ring and bottom-HUD connector negatives without running the full segmentation fallback."
+  }
+}

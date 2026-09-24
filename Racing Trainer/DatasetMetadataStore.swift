@@ -3,7 +3,7 @@ import Foundation
 
 // MARK: - Minimap State
 
-enum DatasetMinimapState:
+nonisolated enum DatasetMinimapState:
     String,
     Codable,
     CaseIterable,
@@ -63,7 +63,7 @@ enum DatasetMinimapState:
 
 // MARK: - Route State
 
-enum DatasetRouteState:
+nonisolated enum DatasetRouteState:
     String,
     Codable,
     CaseIterable,
@@ -116,7 +116,7 @@ enum DatasetRouteState:
 
 // MARK: - Route Shape
 
-enum DatasetRouteCategory:
+nonisolated enum DatasetRouteCategory:
     String,
     Codable,
     CaseIterable,
@@ -171,7 +171,7 @@ enum DatasetRouteCategory:
 
 // MARK: - Scene Conditions
 
-enum DatasetConditionCategory:
+nonisolated enum DatasetConditionCategory:
     String,
     Codable,
     CaseIterable,
@@ -226,7 +226,7 @@ enum DatasetConditionCategory:
 
 // MARK: - Image Metadata
 
-struct DatasetImageMetadata:
+nonisolated struct DatasetImageMetadata:
     Codable,
     Equatable {
 

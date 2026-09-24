@@ -137,8 +137,26 @@ final class VideoFilePlaybackController:
         hasCheckedFrameFormat =
             false
 
+        if url.startAccessingSecurityScopedResource() {
+            securityScopedURL =
+                url
+        }
+
         loadedFileName =
             url.lastPathComponent
+
+        minimapDatasetRecorder
+            .setSource(
+                kind:
+                    .videoFile,
+                displayName:
+                    url.lastPathComponent,
+                stableIdentifier:
+                    stableSourceIdentifier(
+                        for:
+                            url
+                    )
+            )
 
         isReady =
             false
@@ -151,11 +169,6 @@ final class VideoFilePlaybackController:
 
         duration =
             0
-
-        if url.startAccessingSecurityScopedResource() {
-            securityScopedURL =
-                url
-        }
 
         frameAnalyzer.reset()
 
@@ -252,6 +265,9 @@ final class VideoFilePlaybackController:
 
         hasCheckedFrameFormat =
             false
+
+        minimapDatasetRecorder
+            .useLiveCaptureSource()
 
         if resetAnalyzer {
             frameAnalyzer.reset()
@@ -514,7 +530,11 @@ final class VideoFilePlaybackController:
         )
 
         minimapDatasetRecorder.receive(
-            pixelBuffer
+            pixelBuffer,
+            sourceTimeSeconds:
+                itemTime.seconds.isFinite
+                ? itemTime.seconds
+                : nil
         )
     }
 
@@ -599,6 +619,27 @@ final class VideoFilePlaybackController:
             formatWarning =
                 nil
         }
+    }
+
+    private func stableSourceIdentifier(
+        for url:
+            URL
+    ) -> String {
+
+        let resourceValues =
+            try? url
+                .resourceValues(
+                    forKeys: [
+                        .fileSizeKey
+                    ]
+                )
+
+        let fileSize =
+            resourceValues?
+                .fileSize ??
+            0
+
+        return "\(url.lastPathComponent.lowercased()):\(fileSize)"
     }
 
     // MARK: - Item State

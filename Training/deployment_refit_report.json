@@ -1,0 +1,51 @@
+{
+  "purpose": "deployment refit after the source-holdout audit",
+  "fitFrameCount": 474,
+  "calibrationFrameCount": 108,
+  "fitIncludesFormerSourceHoldout": true,
+  "sampling": {
+    "positive": 83647,
+    "hardNegative": 237925,
+    "boundaryNegative": 146576,
+    "randomNegative": 331800,
+    "colorAugmented": 399843
+  },
+  "threshold": 0.8671428571428571,
+  "trainingIterations": 56,
+  "trainingLoss": 0.12163785300707557,
+  "developmentRaw": {
+    "threshold": 0.8671428571428571,
+    "pixel_precision": 0.8645851106182108,
+    "pixel_recall": 0.8838885981743124,
+    "pixel_f1": 0.8741302972802024,
+    "pixel_iou": 0.7764044943820225,
+    "tolerant_precision": 0.9290223511346186,
+    "tolerant_recall": 0.9856386999244142,
+    "tolerant_f1": 0.956493455451626,
+    "mean_positive_iou": 0.789610609479126,
+    "median_positive_iou": 0.8086124401913876,
+    "presence_accuracy": 0.9814814814814815,
+    "empty_specificity": 0.8461538461538461,
+    "false_positive_empty_frames": 2,
+    "positive_frames": 95,
+    "empty_frames": 13
+  },
+  "developmentPostprocessed": {
+    "threshold": 0.8671428571428571,
+    "pixel_precision": 0.9269917227108122,
+    "pixel_recall": 0.8334786906215478,
+    "pixel_f1": 0.8777515843615099,
+    "pixel_iou": 0.7821366215626364,
+    "tolerant_precision": 0.9981893429901707,
+    "tolerant_recall": 0.8874353160067445,
+    "tolerant_f1": 0.9395597059091026,
+    "mean_positive_iou": 0.7816298151112233,
+    "median_positive_iou": 0.8431372549019608,
+    "presence_accuracy": 0.9907407407407407,
+    "empty_specificity": 1.0,
+    "false_positive_empty_frames": 0,
+    "positive_frames": 95,
+    "empty_frames": 13
+  },
+  "elapsedSeconds": 41.319893184998364
+}

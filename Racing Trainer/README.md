@@ -1,19 +1,42 @@
-# Racing Trainer — Phase 1B Route-Mask Test Build
+# Racing Trainer — Phase 1B Confidence-Gated Minimap Coach
 
-## Files
+## Current coaching pipeline
 
-- `FrameAnalyzer.swift` — new file
-- `CaptureSessionManager.swift` — replace the existing file
-- `ContentView.swift` — replace the existing file
+The live analyzer now runs this guarded path:
 
-## Xcode steps
+1. validate the minimap from the connected cyan player shape or circular rim;
+2. find the GPS route with primary color geometry, verified short-route
+   recovery, and a reviewed-mask-trained fallback;
+3. thin the mask and select one ordered forward centerline;
+4. classify direction, severity, and NOW/SOON/LATER timing;
+5. smooth results across full detections;
+6. synchronize against the closest timestamped speed OCR result;
+7. track the verified centerline onto the newest retained frame;
+8. publish guidance only when every critical confidence score passes.
 
-1. In the **Racing Trainer** group, create a new Swift file named `FrameAnalyzer.swift`.
-2. Replace its contents with the provided `FrameAnalyzer.swift`.
-3. Replace the full contents of `CaptureSessionManager.swift`.
-4. Replace the full contents of `ContentView.swift`.
-5. Confirm all three files have **Racing Trainer** checked under **Target Membership**.
-6. Build with **Command-B**, then run.
+The Frame Analyzer reports the route source, explicit detector failure reason,
+player/rim confidence, learned candidates, and short-route verifier confidence.
+The normal HUD displays conservative **BRAKE**, **HOLD**, or **ACCELERATE IF
+CLEAR** guidance and categorical steering. Analyzer mode adds the magenta raw
+mask, green ordered centerline, orange turn-onset point, and confidence values.
+
+This is an MVP for validation. It does not claim exact steering-wheel degrees,
+an ideal racing line, lane position, obstacle awareness, or vehicle-specific
+braking performance.
+
+## Current dataset workflow
+
+The red minimap recording control saves paired data under Application Support:
+
+- `minimap/raw/map_XXXXXX.png` — original minimap crop
+- `minimap/predicted_masks/map_XXXXXX.png` — automatic black/white route mask
+- `minimap/route_mask_reviews/map_XXXXXX.json` — source and review metadata
+- `minimap/corrected_masks/map_XXXXXX.png` — human correction, when needed
+- `minimap/exports/` — reviewed training/validation pairs
+
+Use the paintbrush button in **Route Mask Dataset** to review the masks. Accept
+clean predictions, correct mistakes with Brush/Eraser, approve visible
+no-waypoint frames as No Route, and reject unusable minimaps.
 
 ## Expected behavior
 
@@ -22,8 +45,7 @@
 - The debug card appears in the upper-left of the windowed video preview.
 - Video-only fullscreen hides the debug card.
 - `Frame Count` increases with incoming capture frames.
-- `Analyzed` increases at roughly three frames per second.
-- `Analysis FPS` settles near `3.0`.
+- `Map FPS` reports the actual minimap analysis rate and the 30 FPS ceiling.
 - Resolution and last-frame time update from sampled gameplay frames.
 - Switching or refreshing the video source resets the counters.
 
@@ -56,3 +78,6 @@ testing the analyzer.
 - Minimap analysis runs on a separate user-initiated queue.
 - Stale completed results are discarded if the UI falls behind.
 - Each minimap result and mask is published as one atomic UI update.
+- Binary route-mask data is now also supplied to the live geometry analyzer.
+  The mask is coarse-sampled before skeletonization to keep this bounded; Map
+  Time in Frame Analyzer shows the actual cost on the current Mac.
