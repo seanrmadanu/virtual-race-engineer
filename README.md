@@ -7,6 +7,12 @@ acceleration, and steering guidance.
 
 ## Current phase
 
+This is the canonical `Racing Trainer-3` project. Roadmap v2 implementation has
+started with a tested safety policy and timestamped evidence contracts. See
+[implementation status](docs/IMPLEMENTATION_STATUS.md) for completed work,
+verification, dataset locations and remaining gates. Historical copies live in
+the sibling `Versions` folder.
+
 Phase 1B currently provides:
 
 - live capture-card video and game-audio preview;
@@ -68,6 +74,20 @@ validation data and producing misleading accuracy.
   gameplay video for offline testing
 
 ## Build and test
+
+For a repeatable unsigned Debug build and the automated safety suite:
+
+```sh
+bash scripts/check.sh build
+bash scripts/check.sh test
+```
+
+The XCTest target runs the shared production policy and model sources without
+launching capture. It covers missing/stale/uncertain evidence, source changes,
+brake thresholds, acceleration prerequisites and decision expiration. These
+tests do not replace labeled video replay or live validation.
+
+For manual gameplay checks:
 
 1. Open `Racing Trainer.xcodeproj`.
 2. Choose **Product > Clean Build Folder** (`Shift-Command-K`).
@@ -131,15 +151,19 @@ full-screen browser source through OBS Virtual Camera.
 
 ## Roadmap
 
-1. Build and run this hybrid detector on unseen straight, left, right, sharp, U-turn,
-   no-waypoint, hidden-HUD, menu, and rotating-minimap clips.
-2. Record every wrong direction/severity/timing result and every unsafe command.
-3. Tune confidence and geometry only from those failures.
-4. Add user-confirmed minimap crop calibration for non-default layouts.
-5. Add main-road/lane/obstacle vision and vehicle profiles.
-6. Calibrate braking and steering against controlled runs and real G29 input.
-7. Retrain the embedded models only after the new source holdout is reviewed;
-   do not tune against the same 582 frames again.
+Follow `Racing_Trainer_System_Design_and_Roadmap_v2.md` in the parent folder:
+
+1. Establish the canonical baseline and verify dataset locations.
+2. Add safety contracts, automated tests and integration regression coverage.
+3. Build deterministic replay and independent recording-level evaluation splits.
+4. Recover speed OCR and measure accepted errors, coverage and latency.
+5. Evaluate route generalization; adopt pretrained models only if all gates pass.
+6. Calibrate stable coaching, then add local voice output.
+7. Validate three complete capture-card sessions on the M4.
+8. Address public distribution after the dependable local milestone.
+
+Lane/obstacle perception, exact wheel degrees, automated input, additional games
+and screen capture are deferred.
 
 ## Licensing
 

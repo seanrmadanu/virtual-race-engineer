@@ -24,3 +24,8 @@ Package.resolved
 *.pem
 *.p12
 *.mobileprovision
+
+# Local recordings, reviewed exports, and generated evaluation artifacts
+data/
+evaluation-output/
+*.xcresult/

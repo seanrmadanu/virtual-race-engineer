@@ -30,7 +30,6 @@ nonisolated final class MinimapDrivingCoachEngine {
 
     private let readyThreshold: Float = 0.52
     private let maximumFreshResultAge = 0.65
-    private let maximumSpeedDifference = 0.75
 
     // MARK: Reset
 
@@ -60,7 +59,8 @@ nonisolated final class MinimapDrivingCoachEngine {
         _ analysis: MinimapRouteAnalysis,
         sourceFrameUptime: TimeInterval,
         completionUptime: TimeInterval,
-        speedSample: MinimapSpeedSample?
+        speedSample: MinimapSpeedSample?,
+        sourceSessionID: Int
     ) -> MinimapCoachSnapshot {
         var latency = max(completionUptime - sourceFrameUptime, 0)
         var freshness = freshnessConfidence(forAge: latency)
@@ -219,18 +219,12 @@ nonisolated final class MinimapDrivingCoachEngine {
         let state: MinimapCoachState = confidence.criticalMinimum >= readyThreshold
             ? .ready
             : .routeUncertain
-        let synchronizedSpeed = synchronizedSpeed(
-            speedSample,
-            routeUptime: sourceFrameUptime
+        let decision = safetyDecision(
+            direction: stableDirection, severity: stableSeverity, timing: stableTiming,
+            state: state, confidence: confidence.criticalMinimum,
+            sourceFrameUptime: sourceFrameUptime, speed: speedSample,
+            sourceSessionID: sourceSessionID
         )
-        let action = state == .ready
-            ? drivingAction(
-                direction: stableDirection,
-                severity: stableSeverity,
-                timing: stableTiming,
-                speed: synchronizedSpeed?.sample
-            )
-            : .unavailable
         let steering = state == .ready
             ? steeringGuidance(
                 direction: stableDirection,
@@ -251,21 +245,24 @@ nonisolated final class MinimapDrivingCoachEngine {
             direction: state == .ready ? stableDirection : geometry.direction,
             severity: state == .ready ? stableSeverity : geometry.severity,
             timing: state == .ready ? stableTiming : geometry.timing,
-            action: action,
+            action: decision.action,
             steering: steering,
             orderedPath: geometry.orderedPath,
             turnStartPoint: geometry.turnStartPoint,
             turnStartNormalizedDistance: geometry.turnStartNormalizedDistance,
             pathPointCount: geometry.orderedPath.count,
             branchPointCount: geometry.branchPointCount,
-            speedUsed: synchronizedSpeed?.sample.value,
-            speedAgeMilliseconds: synchronizedSpeed.map { $0.age * 1000 },
+            speedUsed: decision.speedUsed,
+            speedAgeMilliseconds: decision.speedUsed == nil ? nil : speedSample.map {
+                (decision.issuedAt - $0.sourceFrameUptime) * 1000
+            },
             sourceFrameUptime: sourceFrameUptime,
             processingLatencyMilliseconds: latency * 1000,
             trackingApplied: false,
             reason: state == .ready
-                ? geometry.reason
-                : "A route was found, but one or more critical confidence gates are still below the safe threshold."
+                ? geometry.reason + " " + decision.explanation
+                : "A route was found, but one or more critical confidence gates are still below the safe threshold.",
+            guidanceExpiresAt: decision.expiresAt
         )
     }
 
@@ -275,7 +272,8 @@ nonisolated final class MinimapDrivingCoachEngine {
         pixelBuffer: CVPixelBuffer,
         sourceFrameUptime: TimeInterval,
         completionUptime: TimeInterval,
-        speedSample: MinimapSpeedSample?
+        speedSample: MinimapSpeedSample?,
+        sourceSessionID: Int
     ) -> MinimapCoachSnapshot? {
         guard sourceFrameUptime > lastFullSourceUptime,
               sourceFrameUptime - lastFullSourceUptime <= 0.45,
@@ -347,10 +345,6 @@ nonisolated final class MinimapDrivingCoachEngine {
         let state: MinimapCoachState = confidence.criticalMinimum >= readyThreshold
             ? .ready
             : .routeUncertain
-        let synchronizedSpeed = synchronizedSpeed(
-            speedSample,
-            routeUptime: sourceFrameUptime
-        )
 
         // Tracked frames may move a warning closer immediately. They are not
         // independent evidence, so they cannot relax an existing warning.
@@ -363,14 +357,12 @@ nonisolated final class MinimapDrivingCoachEngine {
         let outputDirection = descriptorAgreement >= 0.45
             ? stableDirection
             : geometry.direction
-        let action = state == .ready
-            ? drivingAction(
-                direction: outputDirection,
-                severity: outputSeverity,
-                timing: outputTiming,
-                speed: synchronizedSpeed?.sample
-            )
-            : .unavailable
+        let decision = safetyDecision(
+            direction: outputDirection, severity: outputSeverity, timing: outputTiming,
+            state: state, confidence: confidence.criticalMinimum,
+            sourceFrameUptime: sourceFrameUptime, speed: speedSample,
+            sourceSessionID: sourceSessionID
+        )
         let steering = state == .ready
             ? steeringGuidance(
                 direction: outputDirection,
@@ -390,19 +382,22 @@ nonisolated final class MinimapDrivingCoachEngine {
             direction: outputDirection,
             severity: outputSeverity,
             timing: outputTiming,
-            action: action,
+            action: decision.action,
             steering: steering,
             orderedPath: geometry.orderedPath,
             turnStartPoint: geometry.turnStartPoint,
             turnStartNormalizedDistance: geometry.turnStartNormalizedDistance,
             pathPointCount: geometry.orderedPath.count,
             branchPointCount: geometry.branchPointCount,
-            speedUsed: synchronizedSpeed?.sample.value,
-            speedAgeMilliseconds: synchronizedSpeed.map { $0.age * 1000 },
+            speedUsed: decision.speedUsed,
+            speedAgeMilliseconds: decision.speedUsed == nil ? nil : speedSample.map {
+                (decision.issuedAt - $0.sourceFrameUptime) * 1000
+            },
             sourceFrameUptime: sourceFrameUptime,
             processingLatencyMilliseconds: latency * 1000,
             trackingApplied: true,
-            reason: "Latest-frame route tracking: \(Int(tracking.rotationDegrees))° correction."
+            reason: "Latest-frame route tracking: \(Int(tracking.rotationDegrees))° correction. " + decision.explanation,
+            guidanceExpiresAt: decision.expiresAt
         )
     }
 
@@ -699,76 +694,33 @@ nonisolated final class MinimapDrivingCoachEngine {
 
     // MARK: Speed and Guidance
 
-    private func synchronizedSpeed(
-        _ sample: MinimapSpeedSample?,
-        routeUptime: TimeInterval
-    ) -> (sample: MinimapSpeedSample, age: TimeInterval)? {
-        guard let sample else {
-            return nil
-        }
-
-        let age = abs(sample.sourceFrameUptime - routeUptime)
-        guard age <= maximumSpeedDifference,
-              sample.confidence >= 0.30 else {
-            return nil
-        }
-
-        return (sample, age)
-    }
-
-    private func drivingAction(
+    private func safetyDecision(
         direction: RouteTurnDirection,
         severity: TurnSeverity,
         timing: TurnTiming,
-        speed: MinimapSpeedSample?
-    ) -> DrivingCoachAction {
-        let speedValue = speed?.value
-
-        if severity == .uTurn,
-           timing.urgencyRank >= TurnTiming.soon.urgencyRank,
-           speedValue == nil || speedValue! >= 30 {
-            return .brake
+        state: MinimapCoachState,
+        confidence: Float,
+        sourceFrameUptime: TimeInterval,
+        speed: MinimapSpeedSample?,
+        sourceSessionID: Int
+    ) -> CoachDecision {
+        let now = ProcessInfo.processInfo.systemUptime
+        let route = PerceptionObservation(
+            value: RouteGuidance(direction: direction, severity: severity, timing: timing),
+            state: state == .ready ? .fresh : .uncertain,
+            confidence: confidence, capturedAt: sourceFrameUptime, completedAt: now,
+            sourceSessionID: sourceSessionID, implementation: "minimap-hybrid", version: "1",
+            failureReason: state == .ready ? nil : "Route confidence gate failed."
+        )
+        let speedObservation = speed.map {
+            PerceptionObservation(value: $0.value, state: .fresh, confidence: $0.confidence,
+                                  capturedAt: $0.sourceFrameUptime, completedAt: $0.completionUptime,
+                                  sourceSessionID: $0.sourceSessionID,
+                                  implementation: "vision-fast", version: "1", failureReason: nil)
         }
-
-        if severity == .sharp {
-            if timing == .now,
-               speedValue == nil || speedValue! >= 45 {
-                return .brake
-            }
-            if timing == .soon,
-               let speedValue,
-               speedValue >= 80 {
-                return .brake
-            }
-        }
-
-        if severity == .medium {
-            if timing == .now,
-               let speedValue,
-               speedValue >= 85 {
-                return .brake
-            }
-            if timing == .soon,
-               let speedValue,
-               speedValue >= 135 {
-                return .brake
-            }
-        }
-
-        if severity == .gentle,
-           timing == .now,
-           let speedValue,
-           speedValue >= 170 {
-            return .brake
-        }
-
-        if direction == .straight,
-           consecutiveStableStraightFrames >= 4,
-           speed != nil {
-            return .accelerateIfClear
-        }
-
-        return .hold
+        return CoachSafetyPolicy.decide(route: route, speed: speedObservation,
+                                        stableStraightFrames: consecutiveStableStraightFrames,
+                                        sessionID: sourceSessionID, now: now)
     }
 
     private func steeringGuidance(

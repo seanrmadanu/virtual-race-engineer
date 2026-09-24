@@ -305,6 +305,8 @@ nonisolated struct MinimapSpeedSample:
     let value: Int
     let confidence: Float
     let sourceFrameUptime: TimeInterval
+    let completionUptime: TimeInterval
+    let sourceSessionID: Int
 }
 
 // MARK: - Published Coach Result
@@ -330,6 +332,7 @@ nonisolated struct MinimapCoachSnapshot:
     let processingLatencyMilliseconds: Double
     let trackingApplied: Bool
     let reason: String
+    var guidanceExpiresAt: TimeInterval? = nil
 
     var overallConfidence: Float {
         confidence.criticalMinimum
@@ -359,7 +362,12 @@ nonisolated struct MinimapCoachSnapshot:
             return state
         }
 
-        return ageMilliseconds(at: currentUptime) <= 650
+        guard currentUptime.isFinite, sourceFrameUptime.isFinite,
+              currentUptime >= sourceFrameUptime else {
+            return .stale
+        }
+        let expiration = guidanceExpiresAt ?? (sourceFrameUptime + CoachSafetyPolicy.maximumRouteAge)
+        return expiration.isFinite && currentUptime <= expiration
             ? .ready
             : .stale
     }
