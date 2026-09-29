@@ -6,8 +6,18 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A20000000000000000000001 /* Racing Trainer/CoachSafetyPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* Racing Trainer/CoachSafetyPolicy.swift */; };
+		A20000000000000000000003 /* Racing Trainer/MinimapCoachModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* Racing Trainer/MinimapCoachModels.swift */; };
+		A30000000000000000000001 /* Racing Trainer/CornerReplayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002 /* Racing Trainer/CornerReplayModels.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		1421652F3022DCAA00291EBF /* Racing Trainer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Racing Trainer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000002 /* Racing Trainer/CoachSafetyPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/CoachSafetyPolicy.swift"; sourceTree = SOURCE_ROOT; };
+		A20000000000000000000004 /* Racing Trainer/MinimapCoachModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/MinimapCoachModels.swift"; sourceTree = SOURCE_ROOT; };
+		A20000000000000000000005 /* RacingTrainerSafetyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = RacingTrainerSafetyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A30000000000000000000002 /* Racing Trainer/CornerReplayModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/CornerReplayModels.swift"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -16,10 +26,22 @@
 			path = "Racing Trainer";
 			sourceTree = "<group>";
 		};
+		A20000000000000000000006 /* RacingTrainerSafetyTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = RacingTrainerSafetyTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		1421652C3022DCAA00291EBF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A20000000000000000000007 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +55,10 @@
 			isa = PBXGroup;
 			children = (
 				142165313022DCAA00291EBF /* Racing Trainer */,
+				A20000000000000000000006 /* RacingTrainerSafetyTests */,
+				A20000000000000000000002 /* Racing Trainer/CoachSafetyPolicy.swift */,
+				A20000000000000000000004 /* Racing Trainer/MinimapCoachModels.swift */,
+				A30000000000000000000002 /* Racing Trainer/CornerReplayModels.swift */,
 				142165303022DCAA00291EBF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +67,7 @@
 			isa = PBXGroup;
 			children = (
 				1421652F3022DCAA00291EBF /* Racing Trainer.app */,
+				A20000000000000000000005 /* RacingTrainerSafetyTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +97,25 @@
 			productReference = 1421652F3022DCAA00291EBF /* Racing Trainer.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A20000000000000000000008 /* RacingTrainerSafetyTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A20000000000000000000009 /* Build configuration list for PBXNativeTarget "RacingTrainerSafetyTests" */;
+			buildPhases = (
+				A20000000000000000000010 /* Sources */,
+				A20000000000000000000007 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A20000000000000000000006 /* RacingTrainerSafetyTests */,
+			);
+			name = RacingTrainerSafetyTests;
+			productName = RacingTrainerSafetyTests;
+			productReference = A20000000000000000000005 /* RacingTrainerSafetyTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -78,7 +124,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2650;
-				LastUpgradeCheck = 2650;
+				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					1421652E3022DCAA00291EBF = {
 						CreatedOnToolsVersion = 26.5;
@@ -100,6 +146,7 @@
 			projectRoot = "";
 			targets = (
 				1421652E3022DCAA00291EBF /* Racing Trainer */,
+				A20000000000000000000008 /* RacingTrainerSafetyTests */,
 			);
 		};
 /* End PBXProject section */
@@ -119,6 +166,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A20000000000000000000010 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A20000000000000000000001 /* Racing Trainer/CoachSafetyPolicy.swift in Sources */,
+				A20000000000000000000003 /* Racing Trainer/MinimapCoachModels.swift in Sources */,
+				A30000000000000000000001 /* Racing Trainer/CornerReplayModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -159,6 +216,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = M955JC8G35;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -184,6 +242,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -223,6 +282,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = M955JC8G35;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -241,6 +301,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -253,6 +314,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = M955JC8G35;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -297,6 +359,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = M955JC8G35;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -333,6 +396,38 @@
 			};
 			name = Release;
 		};
+		A20000000000000000000011 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@loader_path/../Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = local.RacingTrainer.SafetyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A20000000000000000000012 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@loader_path/../Frameworks",
+					"@executable_path/../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = local.RacingTrainer.SafetyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -350,6 +445,15 @@
 			buildConfigurations = (
 				1421653B3022DCAB00291EBF /* Debug */,
 				1421653C3022DCAB00291EBF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A20000000000000000000009 /* Build configuration list for PBXNativeTarget "RacingTrainerSafetyTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A20000000000000000000011 /* Debug */,
+				A20000000000000000000012 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

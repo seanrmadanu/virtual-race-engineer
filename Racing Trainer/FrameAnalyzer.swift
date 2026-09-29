@@ -3,7 +3,6 @@ import Combine
 import CoreGraphics
 import CoreVideo
 import Foundation
-import Vision
 
 private struct MinimapAnalyzerSnapshot {
     let analyzedFrameCount:
@@ -434,9 +433,6 @@ final class FrameAnalyzer:
         String? =
             MotorfestHUDLayout.speedUnit
 
-    private let maximumReasonableSpeed =
-        650
-
     private let maximumSingleFrameSpeedChange =
         40
 
@@ -789,8 +785,10 @@ final class FrameAnalyzer:
             let stabilizedUnit =
                 detectedSpeedUnitStorage
 
-            if speedOCRResult.speed != nil,
-               let stabilizedSpeed {
+            // A rejected jump retains the display value, but must not renew
+            // the timestamp of that old value as fresh coaching evidence.
+            if let rawSpeed = speedOCRResult.speed,
+               let stabilizedSpeed, rawSpeed == stabilizedSpeed {
 
                 recentSpeedSamples.append(
                     MinimapSpeedSample(
@@ -799,7 +797,9 @@ final class FrameAnalyzer:
                         confidence:
                             speedOCRResult.confidence,
                         sourceFrameUptime:
-                            sourceFrameUptime
+                            sourceFrameUptime,
+                        completionUptime: completionUptime,
+                        sourceSessionID: currentGeneration
                     )
                 )
 
@@ -929,7 +929,8 @@ final class FrameAnalyzer:
                         completionUptime:
                             detectionCompletionUptime,
                         speedSample:
-                            fullSpeedSample
+                            fullSpeedSample,
+                        sourceSessionID: currentGeneration
                     )
 
             // Pull the newest frame only after the expensive detector and
@@ -982,7 +983,8 @@ final class FrameAnalyzer:
                                     .processInfo
                                     .systemUptime,
                             speedSample:
-                                trackingSpeedSample
+                                trackingSpeedSample,
+                            sourceSessionID: currentGeneration
                         )
 
                 if let trackedResult {
@@ -1195,312 +1197,8 @@ final class FrameAnalyzer:
 
     // MARK: - Vision Speed OCR
 
-    private func recognizeSpeed(
-        in pixelBuffer:
-            CVPixelBuffer
-    ) -> SpeedOCRResult {
-
-        let request =
-            VNRecognizeTextRequest()
-
-        request.recognitionLevel =
-            .fast
-
-        request.minimumTextHeight =
-            0.025
-
-        request.usesLanguageCorrection =
-            false
-
-        request.regionOfInterest =
-            visionRegion(
-                fromTopLeftRegion:
-                    MotorfestHUDLayout
-                        .speedOCR
-                        .normalizedRect
-            )
-
-        let handler =
-            VNImageRequestHandler(
-                cvPixelBuffer:
-                    pixelBuffer,
-                options:
-                    [:]
-            )
-
-        do {
-            try handler.perform(
-                [request]
-            )
-        } catch {
-            return SpeedOCRResult(
-                speed:
-                    nil,
-                unit:
-                    MotorfestHUDLayout
-                        .speedUnit,
-                confidence:
-                    0,
-                rawText:
-                    ""
-            )
-        }
-
-        guard let observations =
-                request.results,
-              !observations.isEmpty else {
-
-            return SpeedOCRResult(
-                speed:
-                    nil,
-                unit:
-                    MotorfestHUDLayout
-                        .speedUnit,
-                confidence:
-                    0,
-                rawText:
-                    ""
-            )
-        }
-
-        var displayedNumericFragments:
-            [String] = []
-
-        var speedCandidates:
-            [SpeedCandidate] = []
-
-        for observation in observations {
-
-            let topCandidates =
-                observation.topCandidates(
-                    3
-                )
-
-            if let primaryCandidate =
-                    topCandidates.first {
-
-                let normalizedPrimary =
-                    normalizedNumericOCRText(
-                        primaryCandidate.string
-                    )
-
-                if !normalizedPrimary.isEmpty {
-
-                    displayedNumericFragments.append(
-                        normalizedPrimary
-                    )
-                }
-            }
-
-            for recognizedText in
-                topCandidates {
-
-                let normalizedText =
-                    normalizedNumericOCRText(
-                        recognizedText.string
-                    )
-
-                guard !normalizedText.isEmpty,
-                      normalizedText.count <= 3,
-                      let value =
-                        Int(
-                            normalizedText
-                        ),
-                      value >= 0,
-                      value <=
-                        maximumReasonableSpeed else {
-
-                    continue
-                }
-
-                let score =
-                    speedCandidateScore(
-                        value:
-                            value,
-                        confidence:
-                            recognizedText
-                                .confidence,
-                        boundingBox:
-                            observation
-                                .boundingBox
-                    )
-
-                speedCandidates.append(
-                    SpeedCandidate(
-                        value:
-                            value,
-                        confidence:
-                            recognizedText
-                                .confidence,
-                        score:
-                            score
-                    )
-                )
-            }
-        }
-
-        let numericDebugText =
-            displayedNumericFragments
-                .joined(
-                    separator:
-                        " | "
-                )
-
-        guard let bestCandidate =
-                speedCandidates.max(
-                    by: {
-                        $0.score <
-                        $1.score
-                    }
-                ) else {
-
-            return SpeedOCRResult(
-                speed:
-                    nil,
-                unit:
-                    MotorfestHUDLayout
-                        .speedUnit,
-                confidence:
-                    0,
-                rawText:
-                    numericDebugText
-            )
-        }
-
-        return SpeedOCRResult(
-            speed:
-                bestCandidate.value,
-            unit:
-                MotorfestHUDLayout
-                    .speedUnit,
-            confidence:
-                bestCandidate.confidence,
-            rawText:
-                numericDebugText
-        )
-    }
-
-    private func normalizedNumericOCRText(
-        _ text:
-            String
-    ) -> String {
-
-        var result =
-            ""
-
-        for character in text {
-
-            if character.isNumber {
-
-                result.append(
-                    character
-                )
-
-                continue
-            }
-
-            switch character {
-
-            case "O", "o", "Q":
-
-                result.append(
-                    "0"
-                )
-
-            case "I", "i", "l", "|":
-
-                result.append(
-                    "1"
-                )
-
-            case "Z", "z":
-
-                result.append(
-                    "2"
-                )
-
-            case "S", "s":
-
-                result.append(
-                    "5"
-                )
-
-            case "B":
-
-                result.append(
-                    "8"
-                )
-
-            default:
-
-                break
-            }
-        }
-
-        return result
-    }
-
-    private func visionRegion(
-        fromTopLeftRegion region:
-            CGRect
-    ) -> CGRect {
-
-        CGRect(
-            x:
-                region.minX,
-            y:
-                1.0 -
-                region.maxY,
-            width:
-                region.width,
-            height:
-                region.height
-        )
-    }
-
-    private func speedCandidateScore(
-        value:
-            Int,
-        confidence:
-            VNConfidence,
-        boundingBox:
-            CGRect
-    ) -> Double {
-
-        var score =
-            Double(
-                confidence
-            ) *
-            2.0
-
-        let digitCount =
-            String(
-                value
-            )
-            .count
-
-        score +=
-            Double(
-                digitCount
-            ) *
-            0.18
-
-        let textArea =
-            Double(
-                boundingBox.width *
-                boundingBox.height
-            )
-
-        score +=
-            textArea *
-            80.0
-
-        if value < 10 {
-            score -=
-                0.12
-        }
-
-        return score
+    private func recognizeSpeed(in pixelBuffer: CVPixelBuffer) -> SpeedOCRResult {
+        MotorfestSpeedRecognizer.recognize(in: pixelBuffer)
     }
 
     // MARK: - Speed Stabilization
@@ -1621,35 +1319,4 @@ final class FrameAnalyzer:
 
         return shouldPublish
     }
-}
-
-// MARK: - OCR Result
-
-private struct SpeedOCRResult {
-
-    let speed:
-        Int?
-
-    let unit:
-        String?
-
-    let confidence:
-        Float
-
-    let rawText:
-        String
-}
-
-// MARK: - Speed Candidate
-
-private struct SpeedCandidate {
-
-    let value:
-        Int
-
-    let confidence:
-        Float
-
-    let score:
-        Double
 }
