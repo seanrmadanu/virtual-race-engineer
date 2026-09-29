@@ -5,6 +5,8 @@ import Combine
 import UniformTypeIdentifiers
 
 struct ContentView: View {
+    @Environment(\.openWindow) private var openWindow
+
     @ObservedObject var captureDevices:
         CaptureDeviceManager
 
@@ -23,10 +25,16 @@ struct ContentView: View {
     @State private var videoFullscreenOwnsNativeFullscreen =
         false
 
-    @State private var showsAnalyzerDebug =
-        true
+    @AppStorage("preview.showsAnalyzerOverlay")
+    private var showsAnalyzerDebug =
+        false
 
-    @State private var showsHUDRegions =
+    @AppStorage("preview.showsHUDRegions")
+    private var showsHUDRegions =
+        false
+
+    @AppStorage("window.showsSidebar")
+    private var showsSidebar =
         true
 
     @State private var gameVolume =
@@ -290,6 +298,8 @@ struct ContentView: View {
                         true,
                     isGameMuted:
                         gameMuted,
+                    gameVolume:
+                        $gameVolume,
                     animator:
                         noConnectionAnimator,
                     onOpenVideoFile:
@@ -300,10 +310,6 @@ struct ContentView: View {
                         toggleGameMute,
                     onRefresh:
                         refreshAllSources,
-                    onAnalyzerDebugToggle:
-                        toggleAnalyzerDebug,
-                    onHUDRegionsToggle:
-                        toggleHUDRegions,
                     onFullscreenToggle:
                         exitVideoFullscreen
                 )
@@ -488,46 +494,48 @@ struct ContentView: View {
     private var normalLayout:
         some View {
 
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                GameplayPreview(
-                    captureSession:
-                        captureSession,
-                    videoFilePlayback:
-                        videoFilePlayback,
-                    showsAnalyzerDebug:
-                        showsAnalyzerDebug,
-                    showsHUDRegions:
-                        showsHUDRegions,
-                    hasAvailableInputSource:
-                        hasAvailableInputSource,
-                    sourceStatusText:
-                        sourceStatusText,
-                    sourceStatusColor:
-                        sourceStatusColor,
-                    isFullscreen:
-                        false,
-                    isGameMuted:
-                        gameMuted,
-                    animator:
-                        noConnectionAnimator,
-                    onOpenVideoFile:
-                        openVideoFile,
-                    onUseLiveCapture:
-                        useLiveCapture,
-                    onMuteToggle:
-                        toggleGameMute,
-                    onRefresh:
-                        refreshAllSources,
-                    onAnalyzerDebugToggle:
-                        toggleAnalyzerDebug,
-                    onHUDRegionsToggle:
-                        toggleHUDRegions,
-                    onFullscreenToggle:
-                        enterVideoFullscreen
-                )
-                .layoutPriority(1)
+        HStack(spacing: 0) {
+            GameplayPreview(
+                captureSession:
+                    captureSession,
+                videoFilePlayback:
+                    videoFilePlayback,
+                showsAnalyzerDebug:
+                    showsAnalyzerDebug,
+                showsHUDRegions:
+                    showsHUDRegions,
+                hasAvailableInputSource:
+                    hasAvailableInputSource,
+                sourceStatusText:
+                    sourceStatusText,
+                sourceStatusColor:
+                    sourceStatusColor,
+                isFullscreen:
+                    false,
+                isGameMuted:
+                    gameMuted,
+                gameVolume:
+                    $gameVolume,
+                animator:
+                    noConnectionAnimator,
+                onOpenVideoFile:
+                    openVideoFile,
+                onUseLiveCapture:
+                    useLiveCapture,
+                onMuteToggle:
+                    toggleGameMute,
+                onRefresh:
+                    refreshAllSources,
+                onFullscreenToggle:
+                    enterVideoFullscreen
+            )
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity
+            )
+            .layoutPriority(1)
 
+            if showsSidebar {
                 Divider()
 
                 ScrollView(
@@ -552,13 +560,16 @@ struct ContentView: View {
                                 .isGameAudioAvailable,
                         gameAudioStatus:
                             gameAudioStatusText,
+                        analyzer:
+                            captureSession
+                                .frameAnalyzer,
                         datasetRecorder:
                             captureSession
                                 .minimapDatasetRecorder
                     )
                 }
                 .frame(
-                    width: 300
+                    width: 320
                 )
                 .frame(
                     maxHeight: .infinity,
@@ -571,176 +582,177 @@ struct ContentView: View {
                     )
                 )
             }
-            .frame(
-                maxWidth: .infinity,
-                maxHeight: .infinity
-            )
-            .clipped()
-            .layoutPriority(0)
-
-            Divider()
-
-            bottomPanel
-                .fixedSize(
-                    horizontal: false,
-                    vertical: true
-                )
-                .layoutPriority(1)
         }
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity
+        )
         .background(
             Color(
                 nsColor:
                     .windowBackgroundColor
             )
         )
+        .navigationTitle("Racing Trainer")
+        .navigationSubtitle(sourceStatusText)
+        .toolbar {
+            windowToolbar
+        }
     }
 
-    // MARK: - Bottom Panel
+    // MARK: - Toolbar
 
-    private var bottomPanel:
+    @ToolbarContentBuilder
+    private var windowToolbar:
+        some ToolbarContent {
+
+        ToolbarItemGroup {
+            sourceMenu
+
+            Button {
+                videoFilePlayback.pause()
+                openWindow(id: "corner-replay-lab")
+            } label: {
+                Label("Replay Lab", systemImage: "chart.xyaxis.line")
+            }
+            .help("Compare reviewed corner recordings offline")
+
+            Button {
+                refreshAllSources()
+            } label: {
+                Label(
+                    isUsingVideoFile
+                    ? "Restart Test Video"
+                    : "Refresh Sources",
+                    systemImage:
+                        "arrow.clockwise"
+                )
+            }
+            .help(
+                isUsingVideoFile
+                ? "Restart Test Video"
+                : "Refresh Video and Audio Sources"
+            )
+        }
+
+        ToolbarSpacer(.fixed)
+
+        ToolbarItemGroup {
+            OverlayViewMenu {
+                Label(
+                    "View",
+                    systemImage:
+                        "eye"
+                )
+                .labelStyle(.titleAndIcon)
+            }
+
+            HUDLayoutMenu {
+                Label(
+                    "Layout",
+                    systemImage:
+                        "rectangle.3.group"
+                )
+            }
+        }
+
+        ToolbarSpacer(.fixed)
+
+        ToolbarItemGroup {
+            Button {
+                enterVideoFullscreen()
+            } label: {
+                Label(
+                    "Video Full Screen",
+                    systemImage:
+                        "arrow.up.left.and.arrow.down.right"
+                )
+            }
+            .help("Enter Video Full Screen")
+
+            Toggle(
+                isOn:
+                    $showsSidebar.animation()
+            ) {
+                Label(
+                    "Sidebar",
+                    systemImage:
+                        "sidebar.right"
+                )
+            }
+            .help(
+                showsSidebar
+                ? "Hide Sidebar"
+                : "Show Sidebar"
+            )
+
+            SettingsLink {
+                Label(
+                    "Settings",
+                    systemImage:
+                        "gearshape"
+                )
+            }
+            .help("Open Settings")
+        }
+    }
+
+    private var sourceMenu:
         some View {
 
-        HStack(spacing: 16) {
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(
-                        sourceStatusColor
-                    )
-                    .frame(
-                        width: 9,
-                        height: 9
-                    )
-
-                Text(sourceStatusText)
-                    .font(
-                        .system(
-                            size: 13,
-                            weight: .medium
-                        )
-                    )
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+        Menu {
+            Button {
+                useLiveCapture()
+            } label: {
+                Label(
+                    "Use Live Capture",
+                    systemImage:
+                        "video"
+                )
             }
-            .layoutPriority(1)
-
-            Spacer(
-                minLength:
-                    20
+            .disabled(
+                !isUsingVideoFile
             )
 
-            HStack(spacing: 12) {
-                Menu {
-                    Button {
-                        useLiveCapture()
-                    } label: {
-                        Label(
-                            "Use Live Capture",
-                            systemImage:
-                                "video"
-                        )
-                    }
-                    .disabled(
-                        !isUsingVideoFile
-                    )
-
-                    Button {
-                        openVideoFile()
-                    } label: {
-                        Label(
-                            "Open Video File…",
-                            systemImage:
-                                "folder"
-                        )
-                    }
-
-                    Divider()
-
-                    Button {
-                        showYouTubeTestingInfo()
-                    } label: {
-                        Label(
-                            "Using a YouTube Video…",
-                            systemImage:
-                                "play.rectangle"
-                        )
-                    }
-                } label: {
-                    Label(
-                        isUsingVideoFile
-                        ? "Test Video"
-                        : "Live Input",
-                        systemImage:
-                            isUsingVideoFile
-                            ? "play.rectangle.fill"
-                            : "video.fill"
-                    )
-                }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
-
-                Toggle(
-                    "Analyzer",
-                    isOn:
-                        $showsAnalyzerDebug
+            Button {
+                openVideoFile()
+            } label: {
+                Label(
+                    "Open Video File…",
+                    systemImage:
+                        "folder"
                 )
-                .toggleStyle(.switch)
-                .controlSize(.small)
-
-                Toggle(
-                    "HUD Boxes",
-                    isOn:
-                        $showsHUDRegions
-                )
-                .toggleStyle(.switch)
-                .controlSize(.small)
-
-                SettingsLink {
-                    Label(
-                        "Settings",
-                        systemImage:
-                            "gearshape"
-                    )
-                }
-                .buttonStyle(.bordered)
             }
-            .fixedSize(
-                horizontal: true,
-                vertical: false
+
+            Divider()
+
+            Button {
+                showYouTubeTestingInfo()
+            } label: {
+                Label(
+                    "Using a YouTube Video…",
+                    systemImage:
+                        "play.rectangle"
+                )
+            }
+        } label: {
+            Label(
+                isUsingVideoFile
+                ? "Test Video"
+                : "Live Input",
+                systemImage:
+                    isUsingVideoFile
+                    ? "play.rectangle.fill"
+                    : "video.fill"
             )
-            .layoutPriority(2)
         }
-        .padding(
-            .horizontal,
-            18
-        )
-        .frame(
-            maxWidth: .infinity
-        )
-        .frame(
-            height: 88,
-            alignment: .center
-        )
-        .background(
-            Color(
-                nsColor:
-                    .controlBackgroundColor
-            )
-        )
-        .clipped()
+        .help("Choose Live Capture or a Test Video")
     }
 
     // MARK: - Preview Controls
 
     private func toggleGameMute() {
         gameMuted.toggle()
-    }
-
-    private func toggleAnalyzerDebug() {
-        showsAnalyzerDebug.toggle()
-    }
-
-    private func toggleHUDRegions() {
-        showsHUDRegions.toggle()
     }
 
     private func openVideoFile() {
@@ -1002,6 +1014,9 @@ struct GameplayPreview: View {
     let isGameMuted:
         Bool
 
+    @Binding var gameVolume:
+        Double
+
     let animator:
         NoConnectionAnimator
 
@@ -1017,20 +1032,133 @@ struct GameplayPreview: View {
     let onRefresh:
         () -> Void
 
-    let onAnalyzerDebugToggle:
-        () -> Void
-
-    let onHUDRegionsToggle:
-        () -> Void
-
     let onFullscreenToggle:
         () -> Void
+
+    @AppStorage(VideoPlacement.storageKey)
+    private var videoPlacement =
+        VideoPlacement.center
+
+    /// Aspect ratio of the incoming feed; 16:9 until a frame arrives.
+    private var videoAspectRatio:
+        CGFloat {
+
+        frameAnalyzer.frameWidth > 0 &&
+        frameAnalyzer.frameHeight > 0
+        ? CGFloat(frameAnalyzer.frameWidth) /
+          CGFloat(frameAnalyzer.frameHeight)
+        : 16.0 / 9.0
+    }
+
+    /// The fitted video's frame inside the preview, matching the
+    /// Video Position setting.
+    private func videoRect(
+        in size: CGSize
+    ) -> CGRect {
+
+        var rect =
+            AVMakeRect(
+                aspectRatio:
+                    CGSize(
+                        width: videoAspectRatio,
+                        height: 1
+                    ),
+                insideRect:
+                    CGRect(
+                        origin: .zero,
+                        size: size
+                    )
+            )
+
+        switch videoPlacement {
+        case .top:
+            rect.origin.y = 0
+        case .bottom:
+            rect.origin.y =
+                size.height - rect.height
+        case .center:
+            break
+        }
+
+        return rect
+    }
+
+    // MARK: Auto-hiding controls
+
+    /// Seconds without pointer movement before the controls fade out.
+    private static let controlsHideDelay:
+        Duration = .seconds(2.5)
+
+    @State private var controlsVisible =
+        true
+
+    @State private var isPointerOverControls =
+        false
+
+    @State private var hideControlsTask:
+        Task<Void, Never>?
 
     private var isUsingVideoFile:
         Bool {
 
         videoFilePlayback
             .hasLoadedVideo
+    }
+
+    /// Paused video keeps its controls up so it can be resumed.
+    private var keepsControlsVisible:
+        Bool {
+
+        isPointerOverControls ||
+        (isUsingVideoFile &&
+         !videoFilePlayback.isPlaying)
+    }
+
+    private func revealControls() {
+        if !controlsVisible {
+            withAnimation(
+                .easeOut(duration: 0.2)
+            ) {
+                controlsVisible = true
+            }
+        }
+
+        scheduleControlsHide()
+    }
+
+    private func scheduleControlsHide() {
+        hideControlsTask?.cancel()
+
+        hideControlsTask = Task {
+            try? await Task.sleep(
+                for: Self.controlsHideDelay
+            )
+
+            guard !Task.isCancelled,
+                  !keepsControlsVisible else {
+                return
+            }
+
+            withAnimation(
+                .easeIn(duration: 0.35)
+            ) {
+                controlsVisible = false
+            }
+
+            if isFullscreen {
+                NSCursor.setHiddenUntilMouseMoves(true)
+            }
+        }
+    }
+
+    private func trackControlsHover(
+        _ isHovering: Bool
+    ) {
+        isPointerOverControls = isHovering
+
+        if !isHovering {
+            scheduleControlsHide()
+        }
     }
 
     private var isReceivingVideo:
@@ -1085,7 +1213,10 @@ struct GameplayPreview: View {
                     )
                     .frame(
                         maxWidth: .infinity,
-                        maxHeight: .infinity
+                        maxHeight: .infinity,
+                        alignment:
+                            videoPlacement
+                                .alignment
                     )
             }
         }
@@ -1109,49 +1240,65 @@ struct GameplayPreview: View {
             ) {
                 Color.black
 
-                if isUsingVideoFile {
-                    VideoFilePreview(
-                        player:
-                            videoFilePlayback
-                                .player
-                    )
-                } else {
-                    CaptureVideoPreview(
-                        session:
-                            captureSession
-                                .session
-                    )
+                // Video and the overlays drawn in video coordinates share one
+                // container, pinned per the Video Position setting.
+                ZStack {
+                    if isUsingVideoFile {
+                        VideoFilePreview(
+                            player:
+                                videoFilePlayback
+                                    .player
+                        )
+                    } else {
+                        CaptureVideoPreview(
+                            session:
+                                captureSession
+                                    .session
+                        )
+                    }
+
+                    if showsAnalyzerDebug,
+                       isReceivingVideo {
+
+                        MinimapRouteMaskOverlay(
+                            analyzer:
+                                frameAnalyzer,
+                            normalizedRect:
+                                MotorfestHUDLayout
+                                    .minimapAnalysisRect
+                        )
+                        .allowsHitTesting(
+                            false
+                        )
+                    }
+
+                    if showsHUDRegions,
+                       isReceivingVideo {
+
+                        HUDRegionOverlay(
+                            frameWidth:
+                                frameAnalyzer.frameWidth,
+                            frameHeight:
+                                frameAnalyzer.frameHeight,
+                            regions:
+                                MotorfestHUDLayout
+                                    .debugRegions
+                        )
+                        .allowsHitTesting(false)
+                    }
                 }
-
-                if showsAnalyzerDebug,
-                   isReceivingVideo {
-
-                    MinimapRouteMaskOverlay(
-                        analyzer:
-                            frameAnalyzer,
-                        normalizedRect:
-                            MotorfestHUDLayout
-                                .minimapAnalysisRect
-                    )
-                    .allowsHitTesting(
-                        false
-                    )
-                }
-
-                if showsHUDRegions,
-                   isReceivingVideo {
-
-                    HUDRegionOverlay(
-                        frameWidth:
-                            frameAnalyzer.frameWidth,
-                        frameHeight:
-                            frameAnalyzer.frameHeight,
-                        regions:
-                            MotorfestHUDLayout
-                                .debugRegions
-                    )
-                    .allowsHitTesting(false)
-                }
+                .aspectRatio(
+                    videoAspectRatio,
+                    contentMode:
+                        .fit
+                )
+                .frame(
+                    maxWidth: .infinity,
+                    maxHeight: .infinity,
+                    alignment:
+                        videoPlacement
+                            .alignment
+                )
 
                 if let errorMessage {
                     CaptureErrorView(
@@ -1221,49 +1368,53 @@ struct GameplayPreview: View {
                         }
                         .zIndex(20)
 
-                    } else {
-                        FrameDebugView(
-                            analyzer:
-                                frameAnalyzer,
-                            maximumHeight:
-                                availablePanelHeight,
-                            allowsDragging:
-                                false
-                        )
-                        .padding(16)
-                        .frame(
-                            maxWidth: .infinity,
-                            maxHeight: .infinity,
-                            alignment: .topLeading
-                        )
-                        .zIndex(20)
                     }
                 }
 
                 if isReceivingVideo {
 
-                    VStack(spacing: 8) {
-                        DrivingCoachHUD(
-                            analyzer:
-                                frameAnalyzer
-                        )
+                    TrainerCoachHUD(
+                        analyzer:
+                            frameAnalyzer,
+                        containerSize:
+                            geometry.size,
+                        videoRect:
+                            videoRect(
+                                in:
+                                    geometry.size
+                            )
+                    )
+                    .zIndex(10)
+                }
 
-                        if showsAnalyzerDebug {
+                // In the window, route status lives in the sidebar's
+                // Tools & Diagnostics section; only warnings stay on video.
+                let showsRouteBadge =
+                    isFullscreen && showsAnalyzerDebug
+
+                let formatWarning =
+                    isUsingVideoFile
+                    ? videoFilePlayback
+                        .formatWarning
+                    : nil
+
+                if isReceivingVideo,
+                   showsRouteBadge || formatWarning != nil {
+
+                    VStack(spacing: 8) {
+                        if showsRouteBadge {
                             RouteDetectionStatusBadge(
                                 analyzer:
                                     frameAnalyzer
                             )
+                        }
 
-                            if isUsingVideoFile,
-                               let formatWarning =
-                                videoFilePlayback
-                                    .formatWarning {
+                        if let formatWarning {
 
-                                VideoFormatWarningView(
-                                    message:
-                                        formatWarning
-                                )
-                            }
+                            VideoFormatWarningView(
+                                message:
+                                    formatWarning
+                            )
                         }
                     }
                     .frame(
@@ -1278,7 +1429,11 @@ struct GameplayPreview: View {
                     )
                     .padding(
                         .top,
-                        16
+                        TrainerCoachHUD
+                            .bannerBottom(
+                                for:
+                                    geometry.size
+                            ) + 10
                     )
                     .padding(
                         .horizontal,
@@ -1300,6 +1455,9 @@ struct GameplayPreview: View {
                         playback:
                             videoFilePlayback
                     )
+                    .onHover(perform: trackControlsHover)
+                    .opacity(controlsVisible ? 1 : 0)
+                    .allowsHitTesting(controlsVisible)
                     .padding(
                         .bottom,
                         68
@@ -1323,21 +1481,28 @@ struct GameplayPreview: View {
                         .zIndex(30)
                 }
 
-                previewControlButtons
-                    .padding(
-                        .trailing,
-                        18
-                    )
-                    .padding(
-                        .bottom,
-                        18
-                    )
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: .infinity,
-                        alignment: .bottomTrailing
-                    )
-                    .zIndex(30)
+                // The window's toolbar carries these controls; full screen
+                // has no toolbar, so they float over the video there.
+                if isFullscreen {
+                    previewControlButtons
+                        .onHover(perform: trackControlsHover)
+                        .opacity(controlsVisible ? 1 : 0)
+                        .allowsHitTesting(controlsVisible)
+                        .padding(
+                            .trailing,
+                            18
+                        )
+                        .padding(
+                            .bottom,
+                            18
+                        )
+                        .frame(
+                            maxWidth: .infinity,
+                            maxHeight: .infinity,
+                            alignment: .bottomTrailing
+                        )
+                        .zIndex(30)
+                }
             }
             .frame(
                 width:
@@ -1346,6 +1511,25 @@ struct GameplayPreview: View {
                     geometry.size.height
             )
             .clipped()
+            .onContinuousHover { phase in
+                switch phase {
+                case .active:
+                    revealControls()
+                case .ended:
+                    scheduleControlsHide()
+                }
+            }
+            .onChange(
+                of: videoFilePlayback.isPlaying
+            ) {
+                revealControls()
+            }
+            .onAppear {
+                scheduleControlsHide()
+            }
+            .onDisappear {
+                hideControlsTask?.cancel()
+            }
         }
     }
 
@@ -1439,15 +1623,14 @@ struct GameplayPreview: View {
             .help(
                 "Choose Live Capture or a Test Video"
             )
+            .accessibilityLabel(
+                "Choose Live Capture or a Test Video"
+            )
 
-            Button {
-                onMuteToggle()
-            } label: {
+            HUDLayoutMenu {
                 Image(
                     systemName:
-                        isGameMuted
-                        ? "speaker.slash.fill"
-                        : "speaker.wave.2.fill"
+                        "rectangle.3.group"
                 )
                 .font(
                     .system(
@@ -1460,11 +1643,21 @@ struct GameplayPreview: View {
                     height: 28
                 )
             }
-            .buttonStyle(.bordered)
-            .help(
-                isGameMuted
-                ? "Unmute Game Audio"
-                : "Mute Game Audio"
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .accessibilityLabel(
+                "Layout"
+            )
+
+            HoverVolumeButton(
+                volume:
+                    $gameVolume,
+                isMuted:
+                    isGameMuted,
+                onMuteToggle:
+                    onMuteToggle,
+                onHoverChange:
+                    trackControlsHover
             )
 
             Button {
@@ -1491,63 +1684,31 @@ struct GameplayPreview: View {
                 ? "Restart Test Video"
                 : "Refresh Video and Audio Sources"
             )
+            .accessibilityLabel(
+                isUsingVideoFile
+                ? "Restart Test Video"
+                : "Refresh Video and Audio Sources"
+            )
 
-            Button {
-                onAnalyzerDebugToggle()
-            } label: {
-                Image(
-                    systemName:
-                        showsAnalyzerDebug
-                        ? "info.circle.fill"
-                        : "info.circle"
+            OverlayViewMenu {
+                Label(
+                    "View",
+                    systemImage:
+                        "eye"
                 )
+                .labelStyle(.titleAndIcon)
                 .font(
                     .system(
-                        size: 15,
+                        size: 14,
                         weight: .semibold
                     )
                 )
                 .frame(
-                    width: 28,
                     height: 28
                 )
             }
-            .buttonStyle(.bordered)
-            .help(
-                showsAnalyzerDebug
-                ? "Hide Analyzer Panel"
-                : "Show Analyzer Panel"
-            )
-
-            Button {
-                onHUDRegionsToggle()
-            } label: {
-                Image(
-                    systemName:
-                        "viewfinder"
-                )
-                .font(
-                    .system(
-                        size: 15,
-                        weight: .semibold
-                    )
-                )
-                .opacity(
-                    showsHUDRegions
-                    ? 1.0
-                    : 0.45
-                )
-                .frame(
-                    width: 28,
-                    height: 28
-                )
-            }
-            .buttonStyle(.bordered)
-            .help(
-                showsHUDRegions
-                ? "Hide HUD Region Boxes"
-                : "Show HUD Region Boxes"
-            )
+            .menuStyle(.borderlessButton)
+            .fixedSize()
 
             Button {
                 onFullscreenToggle()
@@ -1573,6 +1734,11 @@ struct GameplayPreview: View {
                 .borderedProminent
             )
             .help(
+                isFullscreen
+                ? "Exit Video Full Screen"
+                : "Enter Video Full Screen"
+            )
+            .accessibilityLabel(
                 isFullscreen
                 ? "Exit Video Full Screen"
                 : "Enter Video Full Screen"
@@ -2413,292 +2579,6 @@ struct MinimapRouteMaskOverlay:
     }
 }
 
-// MARK: - Driving Coach HUD
-
-struct DrivingCoachHUD:
-    View {
-
-    @ObservedObject var analyzer:
-        FrameAnalyzer
-
-    var body:
-        some View {
-
-        TimelineView(
-            .periodic(
-                from:
-                    .now,
-                by:
-                    0.10
-            )
-        ) { _ in
-            coachContent(
-                currentUptime:
-                    ProcessInfo
-                        .processInfo
-                        .systemUptime
-            )
-        }
-        .allowsHitTesting(false)
-    }
-
-    @ViewBuilder
-    private func coachContent(
-        currentUptime:
-            TimeInterval
-    ) -> some View {
-
-        let snapshot =
-            analyzer
-                .coachSnapshot
-
-        let displayedState =
-            snapshot.displayedState(
-                at:
-                    currentUptime
-            )
-
-        VStack(spacing: 5) {
-            HStack(spacing: 8) {
-                Image(
-                    systemName:
-                        systemImage(
-                            for:
-                                displayedState,
-                            action:
-                                snapshot.action
-                        )
-                )
-
-                Text(
-                    displayedState == .ready
-                    ? snapshot.action.title
-                    : displayedState.title
-                )
-                .font(
-                    .system(
-                        size:
-                            18,
-                        weight:
-                            .black,
-                        design:
-                            .rounded
-                    )
-                )
-                .lineLimit(1)
-
-                if displayedState == .ready {
-                    Text(
-                        String(
-                            format:
-                                "%.0f%%",
-                            snapshot
-                                .overallConfidence *
-                            100
-                        )
-                    )
-                    .font(
-                        .system(
-                            size:
-                                11,
-                            weight:
-                                .bold,
-                            design:
-                                .monospaced
-                        )
-                    )
-                    .padding(
-                        .horizontal,
-                        6
-                    )
-                    .padding(
-                        .vertical,
-                        3
-                    )
-                    .background(
-                        Color.black
-                            .opacity(0.28),
-                        in:
-                            Capsule()
-                    )
-                }
-            }
-
-            if displayedState == .ready {
-                Text(
-                    "\(snapshot.direction.title)  •  \(snapshot.severity.title)  •  \(snapshot.timing.title)"
-                )
-                .font(
-                    .system(
-                        size:
-                            12,
-                        weight:
-                            .bold,
-                        design:
-                            .monospaced
-                    )
-                )
-                .lineLimit(1)
-
-                Text(
-                    "STEERING: \(snapshot.steering.title)"
-                )
-                .font(
-                    .system(
-                        size:
-                            11,
-                        weight:
-                            .semibold,
-                        design:
-                            .monospaced
-                    )
-                )
-                .opacity(0.88)
-
-            } else {
-                Text(
-                    displayedState == .stale
-                    ? "Waiting for a fresh route result."
-                    : snapshot.reason
-                )
-                .font(
-                    .system(
-                        size:
-                            11,
-                        weight:
-                            .medium
-                    )
-                )
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
-                .opacity(0.90)
-            }
-        }
-        .foregroundStyle(.white)
-        .padding(
-            .horizontal,
-            16
-        )
-        .padding(
-            .vertical,
-            10
-        )
-        .frame(
-            minWidth:
-                270,
-            maxWidth:
-                430
-        )
-        .background(
-            statusColor(
-                for:
-                    displayedState,
-                action:
-                    snapshot.action
-            )
-            .opacity(0.90),
-            in:
-                RoundedRectangle(
-                    cornerRadius:
-                        12
-                )
-        )
-        .overlay(
-            RoundedRectangle(
-                cornerRadius:
-                    12
-            )
-            .stroke(
-                Color.white
-                    .opacity(0.24),
-                lineWidth:
-                    1
-            )
-        )
-        .shadow(
-            color:
-                Color.black
-                    .opacity(0.40),
-            radius:
-                8,
-            y:
-                3
-        )
-    }
-
-    private func statusColor(
-        for state:
-            MinimapCoachState,
-        action:
-            DrivingCoachAction
-    ) -> Color {
-
-        guard state == .ready else {
-            switch state {
-            case .noWaypoint:
-                return .orange
-            case .routeUncertain, .stale:
-                return .yellow.opacity(0.78)
-            case .analyzing:
-                return .blue
-            case .minimapUnavailable:
-                return .gray
-            case .ready:
-                return .gray
-            }
-        }
-
-        switch action {
-        case .brake:
-            return .red
-        case .accelerateIfClear:
-            return .green
-        case .hold:
-            return .blue
-        case .unavailable, .setWaypoint:
-            return .gray
-        }
-    }
-
-    private func systemImage(
-        for state:
-            MinimapCoachState,
-        action:
-            DrivingCoachAction
-    ) -> String {
-
-        guard state == .ready else {
-            switch state {
-            case .analyzing:
-                return "waveform.path.ecg"
-            case .noWaypoint:
-                return "location.slash.fill"
-            case .minimapUnavailable:
-                return "map"
-            case .routeUncertain:
-                return "exclamationmark.triangle.fill"
-            case .stale:
-                return "clock.badge.exclamationmark"
-            case .ready:
-                return "checkmark.circle.fill"
-            }
-        }
-
-        switch action {
-        case .brake:
-            return "exclamationmark.octagon.fill"
-        case .hold:
-            return "equal.circle.fill"
-        case .accelerateIfClear:
-            return "arrow.up.circle.fill"
-        case .unavailable:
-            return "questionmark.circle.fill"
-        case .setWaypoint:
-            return "location.slash.fill"
-        }
-    }
-}
-
 // MARK: - Route Detection Status
 
 struct RouteDetectionStatusBadge:
@@ -3092,6 +2972,131 @@ struct VideoFilePlaybackControls:
     }
 }
 
+// MARK: - Hover Volume
+
+/// Mute button that reveals a vertical volume slider while hovered.
+/// Clicking still mutes and unmutes; the slider sets the shared game volume.
+struct HoverVolumeButton: View {
+    @Binding var volume: Double
+    let isMuted: Bool
+    let onMuteToggle: () -> Void
+    let onHoverChange: (Bool) -> Void
+
+    @State private var isButtonHovered = false
+    @State private var isSliderHovered = false
+    @State private var isDragging = false
+    @State private var showsSlider = false
+    @State private var hideTask: Task<Void, Never>?
+
+    private static let trackHeight: CGFloat = 110
+
+    private var symbol: String {
+        if isMuted || volume == 0 { return "speaker.slash.fill" }
+        if volume < 0.34 { return "speaker.wave.1.fill" }
+        if volume < 0.67 { return "speaker.wave.2.fill" }
+        return "speaker.wave.3.fill"
+    }
+
+    var body: some View {
+        Button {
+            onMuteToggle()
+        } label: {
+            Image(systemName: symbol)
+                .font(.system(size: 15, weight: .semibold))
+                .frame(width: 28, height: 28)
+        }
+        .buttonStyle(.bordered)
+        .help(isMuted ? "Unmute Game Audio" : "Mute Game Audio")
+        .accessibilityLabel(isMuted ? "Unmute Game Audio" : "Mute Game Audio")
+        .onHover { hovering in
+            isButtonHovered = hovering
+            updateVisibility()
+        }
+        .overlay(alignment: .bottom) {
+            if showsSlider {
+                sliderPanel
+                    // Sit above the button, overlapping slightly so the
+                    // pointer can move up without leaving both views.
+                    .offset(y: -40)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+        }
+    }
+
+    private var sliderPanel: some View {
+        VStack(spacing: 8) {
+            Text("\(Int(((isMuted ? 0 : volume) * 100).rounded()))")
+                .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                .foregroundStyle(.white)
+
+            GeometryReader { proxy in
+                let height = proxy.size.height
+                let level = CGFloat(isMuted ? 0 : volume)
+                ZStack(alignment: .bottom) {
+                    Capsule().fill(Color.white.opacity(0.18))
+                    Capsule()
+                        .fill(Color.white)
+                        .frame(height: max(height * level, 6))
+                }
+                .frame(width: 6)
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .gesture(
+                    DragGesture(minimumDistance: 0)
+                        .onChanged { value in
+                            isDragging = true
+                            // Dragging while muted should be heard.
+                            if isMuted { onMuteToggle() }
+                            volume = min(max(1 - value.location.y / height, 0), 1)
+                        }
+                        .onEnded { _ in
+                            isDragging = false
+                            updateVisibility()
+                        }
+                )
+            }
+            .frame(width: 28, height: Self.trackHeight)
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 6)
+        .background(Color.black.opacity(0.78), in: Capsule())
+        .overlay(Capsule().stroke(Color.white.opacity(0.16), lineWidth: 1))
+        .padding(.bottom, 12)
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            isSliderHovered = hovering
+            updateVisibility()
+        }
+        .accessibilityElement()
+        .accessibilityLabel("Game Volume")
+        .accessibilityValue(isMuted ? "Muted" : "\(Int((volume * 100).rounded())) percent")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: volume = min(volume + 0.1, 1)
+            case .decrement: volume = max(volume - 0.1, 0)
+            @unknown default: break
+            }
+        }
+    }
+
+    private func updateVisibility() {
+        let wantsSlider = isButtonHovered || isSliderHovered || isDragging
+        onHoverChange(wantsSlider)
+        hideTask?.cancel()
+
+        if wantsSlider {
+            withAnimation(.easeOut(duration: 0.15)) { showsSlider = true }
+        } else {
+            // Short grace period for moving between the button and the slider.
+            hideTask = Task {
+                try? await Task.sleep(for: .milliseconds(250))
+                guard !Task.isCancelled else { return }
+                withAnimation(.easeIn(duration: 0.15)) { showsSlider = false }
+            }
+        }
+    }
+}
+
 // MARK: - Frame Debug
 
 struct FrameDebugView: View {
@@ -3103,6 +3108,9 @@ struct FrameDebugView: View {
 
     let allowsDragging:
         Bool
+
+    var isEmbedded:
+        Bool = false
 
     @State private var showsPerformanceDetails =
         false
@@ -3180,6 +3188,37 @@ struct FrameDebugView: View {
         )
     }
 
+    private var coachAgeText:
+        String {
+
+        let snapshot =
+            analyzer.coachSnapshot
+
+        let frameAge =
+            snapshot.sourceFrameUptime > 0
+            ? String(
+                format: "%.0f ms",
+                snapshot.ageMilliseconds(
+                    at:
+                        ProcessInfo
+                            .processInfo
+                            .systemUptime
+                )
+            )
+            : "—"
+
+        let speedAge =
+            snapshot.speedAgeMilliseconds
+                .map {
+                    String(
+                        format: "%.0f ms",
+                        $0
+                    )
+                } ?? "—"
+
+        return "\(frameAge) / \(speedAge)"
+    }
+
     private var preferredPanelHeight:
         CGFloat {
 
@@ -3195,7 +3234,7 @@ struct FrameDebugView: View {
         }
 
         if showsCoachDetails {
-            height += 190
+            height += 240
         }
 
         if showsSpeedDetails {
@@ -3588,6 +3627,26 @@ struct FrameDebugView: View {
                             value:
                                 "\(analyzer.coachSnapshot.pathPointCount) / \(analyzer.coachSnapshot.branchPointCount)\(analyzer.coachSnapshot.trackingApplied ? " · TRACKED" : "")"
                         )
+
+                        debugRow(
+                            title:
+                                "Latency",
+                            value:
+                                String(
+                                    format:
+                                        "%.0f ms",
+                                    analyzer
+                                        .coachSnapshot
+                                        .processingLatencyMilliseconds
+                                )
+                        )
+
+                        debugRow(
+                            title:
+                                "Frame / Speed Age",
+                            value:
+                                coachAgeText
+                        )
                     }
 
                     debugSection(
@@ -3652,10 +3711,13 @@ struct FrameDebugView: View {
         }
         .padding(12)
         .frame(
-            width: 300,
+            width: isEmbedded ? nil : 300,
             height:
                 preferredPanelHeight,
             alignment: .leading
+        )
+        .frame(
+            maxWidth: isEmbedded ? .infinity : nil
         )
         .background(
             Color.black.opacity(0.72),
@@ -5409,99 +5471,127 @@ struct LegacyDatasetMetadataCounterView:
 // MARK: - Audio Mixer
 
 struct AudioMixerView: View {
+    @Binding var gameVolume: Double
+    @Binding var trainerVolume: Double
+    @Binding var gameMuted: Bool
+    @Binding var trainerMuted: Bool
 
-    @Binding var gameVolume:
-        Double
+    let gameAudioAvailable: Bool
+    let gameAudioStatus: String
 
-    @Binding var trainerVolume:
-        Double
+    @ObservedObject var analyzer: FrameAnalyzer
+    @ObservedObject var datasetRecorder: MinimapDatasetRecorder
 
-    @Binding var gameMuted:
-        Bool
-
-    @Binding var trainerMuted:
-        Bool
-
-    let gameAudioAvailable:
-        Bool
-
-    let gameAudioStatus:
-        String
-
-    @ObservedObject var datasetRecorder:
-        MinimapDatasetRecorder
+    @AppStorage("sidebar.showsTools")
+    private var showsTools = false
 
     var body: some View {
-
         VStack(
             alignment: .leading,
             spacing: 16
         ) {
-
-            Text("AUDIO MIXER")
+            Text("Audio")
                 .font(.headline)
 
             AudioChannelRow(
-                title:
-                    "Game Audio",
-                statusText:
-                    gameAudioStatus,
-                volume:
-                    $gameVolume,
-                isMuted:
-                    $gameMuted,
-                controlsEnabled:
-                    gameAudioAvailable
+                title: "Game Audio",
+                statusText: gameAudioStatus,
+                volume: $gameVolume,
+                isMuted: $gameMuted,
+                controlsEnabled: gameAudioAvailable
             )
-
-            Divider()
 
             AudioChannelRow(
-                title:
-                    "Trainer Voice",
-                statusText:
-                    "Not connected yet",
-                volume:
-                    $trainerVolume,
-                isMuted:
-                    $trainerMuted,
-                controlsEnabled:
-                    false
+                title: "Trainer Voice",
+                statusText: "Not connected yet",
+                volume: $trainerVolume,
+                isMuted: $trainerMuted,
+                controlsEnabled: false
             )
 
             Divider()
 
-            MinimapDatasetControls(
-                recorder:
-                    datasetRecorder
-            )
+            // Bench tools aren't needed while driving, so they start collapsed.
+            DisclosureGroup(
+                isExpanded:
+                    $showsTools.animation(.easeOut(duration: 0.2))
+            ) {
+                VStack(
+                    alignment: .leading,
+                    spacing: 18
+                ) {
+                    toolSection("Route Detection") {
+                        RouteDetectionStatusBadge(
+                            analyzer: analyzer
+                        )
+                    }
 
-            DatasetMetadataCounterView(
-                store:
-                    datasetRecorder
-                        .routeMaskDatasetStore,
-                isOverlay:
-                    false
-            )
+                    toolSection("Frame Analyzer") {
+                        FrameDebugView(
+                            analyzer: analyzer,
+                            maximumHeight: 1_200,
+                            allowsDragging: false,
+                            isEmbedded: true
+                        )
+                    }
 
-            Spacer(
-                minLength:
-                    0
-            )
+                    toolSection("Minimap Dataset") {
+                        MinimapDatasetControls(
+                            recorder: datasetRecorder
+                        )
+                    }
+
+                    toolSection("Route Mask Dataset") {
+                        DatasetMetadataCounterView(
+                            store:
+                                datasetRecorder
+                                    .routeMaskDatasetStore,
+                            isOverlay: false
+                        )
+                    }
+                }
+                .padding(.top, 12)
+            } label: {
+                Label(
+                    "Tools & Diagnostics",
+                    systemImage: "wrench.and.screwdriver"
+                )
+                .font(.headline)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        showsTools.toggle()
+                    }
+                }
+            }
+
+            Spacer(minLength: 0)
         }
         .padding(20)
         .frame(
             maxWidth: .infinity,
             alignment: .topLeading
         )
-        .background(
-            Color(
-                nsColor:
-                    .controlBackgroundColor
-            )
-        )
+    }
+
+    private func toolSection<Content: View>(
+        _ title: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(
+            alignment: .leading,
+            spacing: 8
+        ) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+
+            content()
+        }
     }
 }
+
 // MARK: - Audio Channel
 
 struct AudioChannelRow: View {

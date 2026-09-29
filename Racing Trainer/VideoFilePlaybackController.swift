@@ -545,7 +545,12 @@ final class VideoFilePlaybackController:
         let seconds =
             itemTime.seconds
 
-        if seconds.isFinite {
+        // The observer fires 30×/s for frame delivery, but the scrubber
+        // only needs ~4 updates a second. Publishing every tick redrew the
+        // whole window, which kept toolbar menus from staying open.
+        if seconds.isFinite,
+           abs(seconds - currentTime) >= 0.25 ||
+           seconds < currentTime {
             currentTime =
                 max(
                     seconds,
