@@ -85,6 +85,12 @@ nonisolated enum MotorfestHUDLayout {
 
     // MARK: - Speed OCR
 
+    // Centred on the digital speed readout. Measured on a 1080p
+    // capture showing "114": digits span x 0.061–0.124 and
+    // y 0.864–0.920. The crop stays clear of the gauge's "0"
+    // (ends x 0.048), its "9" (starts x 0.131) and the "km/h"
+    // label (starts y 0.930), which could otherwise be read as
+    // extra digits.
     static let speedOCR =
         GameplayHUDRegion(
             kind:
@@ -94,13 +100,13 @@ nonisolated enum MotorfestHUDLayout {
             normalizedRect:
                 CGRect(
                     x:
-                        0.070,
+                        0.052,
                     y:
-                        0.840,
+                        0.854,
                     width:
-                        0.095,
+                        0.076,
                     height:
-                        0.075
+                        0.073
                 )
         )
 
