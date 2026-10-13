@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "pack_id": "motorfest-literature-starter-2026-09-30",
+  "accessed_on": "2026-09-30",
+  "status": "draft_expert_review_pending",
+  "motorfest_validated": false,
+  "rights_note": "Free access is not a redistribution or model-training license. Original source files remain local; cards contain concise original paraphrases, not copied chapters.",
+  "sources": [
+    {
+      "id": "L01",
+      "title": "The 6 Phases of a Corner",
+      "author": "Scott Mansell / Driver61",
+      "url": "https://driver61.com/uni/corner-phases/",
+      "access": "free_public_article",
+      "review_scope": "Corner-phase explanations in article text; embedded video not reviewed.",
+      "role": "coaching_concepts"
+    },
+    {
+      "id": "L02",
+      "title": "How to Drive the Perfect Racing Line",
+      "author": "Scott Mansell / Driver61",
+      "url": "https://driver61.com/uni/racing-line/",
+      "access": "free_public_article",
+      "review_scope": "Relevant instructional article text; embedded video not reviewed.",
+      "role": "coaching_concepts"
+    },
+    {
+      "id": "L03",
+      "title": "The Ultimate Guide to Braking for Fast Lap Times",
+      "author": "Scott Mansell / Driver61",
+      "url": "https://driver61.com/uni/braking/",
+      "access": "free_public_article",
+      "review_scope": "Brake application, modulation and release discussion; embedded video not reviewed. ABS comparisons and numeric examples excluded from cards.",
+      "role": "coaching_concepts"
+    },
+    {
+      "id": "L04",
+      "title": "How to Trail Brake",
+      "author": "Scott Mansell / Driver61",
+      "url": "https://driver61.com/uni/trail-braking/",
+      "access": "free_public_article",
+      "review_scope": "Relevant instructional article text; embedded video not reviewed.",
+      "role": "coaching_concepts"
+    },
+    {
+      "id": "L05",
+      "title": "How to Find Grip on the Race Track",
+      "author": "Scott Mansell / Driver61",
+      "url": "https://driver61.com/uni/grip/",
+      "access": "free_public_article",
+      "review_scope": "Combined-demand and smooth-input discussion; embedded video not reviewed. Numerical grip illustrations excluded from calibration.",
+      "role": "coaching_concepts"
+    },
+    {
+      "id": "L06",
+      "title": "Maximising the Exit Phase",
+      "author": "Scott Mansell / Driver61",
+      "url": "https://driver61.com/uni/corner-exit/",
+      "access": "free_public_article",
+      "review_scope": "Corner-exit technique discussion; embedded video not reviewed. Track-limit and curb-use advice excluded.",
+      "role": "coaching_concepts"
+    },
+    {
+      "id": "L07",
+      "title": "How Improving your Vision on Track Improves Lap Times",
+      "author": "Scott Mansell / Driver61",
+      "url": "https://driver61.com/uni/vision/",
+      "access": "free_public_article",
+      "review_scope": "Anticipatory visual-reference discussion in article text; embedded video not reviewed.",
+      "role": "coaching_concepts"
+    },
+    {
+      "id": "L08",
+      "title": "Q: How should I practice and get better at trail braking and my brake release?",
+      "author": "Ross Bentley",
+      "url": "https://speedsecrets.com/q-how-should-i-practice-and-get-better-at-trail-braking-and-my-brake-release/",
+      "access": "free_public_article",
+      "review_scope": "Author's answer on practicing brake-release timing and rate.",
+      "role": "coaching_concepts"
+    },
+    {
+      "id": "L09",
+      "title": "Performance Driving Illustrated",
+      "author": "Ross Bentley",
+      "url": "https://speedsecrets.com/product/performance-driving-illustrated/",
+      "download_url": "https://speedsecrets.com/wp-content/uploads/2024/02/Performance-Driving-Illustrated-2-23-24.pdf",
+      "access": "free_author_hosted_pdf_downloaded",
+      "edition_note": "Internal version 1.0, 2-15-16; copyright 2015. The URL's 2024 folder is not an edition date.",
+      "review_scope": "Selected printed pages 7-23 and 31-33 text-reviewed; PDF pages 10, 18, 21 and 34 visually inspected. Additional sections sampled; not a complete-book review.",
+      "page_count": 46,
+      "page_number_note": "Printed page n corresponds to one-based PDF page n+2 in the reviewed sections.",
+      "local_path_from_repo_root": "data/guidance/literature/raw/ross-bentley-performance-driving-illustrated.pdf",
+      "sha256": "07b8e99ace715bb2050a9a8abdcc07ac752445c2145cd6eccf583210c435c594",
+      "redistribution": "Keep original local and ignored; author requests that readers obtain their own copy.",
+      "role": "coaching_concepts"
+    },
+    {
+      "id": "L10",
+      "title": "Electronic stability program",
+      "author": "Bosch Mobility",
+      "url": "https://www.bosch-mobility.com/en/solutions/driving-safety/electronic-stability-program/",
+      "access": "free_public_engineering_overview",
+      "review_scope": "System-operation and sensor-input explanation only.",
+      "role": "observability_background_not_coaching_labels"
+    },
+    {
+      "id": "R01",
+      "title": "A Champion-level Vision-based Reinforcement Learning Agent for Competitive Racing in Gran Turismo 7",
+      "author": "Hojoon Lee et al.",
+      "url": "https://arxiv.org/html/2504.09021v1",
+      "published": "2025",
+      "access": "free_public_paper_html",
+      "review_scope": "Abstract, introduction and observation/training-method sections; not a full experimental replication or results review.",
+      "role": "methodology_background_not_coaching_labels"
+    },
+    {
+      "id": "B01",
+      "title": "Ultimate Speed Secrets: The Complete Guide to High-Performance and Race Driving",
+      "author": "Ross Bentley",
+      "url": "https://speedsecrets.com/books/",
+      "access": "paid_book_not_obtained",
+      "review_scope": "Author's public description only; full book not read.",
+      "acquisition_priority": 1,
+      "role": "candidate_future_reference"
+    },
+    {
+      "id": "B02",
+      "title": "Going Faster! Mastering the Art of Race Driving",
+      "author": "Carl Lopez / Skip Barber Racing School",
+      "publisher": "Bentley Publishers",
+      "url": "https://books.google.com/books/about/Going_Faster.html?id=yLLcIwAACAAJ",
+      "access": "paid_book_not_obtained",
+      "review_scope": "Book catalog and bibliographic description only; full book not read.",
+      "acquisition_priority": 2,
+      "role": "candidate_future_reference"
+    },
+    {
+      "id": "B03",
+      "title": "Race Car Vehicle Dynamics",
+      "author": "William F. Milliken and Douglas L. Milliken",
+      "url": "https://www.millikenresearch.com/rcvd.html",
+      "access": "paid_book_not_obtained",
+      "review_scope": "Authors' company overview and topic listing only; full book not read.",
+      "acquisition_priority": 3,
+      "optional": true,
+      "role": "candidate_future_engineering_reference"
+    },
+    {
+      "id": "B04",
+      "title": "Speed Secrets 4: Engineering the Driver",
+      "author": "Ross Bentley",
+      "url": "https://speedsecrets.com/books/",
+      "access": "paid_book_not_obtained",
+      "review_scope": "Author's public description only; full book not read.",
+      "optional": true,
+      "role": "candidate_future_coaching_reference"
+    },
+    {
+      "id": "Q01",
+      "title": "Vehicle Dynamics",
+      "author": "Dr. R. Krishnakumar / IIT Madras / NPTEL",
+      "url": "https://nptel.ac.in/courses/107106080",
+      "access": "free_course_identified",
+      "review_scope": "Listing and syllabus metadata only; lectures not watched or extracted.",
+      "role": "further_reading_only"
+    },
+    {
+      "id": "Q02",
+      "title": "How to Win at Sim Racing",
+      "author": "Ross Bentley",
+      "url": "https://speedsecrets.com/product/how-to-win-at-sim-racing/",
+      "access": "free_signup_flow_not_completed",
+      "review_scope": "Public product and download-page descriptions only; ebook not obtained or read. No personal details submitted.",
+      "role": "further_reading_only"
+    }
+  ]
+}

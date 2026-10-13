@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Motorfest · Review lab</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">R</span><div><strong>Review lab</strong><span>Motorfest · First practice batch</span></div></div>
+    <span class="local">Local only · no AI answers</span>
+  </header>
+  <main>
+    <div id="fatal" role="alert" hidden></div>
+    <section id="setup" class="welcome">
+      <p class="eyebrow">TEN MOMENTS. YOUR OBSERVATIONS.</p>
+      <h1>What can you see?</h1>
+      <p>Watch a short history, then label the situation at its end. The wheel-camera inset is hidden. There are no future frames or model suggestions.</p>
+      <p>Choose <strong>Unknown</strong> when the footage cannot support an answer. These are practice labels, not braking instructions.</p>
+      <form id="reviewer-form">
+        <label for="reviewer">Your name or nickname</label>
+        <div class="start-row"><input id="reviewer" maxlength="64" autocomplete="off" required placeholder="e.g. Sean"><button id="start" class="primary" type="submit" disabled>Start review</button></div>
+      </form>
+      <p class="quiet">Labels save to this Mac. Use a different nickname for a second independent reviewer.</p>
+    </section>
+    <section id="workspace" hidden>
+      <div class="workspace-heading"><div><h1>Label the visible situation</h1><p id="reviewer-display"></p></div><div class="heading-actions"><button id="export" type="button">Export saved labels</button><button id="change-reviewer" type="button">Change reviewer</button></div></div>
+      <div class="batch-nav"><nav id="cases" aria-label="Review moments"></nav><span id="progress" class="quiet"></span></div>
+      <div class="review-grid">
+        <section class="media-panel" aria-label="Causal gameplay history">
+          <div class="media-heading"><strong id="case-title"></strong><span id="interval" class="quiet"></span></div>
+          <div class="image-wrap"><img id="frame" alt="Masked gameplay frame for the current review moment"><div id="loading" role="status">Loading history…</div></div>
+          <div class="playback"><button id="play" type="button">Play history</button><button id="back-frame" type="button" aria-label="Previous frame">←</button><button id="next-frame" type="button" aria-label="Next frame">→</button><span id="frame-info"></span><label class="zoom"><input id="zoom" type="checkbox"> Full-size view</label></div>
+          <label class="sr-only" for="timeline">History frame</label><input id="timeline" type="range" min="0" max="19" step="1" value="19">
+          <div class="evidence-controls"><button id="mark-evidence" type="button">Mark this frame as evidence</button><span class="quiet">Mark frames that support your answers.</span></div>
+          <div id="evidence-list" aria-label="Marked evidence frames"></div>
+          <details class="guide"><summary>Quick labeling guide</summary><dl>
+            <dt>Speed</dt><dd>Read complete HUD digits. Cropped or unclear digits are unknown, not zero. Entering a value links it to the displayed frame.</dd>
+            <dt>Direction & target</dt><dd>Use the current corner when clearly negotiating it; otherwise the next visible bend. A straight visible segment is not a claim about the whole future route.</dd>
+            <dt>Phase</dt><dd>Approach: before entry. Entry: beginning the curved path. Apex region: visibly passing the corner’s interior region. Exit: leaving as the path opens. Transition: changing between connected bends. Use unknown if this history is insufficient.</dd>
+            <dt>Evidence</dt><dd>A minimap can show a bend without establishing phase. Slowing does not prove braking. Don’t use outside knowledge or later footage to fill gaps.</dd>
+          </dl></details>
+          <p class="quiet scope">One source recording · development practice only · no coaching actions collected</p>
+        </section>
+        <form id="label-form" class="label-panel">
+          <div class="form-title"><h2>Your label</h2><button id="view-frame" type="button">View frame ↑</button></div>
+          <p id="saved-state" class="quiet">Not saved</p>
+          <div class="two-col"><div><label for="speed">Displayed speed</label><input id="speed" type="number" min="0" max="999" step="1" inputmode="numeric" placeholder="Read the HUD"></div><div><label for="unit">Unit</label><select id="unit" required><option value="">Choose…</option><option value="kmh">km/h</option><option value="mph">mph</option><option value="unknown">Unknown</option></select></div></div>
+          <label class="check"><input id="speed-unknown" type="checkbox"> Speed is unreadable / unknown</label>
+          <p id="speed-frame" class="field-hint">Enter speed while its supporting frame is displayed.</p>
+          <label for="direction">Turn direction</label><select id="direction" required><option value="">Choose…</option><option value="left">Left</option><option value="right">Right</option><option value="straight">Straight</option><option value="unknown">Unknown</option></select>
+          <label for="target">Which segment?</label><select id="target" required><option value="">Choose…</option><option value="current_corner">Current corner</option><option value="next_corner">Next corner</option><option value="straight_segment">Straight segment</option><option value="unknown">Unknown</option></select>
+          <label for="phase">Corner phase</label><select id="phase" required><option value="">Choose…</option><option value="straight">Straight</option><option value="approach">Approach</option><option value="entry">Entry</option><option value="apex_region">Apex region</option><option value="exit">Exit</option><option value="transition">Transition between bends</option><option value="unknown">Unknown</option></select>
+          <label for="notes">Evidence / uncertainty</label><textarea id="notes" rows="3" maxlength="4000" required placeholder="What supports your labels? What is unclear?"></textarea>
+          <label class="check confirmation"><input id="independent" type="checkbox" required> I labeled this without seeing AI answers.</label>
+          <div id="form-error" role="alert" hidden></div>
+          <button id="save" class="primary" type="submit">Save & next</button>
+          <p class="quiet save-help">Saved labels remain pending a second review. You can return and revise them.</p>
+        </form>
+      </div>
+    </section>
+    <p id="status" role="status" aria-live="polite"></p>
+  </main>
+</body>
+</html>

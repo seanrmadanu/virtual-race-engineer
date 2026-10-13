@@ -1,0 +1,40 @@
+{
+  "schema_version": "perception-pilot-v1",
+  "recording_id": "synthetic_format_example_not_training_data",
+  "source_group_id": "synthetic_format_example_not_training_data",
+  "event_id": "format_example_001",
+  "decision_time_s": 2.0,
+  "input_interval_s": [0.0, 2.0],
+  "observations": {
+    "hud_speed_displayed": null,
+    "hud_unit": "unknown",
+    "speed_source_frame_id": null,
+    "turn_direction": "unknown",
+    "turn_target": "unknown",
+    "corner_phase": "unknown"
+  },
+  "evidence": {
+    "speed": {
+      "status": "unavailable",
+      "frame_ids": [],
+      "reason": "Synthetic format illustration: no actual frame evidence is supplied."
+    },
+    "direction": {
+      "status": "unavailable",
+      "frame_ids": [],
+      "reason": "Synthetic format illustration: no actual frame evidence is supplied."
+    },
+    "phase": {
+      "status": "unavailable",
+      "frame_ids": [],
+      "reason": "Synthetic format illustration: no actual frame evidence is supplied."
+    }
+  },
+  "recommendation": {
+    "acceptable_actions": ["abstain"],
+    "cue_interval_s": null,
+    "target_speed_range_kph": null,
+    "reason": "Action labels are disabled in this perception-only pilot."
+  },
+  "literature_reference_ids": []
+}
