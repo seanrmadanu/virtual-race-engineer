@@ -6,6 +6,10 @@ import UniformTypeIdentifiers
 
 struct ContentView: View {
     @Environment(\.openWindow) private var openWindow
+    @AppStorage("guidance.hudProfile") private var guidanceHUDProfile = "motorfest-standard-v1"
+    @AppStorage("guidance.speedUnit") private var guidanceSpeedUnit = "km/h"
+    @State private var loadedArgumentVideo = false
+    @State private var loadedArgumentStart = false
 
     @ObservedObject var captureDevices:
         CaptureDeviceManager
@@ -77,7 +81,8 @@ struct ContentView: View {
                                 .frameAnalyzer,
                         minimapDatasetRecorder:
                             captureSession
-                                .minimapDatasetRecorder
+                                .minimapDatasetRecorder,
+                        shadowPipeline: captureSession.shadowPipeline
                     )
             )
     }
@@ -342,6 +347,31 @@ struct ContentView: View {
             )
 
             applySelectedAudioOutput()
+            if !loadedArgumentVideo {
+                loadedArgumentVideo = true
+                let args = CommandLine.arguments
+                if let index = args.firstIndex(of: "--guidance-profile"), index + 1 < args.count,
+                   ["motorfest-standard-v1", "reference-video2-v1"].contains(args[index + 1]) {
+                    guidanceHUDProfile = args[index + 1]
+                }
+                if let index = args.firstIndex(of: "--guidance-speed-unit"), index + 1 < args.count,
+                   ["km/h", "mph", "unknown"].contains(args[index + 1]) {
+                    guidanceSpeedUnit = args[index + 1]
+                }
+                if let index = args.firstIndex(of: "--test-video"), index + 1 < args.count {
+                    captureSession.pauseLiveSourcesForTestPlayback()
+                    videoFilePlayback.load(url: URL(fileURLWithPath: args[index + 1]))
+                }
+            }
+        }
+        .onChange(of: guidanceHUDProfile) { _, _ in captureSession.frameAnalyzer.reset() }
+        .onChange(of: guidanceSpeedUnit) { _, _ in captureSession.frameAnalyzer.reset() }
+        .onReceive(videoFilePlayback.$isReady) { ready in
+            let args = CommandLine.arguments
+            guard ready, !loadedArgumentStart, let index = args.firstIndex(of: "--test-start"),
+                  index + 1 < args.count, let time = Double(args[index + 1]), time.isFinite, time >= 0 else { return }
+            loadedArgumentStart = true
+            videoFilePlayback.seek(to: time)
         }
 
         .onReceive(
@@ -609,13 +639,36 @@ struct ContentView: View {
         ToolbarItemGroup {
             sourceMenu
 
-            Button {
-                videoFilePlayback.pause()
-                openWindow(id: "corner-replay-lab")
+            Menu {
+                Text("Category 1 · Turns & Timing")
+                Text("Turn timing and wheel angles are experimental")
+                Picker("HUD Layout", selection: $guidanceHUDProfile) {
+                    Text("Standard Motorfest HUD").tag("motorfest-standard-v1")
+                    Text("Reference Recording HUD").tag("reference-video2-v1")
+                }
+                Picker("Speed Unit", selection: $guidanceSpeedUnit) {
+                    Text("km/h").tag("km/h")
+                    Text("mph").tag("mph")
+                    Text("Unconfirmed").tag("unknown")
+                }
             } label: {
-                Label("Replay Lab", systemImage: "chart.xyaxis.line")
+                Label("Guidance", systemImage: "arrow.triangle.turn.up.right.diamond")
             }
-            .help("Compare reviewed corner recordings offline")
+            .help("Turn timing and wheel targets use the selected input HUD layout and speed unit")
+
+            Menu {
+                Button("Model Review") {
+                    videoFilePlayback.pause()
+                    openWindow(id: "model-review")
+                }
+                Button("Corner Replay Lab") {
+                    videoFilePlayback.pause()
+                    openWindow(id: "corner-replay-lab")
+                }
+            } label: {
+                Label("Replay", systemImage: "play.rectangle.on.rectangle")
+            }
+            .help("Review timestamped model outputs or compare corner recordings")
 
             Button {
                 refreshAllSources()

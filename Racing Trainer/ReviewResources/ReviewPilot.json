@@ -1,0 +1,2957 @@
+{
+  "schemaVersion": "racing-trainer-review-v2",
+  "title": "Video 2 \u00b7 Modular Coach \u00b7 30-event Pilot",
+  "source": {
+    "filename": "Video 2.mp4",
+    "sha256": "f084bb7f317009b2bd8b2b9b51a1427caefc2646af8822583ff11540806daad5",
+    "duration": 619.3681088435375
+  },
+  "modelSHA256": "d64f6e379893618d0aed2e9dfac3e7df42b85eb7a4ac4ee74b5d7c34b52be9b4",
+  "predictionsSHA256": "46baa96f1fc88bd87622af007fd8e5f40857d8a8ad833ee2bcfb3ecbd3cbbfb5",
+  "events": [
+    {
+      "id": "modular-00050.0",
+      "time": 50,
+      "direction": "unknown",
+      "target": "unknown",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "cannot_judge",
+        "proposedCue": "cannot_judge",
+        "proposalReason": "route_unavailable",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [
+          "geometry_unreliable",
+          "direction_unknown",
+          "route_unavailable"
+        ],
+        "legacyPolicy": "UNAVAILABLE",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "0",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000000142,
+            "capturedAt": 49.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "000",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7070472,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000000142,
+            "capturedAt": 49.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.808809",
+              "routeConfidence": "0.6849301",
+              "routePixels": "388",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "Missing",
+            "units": "normalized_map",
+            "state": "missing",
+            "confidence": 0,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000000142,
+            "capturedAt": 49.9,
+            "version": "1",
+            "failure": "The ordered forward path is not long enough for turn analysis.",
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.0",
+              "geometryConfidence": "0.0",
+              "reason": "The ordered forward path is not long enough for turn analysis."
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000000142,
+            "capturedAt": 49.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "7200061941592548360",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "uncertain",
+        "suggestedRationale": "Input or route evidence is incomplete. Check whether this moment is usable."
+      }
+    },
+    {
+      "id": "modular-00070.0",
+      "time": 70,
+      "direction": "unknown",
+      "target": "unknown",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "cannot_judge",
+        "proposedCue": "cannot_judge",
+        "proposalReason": "route_unavailable",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [
+          "geometry_unreliable",
+          "direction_unknown",
+          "route_unavailable"
+        ],
+        "legacyPolicy": "UNAVAILABLE",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "0",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.09999999999999432,
+            "capturedAt": 69.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "000",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.71216357,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 69.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.8152045",
+              "routeConfidence": "0.6860292",
+              "routePixels": "381",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "Missing",
+            "units": "normalized_map",
+            "state": "missing",
+            "confidence": 0,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 69.9,
+            "version": "1",
+            "failure": "The ordered forward path is not long enough for turn analysis.",
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.0",
+              "geometryConfidence": "0.0",
+              "reason": "The ordered forward path is not long enough for turn analysis."
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 69.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "13698913950238736247",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "uncertain",
+        "suggestedRationale": "Input or route evidence is incomplete. Check whether this moment is usable."
+      }
+    },
+    {
+      "id": "modular-00095.0",
+      "time": 95,
+      "direction": "left",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "brake",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "116",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.09999999999999432,
+            "capturedAt": 94.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "116",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7129071,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 94.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.81613386",
+              "routeConfidence": "0.89861107",
+              "routePixels": "1306",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "left",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.87440765,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 94.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.87440765",
+              "geometryConfidence": "0.95345694",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "medium",
+              "timing": "now",
+              "turnDistance": "0.017999999999999985",
+              "path": "[[0.625,0.7330508474576272],[0.625,0.7153559322033899],[0.624534790435776,0.6976732723040264],[0.6220116219428561,0.6801860818816983],[0.6155191278218869,0.6637442316485908],[0.605778726870539,0.6488975084390599],[0.5936764601234897,0.6358175370705492],[0.5802661488157145,0.62403613287791],[0.5655101014342743,0.6139277112752585],[0.5496295278403941,0.6056217975436706],[0.5331071533213623,0.598611626390773],[0.5164676782892479,0.5918687313549424],[0.4999920077056381,0.5847423057058964],[0.48351633712202835,0.5776158800568503],[0.466876632241512,0.570873523186493],[0.4503547284268055,0.5638622989729197],[0.43430103445713875,0.5558660610028452],[0.41887758996500013,0.546758239652556],[0.4040812581028049,0.5366853108198836],[0.3900348284433692,0.5256387295859739],[0.37705951338411625,0.5133805385809955],[0.3650241688469086,0.5002300603938801],[0.3536509161842239,0.4865164071566785],[0.34182078677276867,0.47318531216309245],[0.3291015767459191,0.4606734547512661],[0.3155191167050126,0.4490693328939368],[0.30145807367941513,0.4380221210831341],[0.28879310344827586,0.4279661016949153]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 94.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "13260878023978388583",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "brake",
+        "suggestedRationale": "Legacy threshold suggests braking. This is uncalibrated; video may not establish whether braking is needed."
+      }
+    },
+    {
+      "id": "modular-00105.0",
+      "time": 105,
+      "direction": "right",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "brake",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "151",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.09999999999999432,
+            "capturedAt": 104.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "151",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7065676,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 104.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.8082095",
+              "routeConfidence": "0.8985176",
+              "routePixels": "1146",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "right",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8799935,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 104.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8799935",
+              "geometryConfidence": "0.96254027",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "medium",
+              "timing": "soon",
+              "turnDistance": "0.10796168900823654",
+              "path": "[[0.625,0.7245762711864406],[0.6215550954603073,0.7072086710006896],[0.6183064887986646,0.6898068167714565],[0.6154626597787446,0.6723341384710999],[0.6125434910084052,0.6548747863125],[0.6095351631342523,0.6374349522297504],[0.6085739442232824,0.6197928962074687],[0.6104333377729276,0.6022104247002327],[0.6142649606455054,0.58493165837293],[0.6192559435436024,0.5679451635815004],[0.6268058199832275,0.5519147227897339],[0.6368016809890558,0.5372377421839138],[0.6486478290744638,0.5239208900825553],[0.6611204163815266,0.5111663595911288],[0.6742263916140074,0.4990386397199418],[0.6877358762992973,0.4873475950287835],[0.7016681436660834,0.4761457310829446],[0.7157237822360579,0.46509180515672727],[0.7300037930964375,0.4543227389880129],[0.744754466847395,0.44418447165319913],[0.7599989782424592,0.434780263680719],[0.775433850905285,0.42567630488976405],[0.7910559958581108,0.4168898517716705],[0.8069187033860277,0.4085310492521594],[0.8228886058082504,0.40036745167496895],[0.8386444071142947,0.39181216477988223],[0.8543688687810654,0.3832037256736349],[0.8663793103448276,0.3771186440677966]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 104.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "3717028852762526738",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "brake",
+        "suggestedRationale": "Legacy threshold suggests braking. This is uncalibrated; video may not establish whether braking is needed."
+      }
+    },
+    {
+      "id": "modular-00140.0",
+      "time": 140,
+      "direction": "right",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "112",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.09999999999999432,
+            "capturedAt": 139.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "112",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7244252,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 139.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.83053154",
+              "routeConfidence": "0.90097857",
+              "routePixels": "1236",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "right",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.87440723,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 139.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.87440723",
+              "geometryConfidence": "0.9704179",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "gentle",
+              "timing": "now",
+              "turnDistance": "0",
+              "path": "[[0.6336206896551724,0.7330508474576272],[0.6392799195163907,0.7162555174163135],[0.6449003603602355,0.6994463948698141],[0.6507009344791581,0.6826984004347898],[0.6558722637469315,0.6657525795909941],[0.6604355628165655,0.648639643830452],[0.6655819017161504,0.6316869544736908],[0.6704476661734229,0.6146510509649803],[0.6756191205053292,0.5977052669909745],[0.6801510233419283,0.5805835742232537],[0.6853224776738348,0.5636377902492479],[0.6901748886408453,0.5465980049856761],[0.6929739908077981,0.5291331638024819],[0.6934694052429626,0.5114725288265298],[0.6903147532224839,0.4940813393487326],[0.683150600628269,0.4779241821899557],[0.6724059568025083,0.46377272788289703],[0.6582338426273684,0.4529317003250079],[0.642078933288876,0.44520313562443276],[0.6249345826304643,0.4398125020664193],[0.6075153305695398,0.4353663288394575],[0.5900081049762024,0.4312558308088805],[0.5723576528137658,0.42778557241762183],[0.5547072006513292,0.424315314026363],[0.5369842925712454,0.4212409192383247],[0.5192103611967447,0.4184452907102676],[0.501480242067138,0.41543398253516206],[0.4839772706314887,0.4113044679184801],[0.46647429919583944,0.4071749533017981],[0.44878191140972906,0.4039779006420727],[0.4310381090206033,0.4010176621125254],[0.4136482469285725,0.3965589050147219],[0.396996300173908,0.38987079655663726],[0.3809146563512172,0.38193403454724634],[0.3652765202594976,0.3731920539770624],[0.3577586206896552,0.3686440677966102]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 139.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "13235381799185890756",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "advance_warning",
+        "suggestedRationale": "A route bend is visible. Check whether an advance warning is useful and when it should occur."
+      }
+    },
+    {
+      "id": "modular-00175.0",
+      "time": 175,
+      "direction": "left",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "133",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.09999999999999432,
+            "capturedAt": 174.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "133",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.71616286,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 174.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.82020354",
+              "routeConfidence": "0.8991921",
+              "routePixels": "1076",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "left",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.88108253,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 174.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.88108253",
+              "geometryConfidence": "0.9682602",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "medium",
+              "timing": "soon",
+              "turnDistance": "0.23374418420506934",
+              "path": "[[0.6163793103448276,0.7330508474576272],[0.6214603018911172,0.7162283586421584],[0.6211208735997626,0.6986240115239655],[0.6182770445798424,0.6811513332236088],[0.6154332155599225,0.6636786549232522],[0.6125069414287969,0.6462205595652727],[0.6095129583945817,0.6287784727239745],[0.607971156467077,0.6111555402925696],[0.6077586206896551,0.5934648020377226],[0.6077586206896551,0.5757698867834853],[0.6077586206896551,0.558074971529248],[0.6077586206896551,0.5403800562750108],[0.6077586206896551,0.5226851410207736],[0.6077586206896551,0.5049902257665363],[0.6074143603466305,0.48730207631549854],[0.6044991705627233,0.4698597400761627],[0.5976450793904237,0.45355766769132777],[0.5870875129355708,0.43925482627669515],[0.5730986933286378,0.4282017436023997],[0.5570622180404133,0.42025147349112973],[0.5401460744668033,0.4142076277096076],[0.5230190293351044,0.40876666414338203],[0.5059810976778878,0.40306795208307783],[0.4889204637873982,0.397434903116625],[0.4719844903737611,0.39144129083057855],[0.4555369392857711,0.3842737015206079],[0.43959391856085794,0.3760679741501129],[0.42422378851608167,0.36686757677486354],[0.4091452344370525,0.35720694609735537],[0.40086206896551724,0.3516949152542373]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 174.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "8451308437756685127",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "lift",
+        "suggestedRationale": "Possible lift before a bend. This is a review hypothesis, not a physics-derived action label."
+      }
+    },
+    {
+      "id": "modular-00185.0",
+      "time": 185,
+      "direction": "left",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "136",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.09999999999999432,
+            "capturedAt": 184.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "136",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7142151,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 184.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.8177688",
+              "routeConfidence": "0.9000098",
+              "routePixels": "1095",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "left",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.88252723,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 184.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.88252723",
+              "geometryConfidence": "0.9621422",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "gentle",
+              "timing": "now",
+              "turnDistance": "0",
+              "path": "[[0.6163793103448276,0.7330508474576272],[0.615490429733047,0.7154806418741535],[0.6106465885584796,0.6984905792580414],[0.6051818670933207,0.6816312525068159],[0.6007077939693223,0.6644959364593811],[0.5971777035368351,0.6471446445030875],[0.5937723829104614,0.6297737583060389],[0.5926785682042692,0.6121368831154202],[0.5945540144917629,0.5945650135150632],[0.5980841049242502,0.5772137215587697],[0.6022209828858595,0.5599989704975881],[0.6076520392343703,0.5431347327875014],[0.6140523342149456,0.5265990873603181],[0.6195158123248596,0.5097516161834846],[0.621754714291986,0.49227687666745407],[0.6182938262713696,0.4750441493109931],[0.6095400864220715,0.4596765304021124],[0.5973694429792803,0.4466920605476543],[0.5829628072489208,0.43612251774505534],[0.5671111194993654,0.42776904350614126],[0.5505232309738145,0.4209309332666652],[0.5335872575601774,0.4149373209806187],[0.5164854941783301,0.4094232334228781],[0.49950646551365635,0.40355415254110416],[0.48262982895342854,0.3974069835884669],[0.4659172485174939,0.39083525704416705],[0.4492046680815592,0.38426353049986733],[0.43249208764562447,0.3776918039555676],[0.4158543252773243,0.37094241323859856],[0.3994743610716153,0.3636152953527617],[0.3922413793103448,0.3601694915254237]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 184.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "9976318539905657801",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "advance_warning",
+        "suggestedRationale": "A route bend is visible. Check whether an advance warning is useful and when it should occur."
+      }
+    },
+    {
+      "id": "modular-00205.0",
+      "time": 205,
+      "direction": "right",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "cannot_judge",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [
+          "minimap_unreliable"
+        ],
+        "legacyPolicy": "brake",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "127",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.09999999999999432,
+            "capturedAt": 204.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "127",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.4109814,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 204.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.43872672",
+              "routeConfidence": "0.8239589",
+              "routePixels": "635",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "right",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7741212,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 204.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8060163",
+              "geometryConfidence": "0.7741212",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "sharp",
+              "timing": "now",
+              "turnDistance": "0",
+              "path": "[[0.6422413793103449,0.5127118644067796],[0.6465792450783979,0.4955595039807879],[0.653151428089635,0.47909584761934193],[0.6603991173094431,0.46289873636565104],[0.6674154277532325,0.44660615213188637],[0.6743155908298492,0.43026562911667],[0.6821964553809526,0.414361329462345],[0.6909977749430769,0.39893019924580625],[0.7002586985407725,0.3837569345942148],[0.7097682716627487,0.36873517594175237],[0.7202065948411747,0.35432688446056804],[0.7317703165516061,0.34077600663240315],[0.7442477604392878,0.32802762533086977],[0.7575621872311521,0.3161283091203097],[0.7718652705387398,0.3054082811059635],[0.7875472166587792,0.2967385753486646],[0.8043769364170713,0.2905214247474433],[0.8218206778964694,0.28621830739662635],[0.8397050650684073,0.2843011609844507],[0.8576948111944358,0.2838983050847458],[0.875,0.2838983050847458]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 204.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "17707593243022216291",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "brake",
+        "suggestedRationale": "Legacy threshold suggests braking. This is uncalibrated; video may not establish whether braking is needed."
+      }
+    },
+    {
+      "id": "modular-00215.0",
+      "time": 215,
+      "direction": "right",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "0",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.09999999999999432,
+            "capturedAt": 214.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "000",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.69758475,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 214.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.796981",
+              "routeConfidence": "0.8961621",
+              "routePixels": "1003",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "right",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8862326,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 214.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8862326",
+              "geometryConfidence": "0.973714",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "sharp",
+              "timing": "soon",
+              "turnDistance": "0.1798786171605557",
+              "path": "[[0.6163793103448276,0.7584745762711864],[0.6223204012699802,0.7418347036848725],[0.6246650722473527,0.7243329701921801],[0.625,0.7066446373262614],[0.625,0.6889497220720241],[0.625,0.6712548068177868],[0.625,0.6535598915635495],[0.625,0.6358649763093123],[0.625,0.618170061055075],[0.6257869551140753,0.6004992803778885],[0.6280506367091953,0.5829515964901144],[0.6320616231683249,0.5657080406947145],[0.6362623363128806,0.5485017297918728],[0.640787630756483,0.5313783485963266],[0.6449883439010389,0.514172037693485],[0.6497862990241878,0.49711832061725864],[0.656480532384023,0.4807248983660544],[0.6658419586619289,0.4656322631507509],[0.6768436339751729,0.4516445697263724],[0.6888271510654107,0.43844269956749277],[0.7022625311833072,0.42668560665995947],[0.7168625899877836,0.4163499410249554],[0.7322067982925248,0.4071051427020362],[0.7478628118938907,0.39838063717424177],[0.7640178103438755,0.3905896067800354],[0.7809759233892121,0.38469408481625755],[0.7983180386734338,0.37995615087569157],[0.815821010109083,0.3758266362590095],[0.8332416301656781,0.3713863831371383],[0.850539078253431,0.3665359328540729],[0.8663793103448276,0.3601694915254237]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 214.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "7063772806444812012",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "lift",
+        "suggestedRationale": "Possible lift before a bend. This is a review hypothesis, not a physics-derived action label."
+      }
+    },
+    {
+      "id": "modular-00220.0",
+      "time": 220,
+      "direction": "right",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "0",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.09999999999999432,
+            "capturedAt": 219.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "000",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.6959404,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 219.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.7949255",
+              "routeConfidence": "0.89574474",
+              "routePixels": "1014",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "right",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8859612,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 219.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8859612",
+              "geometryConfidence": "0.9753672",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "sharp",
+              "timing": "soon",
+              "turnDistance": "0.1978769927117243",
+              "path": "[[0.6163793103448276,0.7584745762711864],[0.6223204012699802,0.7418347036848725],[0.6246650722473527,0.7243329701921801],[0.625,0.7066446373262614],[0.625,0.6889497220720241],[0.625,0.6712548068177868],[0.625,0.6535598915635495],[0.625,0.6358649763093123],[0.625,0.618170061055075],[0.6257869551140753,0.6004992803778885],[0.6280506367091953,0.5829515964901144],[0.6314847704562307,0.5655833316558153],[0.635014860888718,0.5482320396995217],[0.6388253491245363,0.5309413665802896],[0.6430260622690921,0.5137350556774478],[0.6483917444639012,0.49685870155808515],[0.6557155050791589,0.48072036197551443],[0.665952546200711,0.4662023796686177],[0.6776684035334873,0.4527759992065277],[0.6903335243098478,0.44020727739707916],[0.7035443141897816,0.42819188157074317],[0.7175704402769361,0.4171100846202146],[0.7326756452388433,0.4075065685709873],[0.7485384666834812,0.3991642218225743],[0.7650784801658201,0.392206428138186],[0.7820759907203105,0.38642518492715516],[0.7993875013013629,0.3815825080651984],[0.8166472957383786,0.3765703036815039],[0.833886392285488,0.3714905331800457],[0.8511124459013464,0.36636683798841646],[0.8663793103448276,0.3601694915254237]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 219.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "5845531993407687317",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "lift",
+        "suggestedRationale": "Possible lift before a bend. This is a review hypothesis, not a physics-derived action label."
+      }
+    },
+    {
+      "id": "modular-00230.0",
+      "time": 230,
+      "direction": "right",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "72",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.09999999999999432,
+            "capturedAt": 229.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "072",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.69702804,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 229.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.7962851",
+              "routeConfidence": "0.8958274",
+              "routePixels": "969",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "right",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8961337,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 229.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8961337",
+              "geometryConfidence": "0.97326046",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "sharp",
+              "timing": "soon",
+              "turnDistance": "0.16186888229193683",
+              "path": "[[0.6422413793103449,0.7584745762711864],[0.6363002883851921,0.7418347036848726],[0.6339556174078196,0.7243329701921801],[0.6336206896551724,0.7066446373262615],[0.6336206896551724,0.6889497220720241],[0.6336206896551724,0.6712548068177868],[0.6336206896551724,0.6535598915635495],[0.6342866520181977,0.6358843607933322],[0.6364316166385505,0.6183226943817869],[0.6403282297231899,0.6010566861620753],[0.6445289428677458,0.5838503752592337],[0.649054237311348,0.5667269940636874],[0.6532549504559039,0.5495206831608458],[0.6577802448995062,0.5323973019652996],[0.6629571340258817,0.5154654532249933],[0.6707715123376411,0.4995536405695163],[0.6810401778608824,0.48506193874230874],[0.6929460869273069,0.4717967383606521],[0.7057368599388741,0.4593539178586725],[0.7192982440628287,0.44772524659760987],[0.7338074877997681,0.4372649606979177],[0.7490233733065605,0.4278257768644563],[0.7647587872397209,0.41923516909915287],[0.7810429862253978,0.4117258041968423],[0.7979922204817417,0.40577298880299184],[0.815409114848906,0.40131789787887745],[0.8326470675121188,0.3962340953153084],[0.8499388029957828,0.39132192948048283],[0.8673859241734496,0.3870326479724248],[0.875,0.3855932203389831]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.09999999999999432,
+            "capturedAt": 229.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "9696959980262331779",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "lift",
+        "suggestedRationale": "Possible lift before a bend. This is a review hypothesis, not a physics-derived action label."
+      }
+    },
+    {
+      "id": "modular-00265.0",
+      "time": 265,
+      "direction": "left",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "261",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 264.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "261",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.68649703,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 264.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.78312135",
+              "routeConfidence": "0.89512336",
+              "routePixels": "1323",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "left",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8871354,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 264.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8871354",
+              "geometryConfidence": "0.96489954",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "gentle",
+              "timing": "later",
+              "turnDistance": "0.2518573187751522",
+              "path": "[[0.6077586206896551,0.7245762711864406],[0.6165457509227271,0.7091639643149419],[0.6221938411061835,0.6924136859540022],[0.6245604920308441,0.6748922589430179],[0.625,0.6572078377274739],[0.6239311288785538,0.6395487958977573],[0.6213799751037026,0.6220371657639622],[0.6182869530487624,0.6046106323203704],[0.616643273280197,0.5869956992590769],[0.6163793103448276,0.569305971710333],[0.6162380800638326,0.5516138320772395],[0.6148375352137485,0.5339798082482217],[0.6119808731364025,0.5165161560941814],[0.6084507827039152,0.4991648641378879],[0.6049206922714278,0.4818135721815943],[0.6008359288074597,0.4645821942678439],[0.596635215662904,0.44737588336500217],[0.5921099212193017,0.430252502169456],[0.5876647402427905,0.413108652184131],[0.582493285910884,0.39616286821012525],[0.5776399472515245,0.3791233014884031],[0.5744999762932824,0.36172296963423406],[0.5733105309349285,0.3440723704346832],[0.5736160658385506,0.32638482261189244],[0.5754322822032669,0.3087847068019617],[0.5786112894161091,0.29137131502814345],[0.5810593725071022,0.2738466937686591],[0.5818965517241379,0.25618535566024603],[0.5818965517241379,0.25]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 264.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "13376172204182963246",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "advance_warning",
+        "suggestedRationale": "A route bend is visible. Check whether an advance warning is useful and when it should occur."
+      }
+    },
+    {
+      "id": "modular-00270.0",
+      "time": 270,
+      "direction": "right",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "262",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 269.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "262",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.6772205,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 269.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.7715257",
+              "routeConfidence": "0.8904797",
+              "routePixels": "1172",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "right",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8913681,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 269.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8913681",
+              "geometryConfidence": "0.93963987",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "gentle",
+              "timing": "soon",
+              "turnDistance": "0.14385112472730976",
+              "path": "[[0.6422413793103449,0.7245762711864406],[0.6322927782161466,0.7098630737507603],[0.6267901146150292,0.6931010150174598],[0.6250722999847079,0.67550567759028],[0.6253025726508401,0.6578181297674892],[0.6270227387471189,0.6402092023541117],[0.6301866745047893,0.6227937371527784],[0.63266691457691,0.6052710387767247],[0.6348115285480419,0.5877021672618036],[0.6379094715641864,0.5702936228376021],[0.642762810223546,0.55325405611588],[0.6480021071228043,0.5363282726100292],[0.6535501088669322,0.5194959362390736],[0.6603298487024488,0.5031151300176414],[0.6672532542563102,0.48678489892344695],[0.6733350408170479,0.4701312126277979],[0.6778523775301799,0.45300579825208825],[0.6820025265896282,0.4357895612077925],[0.6843606203585525,0.4182559403406586],[0.6835029538307076,0.4006476922444241],[0.6772732150374615,0.3841609817626823],[0.6660300943888973,0.3704277072546724],[0.6517382617464017,0.3597267704100711],[0.635870704542708,0.35140068499099986],[0.6192738241361854,0.3445836855587042],[0.602349437325327,0.33855872373647383],[0.585588159866335,0.3321367843743921],[0.5732758620689655,0.326271186440678]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 269.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "1382460866606779286",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "advance_warning",
+        "suggestedRationale": "A route bend is visible. Check whether an advance warning is useful and when it should occur."
+      }
+    },
+    {
+      "id": "modular-00300.0",
+      "time": 300,
+      "direction": "right",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "266",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 299.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "266",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7228173,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 299.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.8285216",
+              "routeConfidence": "0.90016973",
+              "routePixels": "1139",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "right",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8696025,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 299.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8696025",
+              "geometryConfidence": "0.9736589",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "gentle",
+              "timing": "later",
+              "turnDistance": "0.28795442790350223",
+              "path": "[[0.625,0.7161016949152542],[0.625,0.6984067796610169],[0.625,0.6807118644067797],[0.625,0.6630169491525424],[0.625,0.6453220338983051],[0.6251516029040819,0.6276300981200205],[0.6265726960498215,0.6099976877274516],[0.6294493338457152,0.5925371726227558],[0.6322168718796128,0.5750595241500646],[0.6335257380654021,0.5574183017824894],[0.6336206896551724,0.5397252526269268],[0.6336206896551724,0.5220303373726897],[0.6336206896551724,0.5043354221184524],[0.6340175032272456,0.48664932474994654],[0.6358983815288166,0.46905655416616887],[0.6390773887416588,0.4516431623923507],[0.6419212177615788,0.43417048409199416],[0.6448747736332202,0.41671721434518877],[0.6492933973544719,0.39957523931238687],[0.6546811584209992,0.3826974016752377],[0.660269324909787,0.3658825154499006],[0.6649011873009796,0.3487907742833205],[0.6679653327565523,0.3313570656906746],[0.6706526039211519,0.31386284923350244],[0.6724278389739671,0.2962649743686063],[0.6715967974244972,0.2786178320085931],[0.6693502839817236,0.26106164843784835],[0.6681630080060564,0.24342830663417483],[0.6681034482758621,0.24152542372881355]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 299.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "13419581208669798558",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "advance_warning",
+        "suggestedRationale": "A route bend is visible. Check whether an advance warning is useful and when it should occur."
+      }
+    },
+    {
+      "id": "modular-00305.0",
+      "time": 305,
+      "direction": "straight",
+      "target": "straight_segment",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "cannot_judge",
+        "proposedCue": "cannot_judge",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [
+          "uncalibrated_direction_only"
+        ],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "306",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 304.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "306",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7195642,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 304.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.8244552",
+              "routeConfidence": "0.89999014",
+              "routePixels": "1198",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "straight",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8825731,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 304.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8825731",
+              "geometryConfidence": "0.96177083",
+              "reason": "No significant turn is visible on the ordered route.",
+              "severity": "straight",
+              "timing": "none",
+              "turnDistance": "Missing",
+              "path": "[[0.6163793103448276,0.7161016949152542],[0.6231075139329099,0.6997041916322724],[0.6279888706339296,0.6826861140362288],[0.6315359149458576,0.6653513700360452],[0.6332986105644339,0.6477460115520457],[0.6336206896551724,0.6300574261693338],[0.6336206896551724,0.6123625109150964],[0.6336206896551724,0.5946675956608591],[0.6336206896551724,0.5769726804066219],[0.6336206896551724,0.5592777651523847],[0.6334162932062808,0.5415868669340212],[0.6318906153900714,0.5239626684497375],[0.6289123071696933,0.5065181199866281],[0.625978268908187,0.4890613979528433],[0.6231344398882668,0.47158871965248667],[0.6190711218729051,0.45436592425111966],[0.6142177832135456,0.4373263575293975],[0.6099607997714926,0.42014630396157376],[0.6070910735880972,0.40267820636754614],[0.6042171373642442,0.38521143835636784],[0.6000164242196884,0.36800512745352615],[0.5957817225646946,0.35080750052979937],[0.5912904166315304,0.33367543535513816],[0.5870897034869745,0.3164691244522964],[0.5838225426080993,0.2990905659469821],[0.5834437541397799,0.2814226084473137],[0.5863712669074821,0.2639986435349269],[0.5905172413793104,0.25]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 304.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "13232282665785227135",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "no_cue",
+        "suggestedRationale": "Route geometry looks straight. Check the road and history; this does not establish that acceleration is safe."
+      }
+    },
+    {
+      "id": "modular-00345.0",
+      "time": 345,
+      "direction": "right",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "brake",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "196",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 344.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "196",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7002347,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 344.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.8002934",
+              "routeConfidence": "0.8971213",
+              "routePixels": "1112",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "right",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8962294,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 344.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "1",
+              "forwardPathConfidence": "0.8962294",
+              "geometryConfidence": "0.91464007",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "sharp",
+              "timing": "soon",
+              "turnDistance": "0.125983984836604",
+              "path": "[[0.6422413793103449,0.7415254237288136],[0.6387964747706523,0.7241578235430625],[0.6355827294342726,0.7067511733316107],[0.6339029004428263,0.6891390786796323],[0.6336206896551724,0.6714497097588277],[0.6336206896551724,0.6537547945045904],[0.6336206896551724,0.6360598792503531],[0.6334370660648292,0.6183685727797013],[0.6321620862821594,0.6007205517722977],[0.6318032821218195,0.5830479879055472],[0.6382138785846234,0.5668533655347734],[0.6534469605124964,0.5579240520774373],[0.6711968794693618,0.5553020888073064],[0.6891924594299016,0.5550847457627118],[0.7071924594299016,0.5550847457627118],[0.7251924594299016,0.5550847457627118],[0.7431924594299016,0.5550847457627118],[0.7611924594299017,0.5550847457627118],[0.7791924594299017,0.5550847457627118],[0.7971924594299017,0.5550847457627118],[0.8151920301153975,0.5550636354259708],[0.8331490377582801,0.5539200457152944],[0.8509354840234402,0.5512708146168425],[0.8684384554590896,0.5471413000001606],[0.8859132026882919,0.5428998003148979],[0.9035250894117728,0.5392618800981656],[0.9094827586206896,0.538135593220339]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 344.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "13896888016682440393",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "brake",
+        "suggestedRationale": "Legacy threshold suggests braking. This is uncalibrated; video may not establish whether braking is needed."
+      }
+    },
+    {
+      "id": "modular-00350.0",
+      "time": 350,
+      "direction": "left",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "110",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 349.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "110",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7384597,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 349.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.8480746",
+              "routeConfidence": "0.90453607",
+              "routePixels": "1021",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "left",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8578596,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 349.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8578596",
+              "geometryConfidence": "0.95969903",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "gentle",
+              "timing": "soon",
+              "turnDistance": "0.10798466417449634",
+              "path": "[[0.6422413793103449,0.7330508474576272],[0.6456862838500376,0.7156832472718762],[0.6493013845809477,0.6983491266360199],[0.652831475013435,0.6809978346797263],[0.6563615654459223,0.6636465427234328],[0.6598121648809282,0.6462811903502288],[0.6620033503656146,0.6287312198281156],[0.66088565768502,0.6111328937060307],[0.6561765768662826,0.5940791647007715],[0.6496715522231418,0.5775826283450094],[0.6426128276281621,0.561307550170778],[0.6353635325713737,0.5451111282411277],[0.6281673360975804,0.5288938556336943],[0.6224201669316226,0.5121289153773676],[0.6183443634634422,0.49491145210164594],[0.6166625319767997,0.4772995146840578],[0.6163793103448276,0.45961016562953705],[0.6163793103448276,0.4419152503752997],[0.6165316025100365,0.42422332814317343],[0.6179540610906616,0.4065910249635068],[0.6208320262736744,0.3891307183158376],[0.6235982369204529,0.37165286138611975],[0.6249057376713566,0.3540115318056424],[0.625,0.3363184691039214],[0.625310930887721,0.3186296646238048],[0.6270476547554671,0.3010220373139709],[0.6303202700464293,0.2836247823069748],[0.6336206896551724,0.2669491525423729]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 349.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "11111389817790809151",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "advance_warning",
+        "suggestedRationale": "A route bend is visible. Check whether an advance warning is useful and when it should occur."
+      }
+    },
+    {
+      "id": "modular-00370.0",
+      "time": 370,
+      "direction": "right",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "140",
+            "units": "km/h",
+            "state": "uncertain",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 369.9,
+            "version": "1",
+            "failure": "implausible_speed_change",
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "140",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.72486144,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 369.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.83107674",
+              "routeConfidence": "0.90131396",
+              "routePixels": "1023",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "right",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8884141,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 369.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8884141",
+              "geometryConfidence": "0.97588927",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "gentle",
+              "timing": "soon",
+              "turnDistance": "0.14386610609811176",
+              "path": "[[0.6422413793103449,0.7330508474576272],[0.6363002883851921,0.7164109748713133],[0.6339655172413792,0.6989090468156196],[0.6347717884478503,0.6812480607379493],[0.63743440382595,0.6637573854586795],[0.6416351169705058,0.6465510745558377],[0.6458358301150616,0.6293447636529961],[0.6496178343970312,0.612047932624762],[0.6531479248295184,0.5946966406684684],[0.6571278092824089,0.5774425890974777],[0.6613285224269646,0.5602362781946361],[0.665853816870567,0.5431128969990898],[0.6701969334264066,0.5259429698104373],[0.6753683877583131,0.5089971858364316],[0.6802217264176724,0.49195761911470937],[0.683951415012317,0.47466291623788176],[0.6867952440322372,0.4571902379375252],[0.6905652127667039,0.43990421667864243],[0.6954185514260633,0.4228646499569203],[0.6998687033447338,0.4057301022038504],[0.7020310371935724,0.388177932790846],[0.7023170325569891,0.3705033425022738],[0.7006630289317436,0.35288922006230583],[0.6966401152910409,0.3356614217239929],[0.6917867766316812,0.3186218550022708],[0.6866153222997747,0.30167607102826494],[0.6820834194631756,0.28455437826054414],[0.6768417697678698,0.2676283181428205],[0.6711645455154984,0.2508396582674971],[0.6681034482758621,0.24152542372881355]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 369.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "12265492260377106106",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "advance_warning",
+        "suggestedRationale": "A route bend is visible. Check whether an advance warning is useful and when it should occur."
+      }
+    },
+    {
+      "id": "modular-00375.0",
+      "time": 375,
+      "direction": "left",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "106",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 374.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "106",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7222642,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 374.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.8278302",
+              "routeConfidence": "0.90023565",
+              "routePixels": "1215",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "left",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.87277883,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 374.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.87277883",
+              "geometryConfidence": "0.97526634",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "gentle",
+              "timing": "soon",
+              "turnDistance": "0.1979964230137905",
+              "path": "[[0.6336206896551724,0.7330508474576272],[0.6336206896551724,0.7153559322033899],[0.6336206896551724,0.6976610169491526],[0.6336206896551724,0.6799661016949153],[0.6336206896551724,0.6622711864406781],[0.6336206896551724,0.6445762711864407],[0.6336206896551724,0.6268813559322034],[0.6336206896551724,0.6091864406779661],[0.6336206896551724,0.5914915254237288],[0.6336206896551724,0.5737966101694916],[0.6336206896551724,0.5561016949152544],[0.6332871632661922,0.5384133345081129],[0.6314759300557604,0.5208138934944154],[0.627217877861851,0.5036354298722119],[0.6213923205172187,0.48689638093214804],[0.614707288342845,0.47046706457139864],[0.608022256168471,0.4540377482106493],[0.6013372239940973,0.4376084318498999],[0.5946521918197234,0.42117911548915055],[0.5879671596453495,0.40474979912840114],[0.5807936783759109,0.3885220857397083],[0.5735443833191225,0.37232566381005805],[0.5664358454567486,0.35607114561404335],[0.5591148730777087,0.3399172959096188],[0.550371097943189,0.3244577245949408],[0.5404366115945591,0.3097039748874483],[0.5319888075539762,0.2941198319772965],[0.5281639157818578,0.27693991606207136],[0.5331018342018145,0.26010173496193967],[0.5387931034482759,0.25]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 374.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "10999248024074555115",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "advance_warning",
+        "suggestedRationale": "A route bend is visible. Check whether an advance warning is useful and when it should occur."
+      }
+    },
+    {
+      "id": "modular-00415.0",
+      "time": 415,
+      "direction": "left",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "brake",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "171",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 414.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "171",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.72975564,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 414.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.83719456",
+              "routeConfidence": "0.9005459",
+              "routePixels": "847",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "left",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8696823,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 414.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8696823",
+              "geometryConfidence": "0.95889604",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "sharp",
+              "timing": "now",
+              "turnDistance": "0.017999999999999985",
+              "path": "[[0.625,0.7161016949152542],[0.625,0.6984067796610169],[0.624534790435776,0.6807241197616535],[0.6220888860341391,0.6632171885579143],[0.6170086246827452,0.6462570730508109],[0.6105505948982269,0.629742987461744],[0.6038280200426284,0.6133291665051019],[0.5962792085199741,0.5972683863806548],[0.5877432174150472,0.5816920886825888],[0.5779613787220449,0.566843468740743],[0.5673979568400672,0.5525229130661844],[0.5557834295789122,0.5390107649379222],[0.5435369686119987,0.5260442122086144],[0.5309088854446384,0.5134358534879496],[0.518505637518386,0.5006139826099186],[0.5065041703359099,0.4874276170932737],[0.4955263561636882,0.47341169156059115],[0.48466038456812416,0.4593094639443752],[0.4722737699426867,0.44654930495774353],[0.45627975890423833,0.43883224473004784],[0.438483697455577,0.4365641047135075],[0.42048620754783694,0.43644067796610175],[0.4024862075478369,0.43644067796610175],[0.3845177774502953,0.437387076485265],[0.36668820926261225,0.43978192233971114],[0.3489736873277908,0.4429007311220098],[0.3310663004598851,0.4446428166598825],[0.3130718409401191,0.4449152542372881],[0.30603448275862066,0.4449152542372881]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 414.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "11419540458710227618",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "brake",
+        "suggestedRationale": "Legacy threshold suggests braking. This is uncalibrated; video may not establish whether braking is needed."
+      }
+    },
+    {
+      "id": "modular-00430.0",
+      "time": 430,
+      "direction": "unknown",
+      "target": "unknown",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "cannot_judge",
+        "proposedCue": "cannot_judge",
+        "proposalReason": "route_unavailable",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [
+          "geometry_unreliable",
+          "direction_unknown",
+          "route_unavailable"
+        ],
+        "legacyPolicy": "UNAVAILABLE",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "188",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 429.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "188",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7319494,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 429.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY \u00b7 SHORT ROUTE",
+              "playerConfidence": "0.83993673",
+              "routeConfidence": "0.7603331",
+              "routePixels": "377",
+              "routeSource": "SHORT ROUTE \u00b7 VERIFIED"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "Missing",
+            "units": "normalized_map",
+            "state": "missing",
+            "confidence": 0,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 429.9,
+            "version": "1",
+            "failure": "The ordered forward path is not long enough for turn analysis.",
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.0",
+              "geometryConfidence": "0.0",
+              "reason": "The ordered forward path is not long enough for turn analysis."
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 429.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "781984417836501765",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "uncertain",
+        "suggestedRationale": "Input or route evidence is incomplete. Check whether this moment is usable."
+      }
+    },
+    {
+      "id": "modular-00440.0",
+      "time": 440,
+      "direction": "left",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "brake",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "125",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 439.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "125",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.71952564,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 439.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.82440704",
+              "routeConfidence": "0.90126336",
+              "routePixels": "914",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "left",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8086382,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 439.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8086382",
+              "geometryConfidence": "0.8479676",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "sharp",
+              "timing": "now",
+              "turnDistance": "0",
+              "path": "[[0.6163793103448276,0.7330508474576272],[0.6068271079366349,0.7180739793095818],[0.595250202016559,0.7045419756049045],[0.5822284295304723,0.6923329633339564],[0.5678926402619571,0.6816556903717216],[0.5520360341534436,0.6733552473151845],[0.5353021430346927,0.6668679283851507],[0.5181996104846002,0.6613560655409907],[0.501085277592286,0.6558919475948937],[0.48384732492907334,0.6508081450313244],[0.466430430561909,0.6463530541072102],[0.44919247789869626,0.6412692515436411],[0.43203225023241193,0.6359463285568263],[0.41491884500409826,0.6304793566587551],[0.39768089234088544,0.6253955540951861],[0.3803833653954209,0.6205070383345596],[0.36353542729556243,0.6143054561568991],[0.34714031184484406,0.6070234963010247],[0.3310653080141231,0.5990666049102703],[0.31523104429779375,0.5906560054032599],[0.2996379276736251,0.5818203370007144],[0.2840140644615378,0.573048545494237],[0.26774838834136205,0.5655264605326136],[0.2629310344827586,0.5635593220338984]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 439.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "4598530122916074508",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "brake",
+        "suggestedRationale": "Legacy threshold suggests braking. This is uncalibrated; video may not establish whether braking is needed."
+      }
+    },
+    {
+      "id": "modular-00455.0",
+      "time": 455,
+      "direction": "left",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "80",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 454.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "080",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.70848256,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 454.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.81060326",
+              "routeConfidence": "0.90191454",
+              "routePixels": "1113",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "left",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.84443134,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 454.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.84443134",
+              "geometryConfidence": "0.865755",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "medium",
+              "timing": "now",
+              "turnDistance": "0",
+              "path": "[[0.6077586206896551,0.7584745762711864],[0.5993074736524568,0.7428635063932303],[0.5892502142152776,0.7282008001318916],[0.5774402250634983,0.7148784238269192],[0.5638729521765123,0.703272669223025],[0.5486777660918879,0.6937963772880966],[0.5326542604370895,0.6857473662808232],[0.5162165584516993,0.6785397724014808],[0.4993723771125245,0.672320258205246],[0.4823796013238883,0.666490938992735],[0.46529158506600354,0.6609370897657314],[0.4483556116523665,0.6549434774796848],[0.4317606226905265,0.6481106964586819],[0.41549930926440437,0.6405332062273633],[0.3998925150770427,0.6317374675081184],[0.38547877958110416,0.6211773140002775],[0.37284042322483235,0.6086094276118019],[0.36226607177263626,0.5943175890575451],[0.3532398668766246,0.5790223262303754],[0.345419855825289,0.5630857033252652],[0.33640046142375135,0.5477747673044515],[0.3255345386458574,0.5336998206578156],[0.3130079565286566,0.5210234672127413],[0.29880443958197705,0.5102179846368473],[0.28879310344827586,0.5042372881355932]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 454.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "15151771315844570214",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "lift",
+        "suggestedRationale": "Possible lift before a bend. This is a review hypothesis, not a physics-derived action label."
+      }
+    },
+    {
+      "id": "modular-00480.0",
+      "time": 480,
+      "direction": "right",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "brake",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "190",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 479.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "190",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.73189414,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 479.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.83986765",
+              "routeConfidence": "0.900413",
+              "routePixels": "1062",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "right",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.85840416,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 479.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.85840416",
+              "geometryConfidence": "0.93489355",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "sharp",
+              "timing": "now",
+              "turnDistance": "0.07199999999999994",
+              "path": "[[0.625,0.7161016949152542],[0.625,0.6984067796610169],[0.625,0.6807118644067797],[0.625,0.6630169491525424],[0.625,0.6453220338983051],[0.625,0.6276271186440677],[0.625886322400052,0.6099708051973138],[0.6303040422158727,0.592896845401669],[0.639282766474478,0.5776449496984898],[0.6507758616918308,0.5640408324706052],[0.6636361333730193,0.5516673885290796],[0.6772688461092765,0.5401229319741799],[0.692246362063655,0.5303360440709289],[0.7084157258982785,0.522622968799321],[0.7253143904160249,0.516532805561244],[0.7424788108381297,0.5112227815591317],[0.7598660023670081,0.5066553431703601],[0.7774906284481007,0.5030696391525767],[0.7951410806105372,0.49959938076131805],[0.8127915327729739,0.49612912237005935],[0.8304419849354104,0.49265886397880065],[0.8481454317288031,0.489478142263673],[0.8660444884188416,0.48765345040231484],[0.8840365249021946,0.4872881355932203],[0.9020365249021947,0.4872881355932203],[0.9200365249021947,0.4872881355932203],[0.9353448275862069,0.4872881355932203]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 479.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "14500341385876113032",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "brake",
+        "suggestedRationale": "Legacy threshold suggests braking. This is uncalibrated; video may not establish whether braking is needed."
+      }
+    },
+    {
+      "id": "modular-00490.0",
+      "time": 490,
+      "direction": "left",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "brake",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "169",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 489.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "169",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7276359,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 489.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.8345449",
+              "routeConfidence": "0.85886025",
+              "routePixels": "1435",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "uTurnLeft",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8706012,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 489.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8706012",
+              "geometryConfidence": "0.94536227",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "uTurn",
+              "timing": "now",
+              "turnDistance": "0.053987356097757594",
+              "path": "[[0.6336206896551724,0.7161016949152542],[0.6336206896551724,0.6984067796610169],[0.6340858992193964,0.6807241197616535],[0.6360338870395449,0.6631392533587281],[0.6386650344884336,0.6456415253539926],[0.6382492489496499,0.6280144532923401],[0.6331808779465732,0.6111129014214653],[0.6247242705166196,0.5955256192363714],[0.6136748964954082,0.5816059208538659],[0.5994984595500559,0.5707912010379873],[0.5825510773087772,0.5650696779006471],[0.564638418052994,0.5635599808494417],[0.5467266580070753,0.5650773715346019],[0.5296953125441202,0.5706203919231292],[0.5147819366590252,0.5804815632554267],[0.5016492472946448,0.5925456454282392],[0.49031459785167697,0.6062642182091167],[0.48224724257878526,0.6220194885775615],[0.47885175751298115,0.6393500090744482],[0.47844827586206895,0.6570347001473553],[0.47844827586206895,0.6747296154015927],[0.47844827586206895,0.69242453065583],[0.47844827586206895,0.7101194459100674],[0.47831662437654604,0.7278117737967498],[0.47693505523971574,0.7454472875842499],[0.4739252639107472,0.7628767438684084],[0.46972455076619135,0.7800830547712501],[0.46483820706428564,0.7971072028745465],[0.45895672721011305,0.8138173486839367],[0.45018300223532703,0.8292163719183309],[0.43853039211181566,0.8426400842936391],[0.4252659046335099,0.8546001305097886],[0.41191785795555197,0.8664712099285792],[0.40948275862068967,0.8686440677966102]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 489.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "14191567267386358557",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "brake",
+        "suggestedRationale": "Legacy threshold suggests braking. This is uncalibrated; video may not establish whether braking is needed."
+      }
+    },
+    {
+      "id": "modular-00505.0",
+      "time": 505,
+      "direction": "left",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "brake",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "125",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 504.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "125",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.72350615,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 504.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.8293827",
+              "routeConfidence": "0.90009564",
+              "routePixels": "965",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "left",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8934267,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 504.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8934267",
+              "geometryConfidence": "0.9708657",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "sharp",
+              "timing": "soon",
+              "turnDistance": "0.19789275751308355",
+              "path": "[[0.6336206896551724,0.7415254237288136],[0.6276795987300198,0.7248855511424996],[0.6253349277526473,0.7073838176498073],[0.625,0.6896954847838885],[0.625,0.6720005695296513],[0.625,0.654305654275414],[0.625,0.6366107390211767],[0.625,0.6189158237669394],[0.625,0.6012209085127022],[0.625,0.5835259932584649],[0.625,0.5658310780042276],[0.625,0.5481361627499903],[0.625,0.530441247495753],[0.6246568493089354,0.5127530762365491],[0.6207345726423732,0.4955923712743988],[0.6085728873276788,0.4831128475602668],[0.5916207282366274,0.4773898399903576],[0.5740482788150452,0.4735720684933124],[0.5565453073793959,0.46944255387663036],[0.5391234626754878,0.4650061870144054],[0.5217065683083236,0.4605510960902911],[0.5046626223766999,0.4548704331394151],[0.4876222263534394,0.44917884891965787],[0.4703972551823402,0.44405510888408817],[0.4531530298498717,0.43899186837311227],[0.43610576788730143,0.4333201429404552],[0.41938315031233947,0.4267743913092589],[0.4026192449432555,0.42033242015595107],[0.38566198405079866,0.4144032064077895],[0.375,0.4110169491525424]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 504.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "6714279549151707651",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "brake",
+        "suggestedRationale": "Legacy threshold suggests braking. This is uncalibrated; video may not establish whether braking is needed."
+      }
+    },
+    {
+      "id": "modular-00515.0",
+      "time": 515,
+      "direction": "right",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "brake",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "90",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 514.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "090",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.70328766,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 514.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.8041096",
+              "routeConfidence": "0.89654326",
+              "routePixels": "1226",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "right",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.8597931,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 514.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.8597931",
+              "geometryConfidence": "0.96948284",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "medium",
+              "timing": "now",
+              "turnDistance": "0",
+              "path": "[[0.6422413793103449,0.7330508474576272],[0.644266437144334,0.7154820445712996],[0.6479929409734079,0.6981927558998832],[0.6526029422949026,0.6810926560855745],[0.6587640486340647,0.6644781855603497],[0.665748938796954,0.6481726328881615],[0.6729982338537422,0.6319762109585112],[0.679139315936813,0.6153446174983449],[0.6849706987171823,0.5986069636866217],[0.6907187459011469,0.5818414659949853],[0.6962536275215667,0.5650047459612886],[0.7022981758654806,0.5483383144916256],[0.7093421539177541,0.5320676226260685],[0.7178646773315799,0.5164929015471288],[0.7274574908576603,0.5015218625597379],[0.7374309366162048,0.4867939189326769],[0.7477725347458876,0.47231288596058124],[0.7583394476261367,0.4579909018216787],[0.7689461224207353,0.44369703139574657],[0.7792672743221514,0.42920193242267457],[0.7892827853368793,0.41450207760754754],[0.7993805093470677,0.3998571200063576],[0.8099004982082711,0.3854989095432709],[0.8209350197202444,0.37152052661495394],[0.8321795305762241,0.3577031192071824],[0.8433246977754812,0.34380886862433613],[0.854883337345666,0.33024700321943096],[0.8663793103448276,0.3177966101694915]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 514.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "7974640902877726892",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "brake",
+        "suggestedRationale": "Legacy threshold suggests braking. This is uncalibrated; video may not establish whether braking is needed."
+      }
+    },
+    {
+      "id": "modular-00575.0",
+      "time": 575,
+      "direction": "unknown",
+      "target": "unknown",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "cannot_judge",
+        "proposedCue": "cannot_judge",
+        "proposalReason": "route_unavailable",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [
+          "geometry_unreliable",
+          "direction_unknown",
+          "route_unavailable"
+        ],
+        "legacyPolicy": "UNAVAILABLE",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "202",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 574.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "202",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.7050073,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 574.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY \u00b7 SHORT ROUTE",
+              "playerConfidence": "0.80625916",
+              "routeConfidence": "0.7510206",
+              "routePixels": "517",
+              "routeSource": "SHORT ROUTE \u00b7 VERIFIED"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "Missing",
+            "units": "normalized_map",
+            "state": "missing",
+            "confidence": 0,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 574.9,
+            "version": "1",
+            "failure": "The ordered forward path is not long enough for turn analysis.",
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.0",
+              "geometryConfidence": "0.0",
+              "reason": "The ordered forward path is not long enough for turn analysis."
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 574.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "15845589692328015259",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "uncertain",
+        "suggestedRationale": "Input or route evidence is incomplete. Check whether this moment is usable."
+      }
+    },
+    {
+      "id": "modular-00590.0",
+      "time": 590,
+      "direction": "left",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "brake",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "108",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 589.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "108",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.72588295,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 589.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.8323537",
+              "routeConfidence": "0.89993525",
+              "routePixels": "1221",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "left",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.87096506,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 589.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.87096506",
+              "geometryConfidence": "0.9798776",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "medium",
+              "timing": "now",
+              "turnDistance": "0",
+              "path": "[[0.625,0.7330508474576272],[0.6206621342319468,0.7158984870316355],[0.6146808635694139,0.6992174856330942],[0.6079964653989942,0.6827879234382062],[0.6005290667848552,0.6666908853644635],[0.5920895604118772,0.6510652089554746],[0.5829119581637148,0.635844451228685],[0.5736510345660192,0.6206711865770936],[0.5641305690874305,0.6056560648059051],[0.5544276025518099,0.5907521437501319],[0.5443557115594724,0.5760875192036241],[0.5345367761806095,0.5612588193452159],[0.524841380862772,0.5463502850294005],[0.5155804572650766,0.5311770203778091],[0.5061685464319367,0.5160957545829535],[0.49646557989631607,0.5011918335271802],[0.4864964899536876,0.4864605288463081],[0.4765747535251155,0.47169850912226424],[0.46649135882531034,0.45704134625792614],[0.45660780808226403,0.44225455804514746],[0.4462525844469427,0.4277828987518114],[0.4359594367949366,0.41326853423037485],[0.42512658156833,0.3991378619750924],[0.41419799405112206,0.38507958653685387],[0.402093061885937,0.37198932554379044],[0.38907224025649134,0.3597820743231646],[0.37518053705037324,0.3485353384020668],[0.3611560858328784,0.3374433588946844],[0.3577586206896552,0.3347457627118644]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 589.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "2040789192007226891",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "brake",
+        "suggestedRationale": "Legacy threshold suggests braking. This is uncalibrated; video may not establish whether braking is needed."
+      }
+    },
+    {
+      "id": "modular-00605.0",
+      "time": 605,
+      "direction": "left",
+      "target": "next_corner",
+      "phase": "unknown",
+      "reasons": [
+        "module-derived route, not vehicle steering",
+        "development-only pilot"
+      ],
+      "diagnostics": {
+        "cue": "advance_warning",
+        "proposedCue": "advance_warning",
+        "proposalReason": "uncalibrated_direction_only",
+        "origin": "rules-math-v1",
+        "suppressionReasons": [],
+        "legacyPolicy": "hold",
+        "modules": [
+          {
+            "name": "speed",
+            "value": "37",
+            "units": "km/h",
+            "state": "fresh",
+            "confidence": 0.5,
+            "confidenceKind": "vision_score_uncalibrated",
+            "age": 0.10000000000002274,
+            "capturedAt": 604.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cropProfile": "reference-video2-v1",
+              "rawText": "037",
+              "unitSource": "explicit_source_setting"
+            }
+          },
+          {
+            "name": "minimap",
+            "value": "True",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.70596737,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 604.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "diagnostic": "READY",
+              "playerConfidence": "0.80745924",
+              "routeConfidence": "0.90187985",
+              "routePixels": "1389",
+              "routeSource": "COLOR + GEOMETRY"
+            }
+          },
+          {
+            "name": "geometry",
+            "value": "left",
+            "units": "normalized_map",
+            "state": "fresh",
+            "confidence": 0.88562757,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 604.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "branches": "0",
+              "forwardPathConfidence": "0.88562757",
+              "geometryConfidence": "0.9808859",
+              "reason": "Ordered route centerline extracted.",
+              "severity": "medium",
+              "timing": "now",
+              "turnDistance": "0",
+              "path": "[[0.5905172413793104,0.7669491525423728],[0.5809650389711176,0.7519722843943275],[0.5694404161765254,0.7383906226204312],[0.5570189867838676,0.7255844144326329],[0.5446250373405939,0.7127533560382175],[0.5326173260783913,0.6995725137239347],[0.5211441177933315,0.685939805762992],[0.5096240179677938,0.672345782783745],[0.49759486771303335,0.6591839043359604],[0.4851409836136598,0.646409780501564],[0.472413061552302,0.6338975859327715],[0.4596851394909442,0.621385391363979],[0.44695721742958633,0.6088731967951866],[0.4342292953682285,0.596361002226394],[0.4215013733068706,0.5838488076576016],[0.40877345124551273,0.5713366130888091],[0.39594825563213987,0.5589220148067382],[0.3827592682466018,0.54688191612384],[0.3691315291219113,0.535323527098636],[0.3551814335875165,0.524143041430234],[0.34168731587375484,0.5124385699540334],[0.32910351422055323,0.49979359922573957],[0.31766234784932673,0.48615194853591587],[0.30796979055415724,0.4712499393260203],[0.3010336351534671,0.4549762096875578],[0.2978978168531099,0.4375809855198267],[0.2974137931034483,0.4199010280854369],[0.2974137931034483,0.4022061128311995],[0.2974137931034483,0.3845111975769623],[0.2974137931034483,0.36681628232272506],[0.2974137931034483,0.3516949152542373]]"
+            }
+          },
+          {
+            "name": "validity",
+            "value": "True",
+            "units": "boolean",
+            "state": "fresh",
+            "confidence": 1,
+            "confidenceKind": "heuristic_not_probability",
+            "age": 0.10000000000002274,
+            "capturedAt": 604.9,
+            "version": "1",
+            "failure": null,
+            "evidence": {
+              "cameraStatus": "unverified",
+              "fingerprint": "13172909632052791406",
+              "scope": "layout_hud_and_duplicate_frame_checks_only"
+            }
+          }
+        ],
+        "suggestedLabel": "lift",
+        "suggestedRationale": "Possible lift before a bend. This is a review hypothesis, not a physics-derived action label."
+      }
+    }
+  ]
+}

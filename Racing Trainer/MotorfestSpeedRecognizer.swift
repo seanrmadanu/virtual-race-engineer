@@ -19,21 +19,50 @@ nonisolated enum MotorfestSpeedRecognizer {
     private static let speedOCREdgeTolerance: CGFloat = 0.01
     private static let maximumReasonableSpeed = 650
 
-    static func recognize(in pixelBuffer: CVPixelBuffer) -> SpeedOCRResult {
-        recognize(using: VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:]))
+    static func recognize(in pixelBuffer: CVPixelBuffer, region: CGRect = MotorfestHUDLayout.speedOCR.normalizedRect,
+                          rejectEdgePixels: Bool = false) -> SpeedOCRResult {
+        if rejectEdgePixels && cropCutsBrightPixels(pixelBuffer, region: region) {
+            return unknown(rawText: "crop_edge_pixels")
+        }
+        return recognize(using: VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:]), region: region)
+    }
+
+    /// Vision can omit a partial digit from its text box. Check actual crop-edge pixels too.
+    /// This conservative profile check can reject glare; it must never fill in a missing digit.
+    static func cropCutsBrightPixels(_ buffer: CVPixelBuffer, region: CGRect) -> Bool {
+        guard CVPixelBufferGetPixelFormatType(buffer) == kCVPixelFormatType_32BGRA,
+              region.minX >= 0, region.minY >= 0, region.maxX <= 1, region.maxY <= 1,
+              region.width > 0, region.height > 0 else { return true }
+        CVPixelBufferLockBaseAddress(buffer, .readOnly)
+        defer { CVPixelBufferUnlockBaseAddress(buffer, .readOnly) }
+        guard let base = CVPixelBufferGetBaseAddress(buffer) else { return true }
+        let bytes = base.assumingMemoryBound(to: UInt8.self)
+        let width = CVPixelBufferGetWidth(buffer), height = CVPixelBufferGetHeight(buffer)
+        let stride = CVPixelBufferGetBytesPerRow(buffer)
+        let left = Int(region.minX * Double(width)), right = min(width - 1, Int(region.maxX * Double(width)) - 1)
+        let top = Int(region.minY * Double(height)), bottom = min(height, Int(region.maxY * Double(height)))
+        var bright = 0
+        for y in top..<bottom {
+            for x in [left, min(right, left + 1), max(left, right - 1), right] {
+                let offset = y * stride + x * 4
+                let channels = [Int(bytes[offset]), Int(bytes[offset + 1]), Int(bytes[offset + 2])]
+                if channels.min()! >= 190 && channels.max()! - channels.min()! <= 45 { bright += 1 }
+            }
+        }
+        return bright >= 2
     }
 
     static func recognize(in image: CGImage) -> SpeedOCRResult {
-        recognize(using: VNImageRequestHandler(cgImage: image, options: [:]))
+        recognize(using: VNImageRequestHandler(cgImage: image, options: [:]), region: MotorfestHUDLayout.speedOCR.normalizedRect)
     }
 
-    private static func recognize(using handler: VNImageRequestHandler) -> SpeedOCRResult {
+    private static func recognize(using handler: VNImageRequestHandler, region: CGRect) -> SpeedOCRResult {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .fast
         request.minimumTextHeight = 0.025
         request.usesLanguageCorrection = false
         request.regionOfInterest = visionRegion(
-            fromTopLeftRegion: MotorfestHUDLayout.speedOCR.normalizedRect
+            fromTopLeftRegion: region
         )
 
         do {

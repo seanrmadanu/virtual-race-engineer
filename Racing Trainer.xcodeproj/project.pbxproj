@@ -7,12 +7,34 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A90000000000000000000001 /* LiveTurnGuidance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90000000000000000000002; };
+		A80000000000000000000003 /* TurnGuidanceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80000000000000000000004; };
+		A80000000000000000000001 /* TurnGuidance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80000000000000000000002; };
+		A70000000000000000000005 /* RouteTurnSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70000000000000000000006; };
+		A70000000000000000000003 /* AIReviewModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70000000000000000000004; };
+		A70000000000000000000001 /* RoadLineDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70000000000000000000002; };
+		A60000000000000000000001 /* ShadowCaptureState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000002; };
+		A60000000000000000000003 /* ShadowCapturePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000004; };
+		A60000000000000000000005 /* ShadowSessionRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000006; };
+		A50000000000000000000001 /* ModularCoach.swift in Sources */ = {isa = PBXBuildFile; fileRef = A50000000000000000000002; };
+		A40000000000000000000001 /* ModelReviewModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A40000000000000000000002 /* ModelReviewModels.swift */; };
 		A20000000000000000000001 /* Racing Trainer/CoachSafetyPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* Racing Trainer/CoachSafetyPolicy.swift */; };
 		A20000000000000000000003 /* Racing Trainer/MinimapCoachModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* Racing Trainer/MinimapCoachModels.swift */; };
 		A30000000000000000000001 /* Racing Trainer/CornerReplayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002 /* Racing Trainer/CornerReplayModels.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		A90000000000000000000002 /* LiveTurnGuidance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/LiveTurnGuidance.swift"; sourceTree = SOURCE_ROOT; };
+		A80000000000000000000004 /* TurnGuidanceTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/TurnGuidanceTracker.swift"; sourceTree = SOURCE_ROOT; };
+		A80000000000000000000002 /* TurnGuidance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/TurnGuidance.swift"; sourceTree = SOURCE_ROOT; };
+		A70000000000000000000006 /* RouteTurnSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/RouteTurnSelector.swift"; sourceTree = SOURCE_ROOT; };
+		A70000000000000000000004 /* AIReviewModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/AIReviewModels.swift"; sourceTree = SOURCE_ROOT; };
+		A70000000000000000000002 /* RoadLineDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/RoadLineDetector.swift"; sourceTree = SOURCE_ROOT; };
+		A60000000000000000000002 /* ShadowCaptureState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/ShadowCaptureState.swift"; sourceTree = SOURCE_ROOT; };
+		A60000000000000000000004 /* ShadowCapturePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/ShadowCapturePipeline.swift"; sourceTree = SOURCE_ROOT; };
+		A60000000000000000000006 /* ShadowSessionRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/ShadowSessionRecorder.swift"; sourceTree = SOURCE_ROOT; };
+		A50000000000000000000002 /* ModularCoach.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/ModularCoach.swift"; sourceTree = SOURCE_ROOT; };
+		A40000000000000000000002 /* ModelReviewModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/ModelReviewModels.swift"; sourceTree = SOURCE_ROOT; };
 		1421652F3022DCAA00291EBF /* Racing Trainer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Racing Trainer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000002 /* Racing Trainer/CoachSafetyPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/CoachSafetyPolicy.swift"; sourceTree = SOURCE_ROOT; };
 		A20000000000000000000004 /* Racing Trainer/MinimapCoachModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/MinimapCoachModels.swift"; sourceTree = SOURCE_ROOT; };
@@ -59,6 +81,11 @@
 				A20000000000000000000002 /* Racing Trainer/CoachSafetyPolicy.swift */,
 				A20000000000000000000004 /* Racing Trainer/MinimapCoachModels.swift */,
 				A30000000000000000000002 /* Racing Trainer/CornerReplayModels.swift */,
+				A40000000000000000000002 /* ModelReviewModels.swift */,
+				A50000000000000000000002 /* ModularCoach.swift */,
+				A60000000000000000000002 /* ShadowCaptureState.swift */,
+				A60000000000000000000004 /* ShadowCapturePipeline.swift */,
+				A60000000000000000000006 /* ShadowSessionRecorder.swift */,
 				142165303022DCAA00291EBF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -176,6 +203,17 @@
 				A20000000000000000000001 /* Racing Trainer/CoachSafetyPolicy.swift in Sources */,
 				A20000000000000000000003 /* Racing Trainer/MinimapCoachModels.swift in Sources */,
 				A30000000000000000000001 /* Racing Trainer/CornerReplayModels.swift in Sources */,
+				A40000000000000000000001 /* ModelReviewModels.swift in Sources */,
+				A50000000000000000000001 /* ModularCoach.swift in Sources */,
+				A70000000000000000000005 /* RouteTurnSelector.swift in Sources */,
+				A80000000000000000000003 /* TurnGuidanceTracker.swift in Sources */,
+				A90000000000000000000001 /* LiveTurnGuidance.swift in Sources */,
+				A80000000000000000000001 /* TurnGuidance.swift in Sources */,
+				A70000000000000000000003 /* AIReviewModels.swift in Sources */,
+				A70000000000000000000001 /* RoadLineDetector.swift in Sources */,
+				A60000000000000000000001 /* ShadowCaptureState.swift in Sources */,
+				A60000000000000000000003 /* ShadowCapturePipeline.swift in Sources */,
+				A60000000000000000000005 /* ShadowSessionRecorder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -329,7 +367,7 @@
 				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = NO;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Racing Trainer needs access to display video from your capture card.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -374,7 +412,7 @@
 				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
 				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
 				ENABLE_RESOURCE_ACCESS_USB = NO;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_NSCameraUsageDescription = "Racing Trainer needs access to display video from your capture card.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";

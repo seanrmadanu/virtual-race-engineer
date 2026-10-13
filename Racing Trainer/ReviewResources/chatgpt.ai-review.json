@@ -1,0 +1,462 @@
+{
+  "schema": "racing-trainer-ai-columns-v1",
+  "reviewer": "chatgpt",
+  "sourceSHA256": "f084bb7f317009b2bd8b2b9b51a1427caefc2646af8822583ff11540806daad5",
+  "originalReviewSHA256": "c2ff8a15a824ed2052fd3fdeb3034d93e87a34698a3318211a9515a06ad5890e",
+  "reviewedPipelineSHA256": "d64f6e379893618d0aed2e9dfac3e7df42b85eb7a4ac4ee74b5d7c34b52be9b4",
+  "origin": "ai_after_model_output",
+  "humanApproved": false,
+  "trainingEligible": false,
+  "responses": [
+    {
+      "eventID": "modular-00050.0",
+      "time": 50,
+      "action": "no_cue",
+      "confidence": "low",
+      "current": "Not separately labeled",
+      "upcoming": "",
+      "observation": "Car is stationary in neutral while the exterior camera orbits. The yellow route extends to screen-right of the marker. This does not establish an active right corner or a need to slow down.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Confirm a stationary no-cue interval. Do not score camera orbit as a turn-direction error."
+      ],
+      "intervalStart": 48,
+      "intervalEnd": 50
+    },
+    {
+      "eventID": "modular-00070.0",
+      "time": 70,
+      "action": "no_cue",
+      "confidence": "low",
+      "current": "Not separately labeled",
+      "upcoming": "",
+      "observation": "Speed stays at 000 while the view changes from cockpit to chase camera. The vehicle is stopped beside the road. The route extends right, but no moving corner phase is established.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Keep camera-transition validity separate from map visibility. Confirm a stationary no-cue interval."
+      ],
+      "intervalStart": 68,
+      "intervalEnd": 70
+    },
+    {
+      "eventID": "modular-00095.0",
+      "time": 95,
+      "action": "advance_warning",
+      "confidence": "high",
+      "current": "Not separately labeled",
+      "upcoming": "left",
+      "observation": "The car approaches a left bend on a mostly straight road. The highlighted minimap route bends left ahead. HUD samples read 103, 115, 117, 116 km/h.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Check the warning window in continuous playback. The pilot's brake hypothesis is not established by these frames."
+      ],
+      "intervalStart": 93,
+      "intervalEnd": 95
+    },
+    {
+      "eventID": "modular-00105.0",
+      "time": 105,
+      "action": "advance_warning",
+      "confidence": "medium",
+      "current": "Not separately labeled",
+      "upcoming": "right",
+      "observation": "The highlighted route bends right ahead. The road is shallowly curved, so the current-versus-next boundary needs confirmation. HUD samples read 144, 150, 154, 151 km/h.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Confirm the corner boundary and warning timing. This frozen v4 replay also reports 151 km/h; the older cropped-digit regression is not an error in this event's current record."
+      ],
+      "intervalStart": 103,
+      "intervalEnd": 105
+    },
+    {
+      "eventID": "modular-00140.0",
+      "time": 140,
+      "action": "uncertain",
+      "confidence": "medium",
+      "current": "right",
+      "upcoming": "",
+      "observation": "The road and car are already following the first right sweep of a linked sequence. The map also shows a later left bend. The output's right direction is plausible, but next_corner appears late for the immediate right sweep.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Check the entry boundary and whether the warning names the current bend or a later bend. No exact acceptable window established."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00175.0",
+      "time": 175,
+      "action": "uncertain",
+      "confidence": "medium",
+      "current": "left",
+      "upcoming": "",
+      "observation": "The history follows a left bend and then straightens. A further leftward route change remains ahead. Left is supported, but the boundary between exiting the current bend and approaching the next one is ambiguous.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Review a longer continuous interval. A lift label is not established by speed or route curvature alone."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00185.0",
+      "time": 185,
+      "action": "uncertain",
+      "confidence": "medium",
+      "current": "Not separately labeled",
+      "upcoming": "left",
+      "observation": "The car finishes a left sweep and reaches a straighter section. The map still contains a left bend ahead. The latest frame supports left ahead, but this sparse history cannot settle the event boundary.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Check whether this duplicates the preceding bend warning or identifies a distinct next bend."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00205.0",
+      "time": 205,
+      "action": "advance_warning",
+      "confidence": "high",
+      "current": "Not separately labeled",
+      "upcoming": "right",
+      "observation": "The road approaches a right curve by the tunnel entrance. The yellow minimap route clearly bends right. HUD samples decline from 143 to 126 km/h. An event overlay appears on the map.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Inspect why minimap_unreliable suppressed the cue. This is a perception/coverage candidate, not permission to bypass the guard. Speed decrease does not prove braking."
+      ],
+      "intervalStart": 203,
+      "intervalEnd": 205
+    },
+    {
+      "eventID": "modular-00215.0",
+      "time": 215,
+      "action": "no_cue",
+      "confidence": "high",
+      "current": "Not separately labeled",
+      "upcoming": "right",
+      "observation": "The tunnel route still turns right ahead, but the HUD falls from 040 to 012 to 000 and remains 000 at the event. Direction can remain visible while slowdown advice is unnecessary at the stopped instant.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Confirm the stop time in continuous playback. Reject the lift hypothesis as an unverified target for the stopped event."
+      ],
+      "intervalStart": 214.333333,
+      "intervalEnd": 215
+    },
+    {
+      "eventID": "modular-00220.0",
+      "time": 220,
+      "action": "no_cue",
+      "confidence": "high",
+      "current": "Not separately labeled",
+      "upcoming": "right",
+      "observation": "The car stays stationary in neutral at 000 km/h throughout the sampled history. Traffic and HUD animation change, so the unchanged car position alone is not proof of a frozen source. The map still shows right ahead.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Confirm no slowdown cue during the stop. Keep optional route information distinct from an actionable warning."
+      ],
+      "intervalStart": 218,
+      "intervalEnd": 220
+    },
+    {
+      "eventID": "modular-00230.0",
+      "time": 230,
+      "action": "uncertain",
+      "confidence": "high",
+      "current": "Not separately labeled",
+      "upcoming": "right",
+      "observation": "The car restarts in the tunnel. HUD samples rise 015, 036, 057, 074 km/h. A right bend is visible farther ahead on the map, while the near road remains straight.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Check whether a warning is useful this early. Neither lift need nor optimal timing follows from this map-only lookahead."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00265.0",
+      "time": 265,
+      "action": "uncertain",
+      "confidence": "low",
+      "current": "Not separately labeled",
+      "upcoming": "",
+      "observation": "The near road is nearly straight with a shallow sweep. The map shows a long straight section and small distant direction changes. It does not support a confident immediate left-corner label from these samples.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Inspect a larger minimap and define which bend counts as the next corner. Check possible sensitivity to small route wiggles."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00270.0",
+      "time": 270,
+      "action": "uncertain",
+      "confidence": "low",
+      "current": "Not separately labeled",
+      "upcoming": "",
+      "observation": "The car crosses a broad, mostly straight urban section. The map contains a shallow rightward offset followed by a more visible left change farther ahead. Selecting one next-corner direction depends on the corner definition.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Resolve near-versus-far geometry before scoring the right warning. Do not treat reviewer uncertainty as evidence that either direction is correct."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00300.0",
+      "time": 300,
+      "action": "no_cue",
+      "confidence": "medium",
+      "current": "straight",
+      "upcoming": "",
+      "observation": "The road and highlighted route are essentially straight through this sampled interval. Small map deviations do not establish a useful right corner. A speedtrap-results overlay is present but does not hide the road.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Check the route crop for an over-sensitive bend detection. No-cue applies to corner coaching only; traffic safety is not judged."
+      ],
+      "intervalStart": 298,
+      "intervalEnd": 300
+    },
+    {
+      "eventID": "modular-00305.0",
+      "time": 305,
+      "action": "no_cue",
+      "confidence": "high",
+      "current": "straight",
+      "upcoming": "",
+      "observation": "The road and near highlighted route continue straight. HUD samples rise 293, 298, 302, 306 km/h. No immediate corner is established. The pipeline's cannot_judge reflects its uncalibrated no-cue decision, not a wrong turn direction.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Confirm a corner-only no-cue window. Do not equate high speed with a brake requirement without a target and calibration."
+      ],
+      "intervalStart": 303,
+      "intervalEnd": 305
+    },
+    {
+      "eventID": "modular-00345.0",
+      "time": 345,
+      "action": "advance_warning",
+      "confidence": "high",
+      "current": "Not separately labeled",
+      "upcoming": "right",
+      "observation": "The car approaches a bridge and junction. The highlighted map route makes a pronounced right turn ahead rather than continuing along the pale through-road. HUD samples read 182, 194, 205, 195 km/h.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Confirm the warning interval before the junction. A need for a specific brake action or deceleration is not established."
+      ],
+      "intervalStart": 343,
+      "intervalEnd": 345
+    },
+    {
+      "eventID": "modular-00350.0",
+      "time": 350,
+      "action": "uncertain",
+      "confidence": "medium",
+      "current": "right",
+      "upcoming": "",
+      "observation": "The history shows the vehicle completing a right turn at the junction and passing under the overpass. The route then bends left farther ahead. The model's left-next output can describe the next bend while missing the current-right priority.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Set the right-turn exit boundary before deciding whether left-next is wrong. Do not merge current and upcoming directions into one truth label."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00370.0",
+      "time": 370,
+      "action": "uncertain",
+      "confidence": "medium",
+      "current": "right",
+      "upcoming": "",
+      "observation": "The road is already sweeping right through the visible history. The map shows that same rightward segment with later changes beyond it. Speed declines 160, 153, 146, 139 km/h.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Check a current-corner correction and possible late warning. The slowing vehicle does not establish a brake or lift label."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00375.0",
+      "time": 375,
+      "action": "uncertain",
+      "confidence": "medium",
+      "current": "Not separately labeled",
+      "upcoming": "left",
+      "observation": "The current road is straighter and a leftward change appears farther ahead on the map. The car closes on another vehicle while the HUD drops from 157 to 105 km/h. The cause of slowing is not identifiable from speed alone.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Do not use possible traffic-related slowing as a corner-braking target. Review warning distance separately."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00415.0",
+      "time": 415,
+      "action": "advance_warning",
+      "confidence": "high",
+      "current": "Not separately labeled",
+      "upcoming": "left",
+      "observation": "In hood view, the map shows a pronounced left route turn ahead as the vehicle passes under a bridge. The visible road is still on the approach. HUD samples read 160, 169, 178, 166 km/h.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Check timing and camera validity. Keep the brake hypothesis unapproved without car/setup and slowdown evidence."
+      ],
+      "intervalStart": 413,
+      "intervalEnd": 415
+    },
+    {
+      "eventID": "modular-00430.0",
+      "time": 430,
+      "action": "cannot_judge",
+      "confidence": "high",
+      "current": "Not separately labeled",
+      "upcoming": "",
+      "observation": "The yellow route is behind the player marker rather than established ahead. The visible road continues forward, and destination distance increases through the samples. The forward navigation route is unavailable.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Keep road direction separate from selected-route direction. Abstain from route-based coaching until a forward route is re-established."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00440.0",
+      "time": 440,
+      "action": "uncertain",
+      "confidence": "high",
+      "current": "left",
+      "upcoming": "",
+      "observation": "The cockpit view and lane markings show the car already taking a left bend. The map bends left immediately ahead of the marker. HUD samples fall 148, 147, 139, 124 km/h.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Check current_corner instead of next_corner and possible late warning. Neither cockpit-wheel position nor slowing is used as a control label."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00455.0",
+      "time": 455,
+      "action": "uncertain",
+      "confidence": "medium",
+      "current": "Not separately labeled",
+      "upcoming": "left",
+      "observation": "The road follows a right sweep toward a junction, while the highlighted route calls for a left turn. The samples end near that transition. HUD speed declines 087, 084, 082, 078 km/h.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Confirm the current-right versus next-left boundary. Do not accept the lift hypothesis from the speed decrease alone."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00480.0",
+      "time": 480,
+      "action": "advance_warning",
+      "confidence": "high",
+      "current": "Not separately labeled",
+      "upcoming": "right",
+      "observation": "The near road is comparatively straight. The highlighted minimap route has a pronounced right bend ahead followed by linked turns. HUD samples read 189, 185, 188, 191 km/h.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Confirm warning timing. The map shape supports right-ahead content but not a calibrated brake instruction."
+      ],
+      "intervalStart": 478,
+      "intervalEnd": 480
+    },
+    {
+      "eventID": "modular-00490.0",
+      "time": 490,
+      "action": "uncertain",
+      "confidence": "medium",
+      "current": "right",
+      "upcoming": "",
+      "observation": "The immediate road sweeps right while a stronger left reversal appears ahead on the map. A left-next output may describe that later turn but does not capture the ongoing right bend. HUD speed rises 143, 157, 162, 172 km/h.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Review current-corner priority in this linked sequence. Leave brake timing unapproved."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00505.0",
+      "time": 505,
+      "action": "uncertain",
+      "confidence": "medium",
+      "current": "Not separately labeled",
+      "upcoming": "left",
+      "observation": "The car unwinds from a right sweep into a straighter approach. The map now highlights a left junction ahead. The next-left content is plausible, but the current-right exit boundary is uncertain in these samples.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Inspect the transition before assigning a warning interval. Do not infer the brake hypothesis from this route turn alone."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00515.0",
+      "time": 515,
+      "action": "uncertain",
+      "confidence": "medium",
+      "current": "left",
+      "upcoming": "",
+      "observation": "The chase-camera history shows a left turn finishing. By the last frame, the road and route point toward a later rightward bend. HUD speed rises 052, 058, 076, 092 km/h.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Confirm when the current left exit becomes the next right approach. The current brake hypothesis is not visually established."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00575.0",
+      "time": 575,
+      "action": "cannot_judge",
+      "confidence": "high",
+      "current": "Not separately labeled",
+      "upcoming": "",
+      "observation": "The visible bridge is straight, but the yellow navigation route lies behind the marker and destination distance increases. The forward road exists without a confirmed forward selected route. HUD samples rise 167, 179, 192, 204 km/h.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Keep cannot_judge for route-based advice. A straight road should not be mistaken for proof that the chosen route is straight."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00590.0",
+      "time": 590,
+      "action": "uncertain",
+      "confidence": "high",
+      "current": "left",
+      "upcoming": "",
+      "observation": "The vehicle is already following a left coastal bend throughout the history. Lane markings and the minimap agree. HUD speed falls 134, 124, 115, 107 km/h.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Check current_corner rather than next_corner. A prior warning may be needed, but these frames do not establish its earliest or latest acceptable time."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    },
+    {
+      "eventID": "modular-00605.0",
+      "time": 605,
+      "action": "uncertain",
+      "confidence": "low",
+      "current": "Not separately labeled",
+      "upcoming": "",
+      "observation": "The highlighted main-road route bends left, but the car moves onto the right-side turnout by the last frame. HUD speed falls 041, 039, 038, 037 km/h. The driver's intended path is not established.",
+      "rationale": "Candidate interval from sampled frames; not verified earliest/latest timing.",
+      "questions": [
+        "Separate map route from the observed rightward departure. Do not force a left-turn or lift training label for this event."
+      ],
+      "intervalStart": null,
+      "intervalEnd": null
+    }
+  ]
+}

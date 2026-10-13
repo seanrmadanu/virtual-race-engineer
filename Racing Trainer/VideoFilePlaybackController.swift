@@ -53,6 +53,11 @@ final class VideoFilePlaybackController:
     private let frameAnalyzer:
         FrameAnalyzer
 
+    private let shadowPipeline: ShadowCapturePipeline?
+    private var shadowSource: ShadowSource?
+    private var shadowSourceToken: Int?
+    private var seekGeneration = UUID()
+
     private let minimapDatasetRecorder:
         MinimapDatasetRecorder
 
@@ -87,13 +92,15 @@ final class VideoFilePlaybackController:
         frameAnalyzer:
             FrameAnalyzer,
         minimapDatasetRecorder:
-            MinimapDatasetRecorder
+            MinimapDatasetRecorder,
+        shadowPipeline: ShadowCapturePipeline? = nil
     ) {
         self.frameAnalyzer =
             frameAnalyzer
 
         self.minimapDatasetRecorder =
             minimapDatasetRecorder
+        self.shadowPipeline = shadowPipeline
 
         super.init()
 
@@ -144,6 +151,7 @@ final class VideoFilePlaybackController:
 
         loadedFileName =
             url.lastPathComponent
+        shadowSource = ShadowSource(kind: .videoFile, identifier: UUID().uuidString, name: url.lastPathComponent)
 
         minimapDatasetRecorder
             .setSource(
@@ -219,6 +227,9 @@ final class VideoFilePlaybackController:
         resetAnalyzer:
             Bool
     ) {
+        seekGeneration = UUID()
+        if shadowSource != nil { shadowPipeline?.invalidate("file_unloaded") }
+        shadowSource = nil; shadowSourceToken = nil
         player.pause()
 
         removeItemObservers()
@@ -307,6 +318,7 @@ final class VideoFilePlaybackController:
             return
         }
 
+        resumeShadow()
         player.play()
 
         isPlaying =
@@ -314,6 +326,7 @@ final class VideoFilePlaybackController:
     }
 
     func pause() {
+        shadowPipeline?.invalidate("playback_paused"); shadowSourceToken = nil
         player.pause()
 
         isPlaying =
@@ -391,6 +404,10 @@ final class VideoFilePlaybackController:
             return
         }
 
+        shadowPipeline?.invalidate("playback_seek"); shadowSourceToken = nil
+        frameAnalyzer.reset()
+        let seekToken = UUID(); seekGeneration = seekToken
+
         let maximumTime =
             duration > 0
             ? duration
@@ -432,6 +449,8 @@ final class VideoFilePlaybackController:
             }
 
             DispatchQueue.main.async {
+                guard self.seekGeneration == seekToken else { return }
+                if resumeAfterSeek { self.resumeShadow() }
                 self.currentTime =
                     safeTime
 
@@ -464,6 +483,10 @@ final class VideoFilePlaybackController:
     }
 
     // MARK: - Frame Delivery
+
+    private func resumeShadow() {
+        if shadowSourceToken == nil, let source = shadowSource { shadowSourceToken = shadowPipeline?.begin(source) }
+    }
 
     private func installTimeObserver() {
         let interval =
@@ -503,6 +526,7 @@ final class VideoFilePlaybackController:
         at itemTime:
             CMTime
     ) {
+        var displayTime = CMTime.invalid
         guard let videoOutput,
               videoOutput
                 .hasNewPixelBuffer(
@@ -515,7 +539,7 @@ final class VideoFilePlaybackController:
                         forItemTime:
                             itemTime,
                         itemTimeForDisplay:
-                            nil
+                            &displayTime
                     ) else {
 
             return
@@ -536,6 +560,10 @@ final class VideoFilePlaybackController:
                 ? itemTime.seconds
                 : nil
         )
+        if let shadowSourceToken {
+            shadowPipeline?.receive(pixelBuffer, sourcePTS: displayTime.seconds,
+                receivedAt: ProcessInfo.processInfo.systemUptime, sourceToken: shadowSourceToken)
+        }
     }
 
     private func updatePlaybackTime(
@@ -757,6 +785,7 @@ final class VideoFilePlaybackController:
 
             updateDuration()
 
+            resumeShadow()
             player.play()
 
             isPlaying =
@@ -780,6 +809,7 @@ final class VideoFilePlaybackController:
     }
 
     private func handlePlaybackEnded() {
+        shadowPipeline?.invalidate("playback_ended"); shadowSourceToken = nil
         isPlaying =
             false
 
@@ -802,6 +832,7 @@ final class VideoFilePlaybackController:
         _ message:
             String
     ) {
+        shadowPipeline?.invalidate("playback_failed"); shadowSourceToken = nil
         player.pause()
 
         isReady =

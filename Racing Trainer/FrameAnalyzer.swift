@@ -152,6 +152,11 @@ final class FrameAnalyzer:
     @Published private var minimapSnapshot =
         MinimapAnalyzerSnapshot.empty
 
+    @Published private(set) var roadLines = RoadLineObservation.empty
+    @Published private(set) var turnGuidance = LiveTurnGuidanceSnapshot.empty
+    private var liveTurnPipeline = LiveTurnGuidancePipeline()
+    private let roadLineDetector = RoadLineDetector()
+
     var minimapAnalyzedFrameCount:
         Int {
 
@@ -461,6 +466,7 @@ final class FrameAnalyzer:
                 targetMinimapAnalysisFPS,
                 0.5
             )
+        detectedSpeedUnitStorage = confirmedGuidanceSpeedUnit()?.uppercased()
     }
 
     // MARK: - Receive Frame
@@ -657,8 +663,7 @@ final class FrameAnalyzer:
         consecutiveSpeedMissesStorage =
             0
 
-        detectedSpeedUnitStorage =
-            MotorfestHUDLayout.speedUnit
+        detectedSpeedUnitStorage = confirmedGuidanceSpeedUnit()?.uppercased()
 
         stateLock.unlock()
 
@@ -666,6 +671,7 @@ final class FrameAnalyzer:
             [weak self] in
 
             self?.minimapCoachEngine.reset()
+            self?.liveTurnPipeline.reset()
         }
 
         DispatchQueue.main.async {
@@ -693,6 +699,9 @@ final class FrameAnalyzer:
 
             self.minimapSnapshot =
                 .empty
+
+            self.roadLines = .empty
+            self.turnGuidance = .empty
 
             self.detectedSpeed = nil
             self.rawDetectedSpeed = nil
@@ -887,6 +896,12 @@ final class FrameAnalyzer:
             Int
     ) {
         autoreleasepool {
+            let road = roadLineDetector.analyze(pixelBuffer, at: sourceFrameUptime,
+                camera: RoadCameraMode(rawValue: UserDefaults.standard.string(forKey: "hud.pathRibbonCamera") ?? "chase") ?? .chase)
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.isCurrentGeneration(currentGeneration) else { return }
+                self.roadLines = road
+            }
             let startUptime =
                 ProcessInfo
                     .processInfo
@@ -1040,6 +1055,13 @@ final class FrameAnalyzer:
             latestCompletedMinimapResultSequence +=
                 1
 
+            let currentSpeed = closestSpeedSampleLocked(to: coachResult.sourceFrameUptime)
+            let confirmedUnit = detectedSpeedUnitStorage?.lowercased()
+            let liveGuidance = liveTurnPipeline.process(coach: coachResult,
+                minimapVisible: result.minimapVisible, minimapConfidence: result.minimapConfidence,
+                speed: currentSpeed, speedUnit: confirmedUnit, session: currentGeneration, completedAt: completionUptime)
+            coachResult = coachResult.applying(liveGuidance, at: completionUptime)
+
             let resultSequence =
                 latestCompletedMinimapResultSequence
 
@@ -1118,6 +1140,7 @@ final class FrameAnalyzer:
                         coach:
                             coachResult
                     )
+                self.turnGuidance = liveGuidance
             }
         }
     }
@@ -1198,7 +1221,14 @@ final class FrameAnalyzer:
     // MARK: - Vision Speed OCR
 
     private func recognizeSpeed(in pixelBuffer: CVPixelBuffer) -> SpeedOCRResult {
-        MotorfestSpeedRecognizer.recognize(in: pixelBuffer)
+        let reference = UserDefaults.standard.string(forKey: "guidance.hudProfile") == "reference-video2-v1"
+        let crop = reference ? CGRect(x: 0.075, y: 0.854, width: 0.070, height: 0.073) : MotorfestHUDLayout.speedOCR.normalizedRect
+        return MotorfestSpeedRecognizer.recognize(in: pixelBuffer, region: crop, rejectEdgePixels: true)
+    }
+
+    private func confirmedGuidanceSpeedUnit() -> String? {
+        let unit = UserDefaults.standard.string(forKey: "guidance.speedUnit") ?? "km/h"
+        return ["km/h", "mph"].contains(unit) ? unit : nil
     }
 
     // MARK: - Speed Stabilization

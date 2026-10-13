@@ -1,4 +1,5 @@
 import CoreVideo
+import AppKit
 import AVFoundation
 import Combine
 import Foundation
@@ -10,6 +11,12 @@ final class CaptureSessionManager:
 
     let session =
         AVCaptureSession()
+
+    // Opt-in diagnostic side channel. Never feeds FrameAnalyzer or coaching UI.
+    let shadowPipeline = ModularShadowFactory.makeFromArguments()
+    private var shadowSourceToken: Int?
+    private var shadowLiveSource: ShadowSource?
+    private var shadowObservers: [NSObjectProtocol] = []
 
     let frameAnalyzer =
         FrameAnalyzer(
@@ -143,6 +150,43 @@ final class CaptureSessionManager:
 
         audioPreviewOutput.volume =
             desiredGameVolume
+
+        if shadowPipeline != nil {
+            shadowObservers.append(NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification,
+                object: nil, queue: .main) { [weak self] _ in
+                self?.shadowPipeline?.stop(reason: "application_terminated")
+                self?.shadowPipeline?.flush()
+            })
+            for name in [AVCaptureSession.wasInterruptedNotification, AVCaptureSession.runtimeErrorNotification,
+                         AVCaptureSession.didStopRunningNotification] {
+                shadowObservers.append(NotificationCenter.default.addObserver(forName: name, object: session, queue: nil) {
+                    [weak self] _ in self?.invalidateLiveShadow()
+                })
+            }
+            for name in [AVCaptureSession.interruptionEndedNotification, AVCaptureSession.didStartRunningNotification] {
+                shadowObservers.append(NotificationCenter.default.addObserver(forName: name, object: session, queue: nil) {
+                    [weak self] _ in self?.resumeLiveShadow()
+                })
+            }
+        }
+    }
+
+    deinit {
+        shadowObservers.forEach { NotificationCenter.default.removeObserver($0) }
+        shadowPipeline?.stop(reason: "capture_manager_closed")
+    }
+
+    private func invalidateLiveShadow() {
+        frameStateLock.lock(); defer { frameStateLock.unlock() }
+        guard shadowLiveSource != nil else { return }
+        shadowSourceToken = nil
+        shadowPipeline?.invalidate("capture_session_interrupted_or_stopped")
+    }
+
+    private func resumeLiveShadow() {
+        frameStateLock.lock(); defer { frameStateLock.unlock() }
+        guard let source = shadowLiveSource, shadowSourceToken == nil else { return }
+        shadowSourceToken = shadowPipeline?.begin(source)
     }
 
     // MARK: - Refresh All Sources
@@ -177,6 +221,9 @@ final class CaptureSessionManager:
         _ = createAudioRequestNumber()
 
         frameStateLock.lock()
+
+        shadowLiveSource = nil; shadowSourceToken = nil
+        shadowPipeline?.invalidate("switch_to_test_playback")
 
         hasReceivedCurrentVideoFrame =
             false
@@ -382,10 +429,13 @@ final class CaptureSessionManager:
                 return
             }
 
-            self.prepareForNewFrames(
-                ignoreDuration:
-                    0.10
-            )
+            // Drain callbacks from the stopped source before assigning a new shadow token.
+            self.videoOutputQueue.sync {
+                self.prepareForNewFrames(
+                    ignoreDuration: 0.10,
+                    shadowSource: ShadowSource(kind: .liveCapture, identifier: device.uniqueID, name: device.localizedName)
+                )
+            }
 
             self.session.startRunning()
 
@@ -761,6 +811,7 @@ final class CaptureSessionManager:
     // MARK: - Stop
 
     func stop() {
+        shadowPipeline?.stop(reason: "capture_stopped")
         minimapDatasetRecorder
             .stopRecording()
 
@@ -945,6 +996,10 @@ final class CaptureSessionManager:
         let shouldPublishVideoState =
             !hasReceivedCurrentVideoFrame
 
+        // Do not stamp an old connection's queued frame with the new device's token.
+        let connectionDeviceIDs = connection.inputPorts.compactMap { ($0.input as? AVCaptureDeviceInput)?.device.uniqueID }
+        let shadowToken = shadowLiveSource.map { connectionDeviceIDs.contains($0.identifier) } == true ? shadowSourceToken : nil
+
         if shouldPublishVideoState {
             hasReceivedCurrentVideoFrame =
                 true
@@ -974,10 +1029,18 @@ final class CaptureSessionManager:
         minimapDatasetRecorder.receive(
             sampleBuffer
         )
+
+        if let shadowToken, let pixels = CMSampleBufferGetImageBuffer(sampleBuffer) {
+            shadowPipeline?.receive(pixels, sourcePTS: CMSampleBufferGetPresentationTimeStamp(sampleBuffer).seconds,
+                receivedAt: currentUptime, sourceToken: shadowToken)
+        }
     }
 
     private func resetFrameState() {
         frameStateLock.lock()
+
+        shadowSourceToken = nil; shadowLiveSource = nil
+        shadowPipeline?.invalidate("live_source_reset")
 
         hasReceivedCurrentVideoFrame =
             false
@@ -992,9 +1055,13 @@ final class CaptureSessionManager:
 
     private func prepareForNewFrames(
         ignoreDuration:
-            TimeInterval
+            TimeInterval,
+        shadowSource: ShadowSource
     ) {
         frameStateLock.lock()
+
+        shadowLiveSource = shadowSource
+        shadowSourceToken = shadowPipeline?.begin(shadowSource)
 
         hasReceivedCurrentVideoFrame =
             false

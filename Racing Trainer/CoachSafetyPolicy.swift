@@ -1,6 +1,6 @@
 import Foundation
 
-nonisolated enum PerceptionState: String, CaseIterable, Sendable {
+nonisolated enum PerceptionState: String, Codable, CaseIterable, Sendable {
     case fresh, stale, uncertain, missing
 }
 
@@ -16,6 +16,10 @@ nonisolated struct PerceptionObservation<Value: Sendable>: Sendable {
     let implementation: String
     let version: String
     let failureReason: String?
+    // Optional metadata keeps all legacy callers source-compatible.
+    var units: String? = nil
+    var evidence: [String: String]? = nil
+    var confidenceKind: String? = nil
 
     func isUsable(at now: TimeInterval, sessionID: Int,
                   maximumAge: TimeInterval, minimumConfidence: Float) -> Bool {
@@ -26,6 +30,9 @@ nonisolated struct PerceptionObservation<Value: Sendable>: Sendable {
         confidence.isFinite && confidence >= minimumConfidence && confidence <= 1
     }
 }
+
+extension PerceptionObservation: Encodable where Value: Encodable {}
+extension PerceptionObservation: Decodable where Value: Decodable {}
 
 nonisolated struct RouteGuidance: Sendable {
     let direction: RouteTurnDirection

@@ -31,8 +31,7 @@ enum VideoPlacement: String, CaseIterable, Identifiable {
     }
 }
 
-/// In-game camera the path highlight is projected for: the horizon and
-/// the nearest visible road differ between chase and cockpit views.
+/// Camera profile controls the image region searched for white road markings.
 /// Whether the highlight shows at all is in the View menu.
 enum PathRibbon: String, CaseIterable, Identifiable {
     case chase
@@ -49,15 +48,6 @@ enum PathRibbon: String, CaseIterable, Identifiable {
         }
     }
 
-    /// Horizon (fraction of video height), focal length (fraction of video
-    /// height) and nearest ground drawn (camera heights), measured on
-    /// Motorfest gameplay captures.
-    var projection: (horizon: Double, focal: Double, near: Double) {
-        switch self {
-        case .chase: return (0.40, 0.80, 5.0)
-        case .cockpit: return (0.515, 0.70, 13.0)
-        }
-    }
 }
 
 /// Visibility of every overlay, keyed in UserDefaults so the View menu,
@@ -89,7 +79,7 @@ enum OverlayItem: CaseIterable {
     var title: String {
         switch self {
         case .navigationCard: return "Navigation Card"
-        case .sessionPanel: return "Session Panel"
+        case .sessionPanel: return "Session Timer"
         case .steeringWheel: return "Steering Wheel"
         case .speed: return "Speed"
         case .pedalAction: return "Pedal Action"
@@ -350,7 +340,7 @@ struct TrainerCoachHUD: View {
     /// Layout is authored against a 1440×810 canvas and scaled to the preview.
     static let referenceSize = CGSize(width: 1440, height: 810)
     static let bannerTopInset: CGFloat = 36
-    static let bannerHeight: CGFloat = 124
+    static let bannerHeight: CGFloat = 80
 
     static func layoutScale(for size: CGSize) -> CGFloat {
         let scale = min(
@@ -376,9 +366,8 @@ struct TrainerCoachHUD: View {
 
     @ViewBuilder
     private func content(currentUptime: TimeInterval, now: Date) -> some View {
-        let snapshot = analyzer.coachSnapshot
-        let state = snapshot.displayedState(at: currentUptime)
-        let isReady = state == .ready && snapshot.action != .unavailable
+        let liveTurn = analyzer.turnGuidance
+        let turnIsFresh = liveTurn.isFresh(at: currentUptime)
         let scale = Self.layoutScale(for: containerSize)
         let width = containerSize.width
         let height = containerSize.height
@@ -387,14 +376,8 @@ struct TrainerCoachHUD: View {
         let wheelHub = CGPoint(x: width * wheelCenterX, y: height * wheelHubY)
 
         ZStack {
-            if isReady, showsPathHighlight {
-                PathRibbonView(
-                    projection: pathRibbon.projection,
-                    path: snapshot.orderedPath,
-                    confidence: Double(snapshot.overallConfidence),
-                    videoRect: videoRect,
-                    edgeColor: highlightsItems ? OverlayItem.pathHighlight.color : .white
-                )
+            if showsPathHighlight {
+                RoadLineOverlay(observation: analyzer.roadLines, time: currentUptime, videoRect: videoRect)
                 .mask(alignment: .topLeading) {
                     Rectangle()
                         .frame(width: videoRect.width, height: videoRect.height)
@@ -405,8 +388,8 @@ struct TrainerCoachHUD: View {
 
             if showsSteeringWheel || editor.isAdjustingWheel {
                 SteeringWheelTargetView(
-                    steering: isReady ? snapshot.steering : .unavailable,
-                    accent: isReady ? HUDPalette.amber : HUDPalette.inactive,
+                    steering: liveTurn.steering(at: currentUptime),
+                    accent: turnIsFresh && liveTurn.cue.stage != .unavailable ? HUDPalette.amber : HUDPalette.inactive,
                     diameter: wheelDiameter,
                     rotationOverride: editor.isAdjustingWheel ? editor.testRotation : nil
                 )
@@ -428,7 +411,7 @@ struct TrainerCoachHUD: View {
             }
 
             if showsNavigationCard {
-                NavigationCardView(snapshot: snapshot, state: state, isReady: isReady)
+                NavigationCardView(turnCue: turnIsFresh ? liveTurn.cue : nil)
                     .fixedSize()
                     .overlayHighlight(.navigationCard, highlightsItems)
                     .scaleEffect(scale, anchor: .top)
@@ -438,12 +421,7 @@ struct TrainerCoachHUD: View {
             }
 
             if showsSessionPanel {
-                SessionPanelView(
-                    snapshot: snapshot,
-                    state: state,
-                    isReady: isReady,
-                    elapsed: now.timeIntervalSince(sessionStart)
-                )
+                SessionPanelView(elapsed: now.timeIntervalSince(sessionStart))
                 .fixedSize()
                 .overlayHighlight(.sessionPanel, highlightsItems, cornerRadius: 24)
                 .scaleEffect(scale, anchor: .topTrailing)
@@ -465,7 +443,7 @@ struct TrainerCoachHUD: View {
             }
 
             if showsPedalAction {
-                PedalActionCardView(action: isReady ? snapshot.action : .unavailable)
+                PedalActionCardView(action: .unavailable, timingOnly: true)
                     .fixedSize()
                     .overlayHighlight(.pedalAction, highlightsItems)
                     .scaleEffect(scale, anchor: .bottomTrailing)
@@ -556,405 +534,78 @@ private extension View {
     }
 }
 
-// MARK: - Turn Naming
-
-private enum TurnDescriptor {
-    static func title(_ direction: RouteTurnDirection, _ severity: TurnSeverity) -> String {
-        switch direction {
-        case .unknown: return "—"
-        case .straight: return "STRAIGHT"
-        case .uTurnLeft, .uTurnRight: return direction.title
-        case .left, .right:
-            switch severity {
-            case .gentle: return "GENTLE \(direction.title)"
-            case .sharp: return "SHARP \(direction.title)"
-            default: return direction.title
-            }
-        }
-    }
-
-    static func symbol(_ direction: RouteTurnDirection, _ severity: TurnSeverity) -> String {
-        switch direction {
-        case .unknown: return "questionmark"
-        case .straight: return "arrow.up"
-        case .uTurnLeft: return "arrow.uturn.left"
-        case .uTurnRight: return "arrow.uturn.right"
-        case .left: return severity == .gentle ? "arrow.up.left" : "arrow.turn.up.left"
-        case .right: return severity == .gentle ? "arrow.up.right" : "arrow.turn.up.right"
-        }
-    }
-}
-
 // MARK: - Navigation Card
 
-/// Compact turn-by-turn card: what to do and when, with the pedal action as
-/// a coloured strip along the bottom. Kept small so the road stays visible.
+/// One instruction from the same fresh cue that drives the steering target.
+/// Preview and heads-up share wording; their internal distinction stays in review.
 private struct NavigationCardView: View {
-    let snapshot: MinimapCoachSnapshot
-    let state: MinimapCoachState
-    let isReady: Bool
+    let turnCue: TurnGuidanceSample?
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    /// Distance at which the turn-in bar starts filling; matches the
-    /// geometry analyzer's "later" horizon.
-    private let turnInHorizon = 0.40
-
-    static let width: CGFloat = 540
-
-    private var turnInProgress: Double {
-        guard isReady, let distance = snapshot.turnStartNormalizedDistance else {
-            return 0
-        }
-        return min(max(1 - distance / turnInHorizon, 0), 1)
+    private var instruction: String { turnCue?.title ?? "Guidance unavailable" }
+    private var isAvailable: Bool { turnCue.map { $0.stage != .unavailable } ?? false }
+    private var isTurnNow: Bool { turnCue?.stage == .turnNow }
+    private var symbol: String {
+        guard let turnCue, isAvailable else { return "ellipsis" }
+        if turnCue.stage == .straight { return "arrow.up" }
+        return turnCue.direction == "left" ? "arrow.turn.up.left" : "arrow.turn.up.right"
     }
-
-    private var instruction: String {
-        guard isReady else {
-            switch state {
-            case .analyzing: return "Analyzing minimap"
-            case .noWaypoint: return "Set a waypoint"
-            case .minimapUnavailable: return "Minimap not found"
-            case .routeUncertain: return "Route uncertain"
-            case .stale: return "Guidance paused"
-            case .ready: return "No guidance"
-            }
-        }
-        let side = snapshot.direction == .left || snapshot.direction == .uTurnLeft ? "left" : "right"
-        switch snapshot.direction {
-        case .unknown: return "Follow the route"
-        case .straight: return "Continue straight"
-        case .uTurnLeft, .uTurnRight: return "U-turn \(side)"
-        case .left, .right:
-            switch snapshot.severity {
-            case .gentle: return "Bear \(side)"
-            case .sharp: return "Sharp \(side)"
-            default: return "Turn \(side)"
-            }
-        }
-    }
-
-    private var caption: String {
-        guard isReady else {
-            return state == .stale ? "Waiting for a fresh route result" : snapshot.reason
-        }
-        switch snapshot.timing {
-        case .now: return "Turn in now"
-        case .soon: return "Coming up"
-        case .later: return "Ahead"
-        case .none: return "Clear road"
-        case .unknown: return "Route ahead"
-        }
-    }
-
-    private var actionText: String? {
-        guard isReady else { return nil }
-        switch snapshot.action {
-        case .unavailable: return nil
-        default: return snapshot.action.title
-        }
+    private var foreground: Color {
+        isTurnNow ? HUDPalette.amber : Color.white.opacity(isAvailable ? 1 : 0.75)
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 18) {
-                Image(systemName: isReady
-                      ? TurnDescriptor.symbol(snapshot.direction, snapshot.severity)
-                      : "ellipsis")
-                    .font(.system(size: 40, weight: .semibold))
-                    .foregroundStyle(isReady ? Color.white : HUDPalette.inactive)
-                    .frame(width: 56)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(caption)
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundStyle(HUDPalette.label)
-                        .lineLimit(1)
-                    Text(instruction)
-                        .font(.system(size: 30, weight: .semibold))
-                        .foregroundStyle(isReady ? Color.white : HUDPalette.status(state))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.6)
-                }
-
-                Spacer(minLength: 8)
-
-                if isReady {
-                    Rectangle()
-                        .fill(HUDPalette.stroke)
-                        .frame(width: 1, height: 52)
-
-                    VStack(spacing: 6) {
-                        Text(snapshot.timing.title)
-                            .font(.system(size: 22, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(snapshot.timing == .now ? HUDPalette.amber : Color.white)
-                        GeometryReader { proxy in
-                            ZStack(alignment: .leading) {
-                                Capsule().fill(HUDPalette.track)
-                                Capsule()
-                                    .fill(snapshot.timing == .now ? HUDPalette.amber : Color.white.opacity(0.8))
-                                    .frame(width: proxy.size.width * turnInProgress)
-                            }
-                        }
-                        .frame(width: 72, height: 3)
-                        .animation(reduceMotion ? nil : .easeOut(duration: 0.2), value: turnInProgress)
-                    }
-                    .frame(width: 92)
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 16)
-
-            if let actionText {
-                Text(actionText)
-                    .font(.system(size: 15, weight: .bold))
-                    .tracking(1.4)
-                    .foregroundStyle(Color.black.opacity(0.85))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(HUDPalette.action(snapshot.action))
-            }
+        HStack(spacing: 18) {
+            Image(systemName: symbol)
+                .font(.system(size: 36, weight: .semibold))
+                .frame(width: 44)
+                .accessibilityHidden(true)
+            Text(instruction)
+                .font(.system(size: 28, weight: isTurnNow ? .bold : .semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(width: Self.width)
-        .background(HUDPalette.panel)
+        .foregroundStyle(foreground)
+        .padding(.horizontal, 22)
+        .frame(width: 440, height: TrainerCoachHUD.bannerHeight)
+        .background(reduceTransparency ? Color(white: 0.08) : HUDPalette.panel)
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(
+        .overlay {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .strokeBorder(HUDPalette.stroke, lineWidth: 1)
-        )
+                .strokeBorder(isTurnNow ? HUDPalette.amber : HUDPalette.stroke,
+                              lineWidth: isTurnNow ? 2 : 1)
+        }
         .shadow(color: .black.opacity(0.35), radius: 14, y: 6)
+        .accessibilityElement(children: .combine)
     }
 }
 
-// MARK: - Path Ribbon
+// Road highlights come from RoadLineDetector in input-frame coordinates.
+// No minimap-to-ground projection is used.
 
-/// Soft neon-white ribbon along the route ahead, drawn on the road.
-///
-/// There is no road detection: the ribbon is the minimap route projected
-/// through a simple pinhole camera (heading-up minimap, flat ground, camera
-/// on the car's centreline). It shows the shape of the road ahead, not its
-/// exact position, so it fades out when coach confidence drops.
-private struct PathRibbonView: View {
-    let projection: (horizon: Double, focal: Double, near: Double)
-    let path: [MinimapPoint]
-    let confidence: Double
-    let videoRect: CGRect
-    /// Edge colour; the path's highlight colour while Highlight Items is on.
-    var edgeColor: Color = .white
+// MARK: - Session Timer
 
-    /// Camera heights per minimap unit (the minimap crop's width). Motorfest's
-    /// minimap spans roughly 200–250 m; a cockpit or chase camera sits ~1.2 m up.
-    private let groundScale = 200.0
-    private var horizon: Double { projection.horizon }
-    private var focal: Double { projection.focal }
-    private var nearDistance: Double { projection.near }
-    private let farDistance = 90.0
-    /// Ribbon half-width in camera heights (a little under one lane).
-    private let halfWidth = 1.1
-
-    var body: some View {
-        Canvas { context, _ in
-            guard let (ribbon, edges) = ribbonPaths() else { return }
-
-            let top = videoRect.minY + videoRect.height * horizon
-            let near = ribbon.boundingRect.maxY
-            let fill = GraphicsContext.Shading.linearGradient(
-                Gradient(stops: [
-                    .init(color: .white.opacity(0.05), location: 0),
-                    .init(color: .white.opacity(0.24), location: 0.2),
-                    .init(color: .white.opacity(0.12), location: 0.65),
-                    .init(color: .white.opacity(0), location: 1)
-                ]),
-                startPoint: CGPoint(x: videoRect.midX, y: near),
-                endPoint: CGPoint(x: videoRect.midX, y: top)
-            )
-            let edgeShading = GraphicsContext.Shading.linearGradient(
-                Gradient(stops: [
-                    .init(color: edgeColor.opacity(0.2), location: 0),
-                    .init(color: edgeColor.opacity(0.95), location: 0.2),
-                    .init(color: edgeColor.opacity(0.5), location: 0.7),
-                    .init(color: edgeColor.opacity(0), location: 1)
-                ]),
-                startPoint: CGPoint(x: videoRect.midX, y: near),
-                endPoint: CGPoint(x: videoRect.midX, y: top)
-            )
-            let edgeWidth = max(videoRect.height * 0.004, 1.5)
-
-            context.fill(ribbon, with: fill)
-
-            // Neon edges: a soft glow under a thin bright line.
-            var glow = context
-            glow.addFilter(.shadow(color: edgeColor.opacity(0.9), radius: edgeWidth * 5))
-            glow.stroke(edges, with: edgeShading, style: StrokeStyle(lineWidth: edgeWidth, lineCap: .round, lineJoin: .round))
-            context.stroke(edges, with: edgeShading, style: StrokeStyle(lineWidth: edgeWidth * 0.6, lineCap: .round, lineJoin: .round))
-        }
-        .opacity(min(max((confidence - 0.3) / 0.35, 0), 1))
-    }
-
-    private func ribbonPaths() -> (fill: Path, edges: Path)? {
-        guard let origin = path.first, path.count >= 3 else { return nil }
-
-        // Ground plane: x to the right, z forward, in camera heights.
-        var ground: [(x: Double, z: Double)] = []
-        for point in path {
-            let sample = (x: (point.x - origin.x) * groundScale,
-                          z: -(point.y - origin.y) * groundScale)
-            if sample.z > farDistance { break }
-            ground.append(sample)
-        }
-        guard ground.count >= 2 else { return nil }
-
-        // Start the ribbon where the road first becomes visible.
-        guard let firstVisible = ground.firstIndex(where: { $0.z >= nearDistance }) else { return nil }
-        if firstVisible > 0 {
-            let a = ground[firstVisible - 1], b = ground[firstVisible]
-            let t = (nearDistance - a.z) / max(b.z - a.z, 0.0001)
-            ground = [(a.x + (b.x - a.x) * t, nearDistance)] + ground[firstVisible...]
-        }
-        guard ground.count >= 2 else { return nil }
-
-        var left: [CGPoint] = []
-        var right: [CGPoint] = []
-        for index in ground.indices {
-            let previous = ground[max(index - 1, 0)]
-            let next = ground[min(index + 1, ground.count - 1)]
-            let dx = next.x - previous.x, dz = next.z - previous.z
-            let length = max(hypot(dx, dz), 0.0001)
-            let normal = (x: dz / length, z: -dx / length)
-            let p = ground[index]
-            guard let l = project(x: p.x - normal.x * halfWidth, z: p.z - normal.z * halfWidth),
-                  let r = project(x: p.x + normal.x * halfWidth, z: p.z + normal.z * halfWidth) else {
-                continue
-            }
-            left.append(l)
-            right.append(r)
-        }
-        guard left.count >= 2 else { return nil }
-
-        var ribbon = Path()
-        ribbon.move(to: left[0])
-        left.dropFirst().forEach { ribbon.addLine(to: $0) }
-        right.reversed().forEach { ribbon.addLine(to: $0) }
-        ribbon.closeSubpath()
-
-        var edges = Path()
-        edges.addLines(left)
-        edges.addLines(right)
-        return (ribbon, edges)
-    }
-
-    private func project(x: Double, z: Double) -> CGPoint? {
-        guard z > nearDistance * 0.5 else { return nil }
-        let f = focal * Double(videoRect.height)
-        return CGPoint(
-            x: Double(videoRect.midX) + f * x / z,
-            y: Double(videoRect.minY) + Double(videoRect.height) * horizon + f / z
-        )
-    }
-}
-
-// MARK: - Session Panel
-
+/// Session information is separate from turn guidance. The removed Upcoming
+/// list used a different bend selector and could contradict the navigation card.
 private struct SessionPanelView: View {
-    let snapshot: MinimapCoachSnapshot
-    let state: MinimapCoachState
-    let isReady: Bool
     let elapsed: TimeInterval
 
-    private var upcoming: [UpcomingTurn] {
-        guard isReady else {
-            return []
-        }
-        var turns = UpcomingTurnExtractor.turns(along: snapshot.orderedPath, limit: 3)
-        if snapshot.direction.isTurn {
-            let current = UpcomingTurn(direction: snapshot.direction, severity: snapshot.severity)
-            if turns.isEmpty {
-                turns = [current]
-            } else {
-                turns[0] = current
-            }
-        }
-        return turns
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("SESSION")
-                    .font(.hudLabel())
-                    .tracking(1.2)
-                    .foregroundStyle(HUDPalette.label)
-                Spacer()
-                Text(Self.format(elapsed))
-                    .font(.system(size: 19, weight: .medium, design: .monospaced))
-                    .foregroundStyle(.white)
-            }
-
-            divider.padding(.vertical, 14)
-
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
-                    Circle()
-                        .fill(HUDPalette.status(state))
-                        .frame(width: 7, height: 7)
-                    Text(state.title)
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                    Spacer()
-                    Text(String(format: "%.0f%%", snapshot.overallConfidence * 100))
-                        .font(.hudLabel())
-                        .foregroundStyle(HUDPalette.label)
-                }
-
-                GeometryReader { proxy in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(HUDPalette.track)
-                        Capsule()
-                            .fill(HUDPalette.status(state))
-                            .frame(width: proxy.size.width * CGFloat(min(max(snapshot.overallConfidence, 0), 1)))
-                    }
-                }
-                .frame(height: 3)
-
-                Text("UPCOMING")
-                    .font(.hudLabel(11))
-                    .tracking(1.2)
-                    .foregroundStyle(HUDPalette.faint)
-                    .padding(.top, 10)
-
-                if upcoming.isEmpty {
-                    Text(isReady ? "No turns on the visible route" : "Route not available")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(HUDPalette.faint)
-                } else {
-                    ForEach(Array(upcoming.enumerated()), id: \.offset) { index, turn in
-                        HStack(spacing: 12) {
-                            Text(String(format: "%02d", index + 1))
-                                .font(.hudLabel(11))
-                                .foregroundStyle(HUDPalette.faint)
-                            Image(systemName: TurnDescriptor.symbol(turn.direction, turn.severity))
-                                .font(.system(size: 13, weight: .medium))
-                                .frame(width: 16)
-                            Text(TurnDescriptor.title(turn.direction, turn.severity))
-                                .font(.system(size: 13, weight: .medium))
-                        }
-                        .foregroundStyle(.white)
-                        .opacity(1 - Double(index) * 0.28)
-                    }
-                }
-            }
+        HStack(spacing: 10) {
+            Text("Session")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(HUDPalette.label)
+            Text(Self.format(elapsed))
+                .font(.system(size: 17, weight: .medium, design: .monospaced))
+                .foregroundStyle(.white)
+                .monospacedDigit()
         }
-        .padding(20)
-        .frame(width: 300, alignment: .leading)
-        .hudPanel(cornerRadius: 24)
-    }
-
-    private var divider: some View {
-        Rectangle()
-            .fill(HUDPalette.stroke)
-            .frame(height: 1)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .hudPanel(cornerRadius: 16)
+        .accessibilityElement(children: .combine)
     }
 
     private static func format(_ interval: TimeInterval) -> String {
@@ -962,129 +613,6 @@ private struct SessionPanelView: View {
         let minutes = Int(total) / 60
         let seconds = Int(total) % 60
         return String(format: "%02d:%02d", minutes, seconds)
-    }
-}
-
-// MARK: - Upcoming Turn Extraction
-
-struct UpcomingTurn: Equatable {
-    let direction: RouteTurnDirection
-    let severity: TurnSeverity
-}
-
-/// Splits the visible ordered route into successive turns for the preview
-/// list. Display only; the coach's own decision still comes from
-/// `MinimapGeometryAnalyzer`. Severity bands mirror that analyzer's.
-enum UpcomingTurnExtractor {
-    static func turns(along path: [MinimapPoint], limit: Int) -> [UpcomingTurn] {
-        let samples = resample(path, spacing: 0.015)
-        guard samples.count >= 5 else {
-            return []
-        }
-
-        let lookahead = 2
-        var headings: [Double] = []
-        for index in 0..<(samples.count - lookahead) {
-            let from = samples[index]
-            let to = samples[index + lookahead]
-            headings.append(atan2(to.y - from.y, to.x - from.x))
-        }
-        guard headings.count >= 3 else {
-            return []
-        }
-
-        var deltas: [Double] = []
-        for index in 1..<headings.count {
-            deltas.append(wrapped(headings[index] - headings[index - 1]))
-        }
-
-        let activeThreshold = 1.5 * Double.pi / 180
-        let minimumTurn = 16 * Double.pi / 180
-        var result: [UpcomingTurn] = []
-        var runTotal = 0.0
-        var runSign = 0.0
-        var quietSamples = 0
-
-        func closeRun() {
-            if abs(runTotal) >= minimumTurn {
-                result.append(describe(total: runTotal))
-            }
-            runTotal = 0
-            runSign = 0
-            quietSamples = 0
-        }
-
-        for delta in deltas {
-            let sign: Double = delta > 0 ? 1 : -1
-            if abs(delta) >= activeThreshold {
-                if runSign != 0 && sign != runSign {
-                    closeRun()
-                }
-                runSign = sign
-                runTotal += delta
-                quietSamples = 0
-            } else if runSign != 0 {
-                runTotal += delta
-                quietSamples += 1
-                if quietSamples >= 2 {
-                    closeRun()
-                }
-            }
-            if result.count >= limit {
-                break
-            }
-        }
-        if result.count < limit {
-            closeRun()
-        }
-        return Array(result.prefix(limit))
-    }
-
-    /// Minimap coordinates have y pointing down, so a positive (clockwise)
-    /// heading change is a right turn.
-    private static func describe(total: Double) -> UpcomingTurn {
-        let degrees = abs(total) * 180 / .pi
-        let isRight = total > 0
-        if degrees >= 135 {
-            return UpcomingTurn(direction: isRight ? .uTurnRight : .uTurnLeft, severity: .uTurn)
-        }
-        let severity: TurnSeverity = degrees < 34 ? .gentle : (degrees < 72 ? .medium : .sharp)
-        return UpcomingTurn(direction: isRight ? .right : .left, severity: severity)
-    }
-
-    private static func wrapped(_ angle: Double) -> Double {
-        var value = angle
-        while value > .pi { value -= 2 * .pi }
-        while value < -.pi { value += 2 * .pi }
-        return value
-    }
-
-    private static func resample(_ path: [MinimapPoint], spacing: Double) -> [MinimapPoint] {
-        guard var previous = path.first else {
-            return []
-        }
-        var result = [previous]
-        var carried = 0.0
-
-        for point in path.dropFirst() {
-            var segment = hypot(point.x - previous.x, point.y - previous.y)
-            var start = previous
-            while carried + segment >= spacing, segment > 0 {
-                let step = spacing - carried
-                let t = step / segment
-                let next = MinimapPoint(
-                    x: start.x + (point.x - start.x) * t,
-                    y: start.y + (point.y - start.y) * t
-                )
-                result.append(next)
-                start = next
-                segment -= step
-                carried = 0
-            }
-            carried += segment
-            previous = point
-        }
-        return result
     }
 }
 
@@ -1114,6 +642,7 @@ private struct SpeedCardView: View {
 
 private struct PedalActionCardView: View {
     let action: DrivingCoachAction
+    var timingOnly = false
 
     /// 0 = full brake, 0.5 = hold, 1 = accelerate.
     private var position: CGFloat? {
@@ -1126,6 +655,7 @@ private struct PedalActionCardView: View {
     }
 
     private var title: String {
+        if timingOnly { return "TURN GUIDANCE" }
         switch action {
         case .unavailable: return "NO GUIDANCE"
         default: return action.title
@@ -1151,42 +681,47 @@ private struct PedalActionCardView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
 
-            GeometryReader { proxy in
-                let width = proxy.size.width
-                ZStack(alignment: .leading) {
-                    Capsule().fill(HUDPalette.track)
-                    Rectangle()
-                        .fill(Color.white.opacity(0.25))
-                        .frame(width: 1, height: 7)
-                        .offset(x: width * 0.5)
-                    if let position {
-                        let start = min(position, 0.5) * width
-                        let end = max(position, 0.5) * width
-                        Capsule()
-                            .fill(color.opacity(0.85))
-                            .frame(width: max(end - start, 8), height: 4)
-                            .offset(x: position == 0.5 ? width * 0.5 - 4 : start)
-                        RoundedRectangle(cornerRadius: 1)
-                            .fill(color)
-                            .frame(width: 2, height: 10)
-                            .offset(x: width * position - 1)
+            if timingOnly {
+                Text("Pedal timing is not calibrated")
+                    .font(.hudLabel(12)).foregroundStyle(HUDPalette.label)
+            } else {
+                GeometryReader { proxy in
+                    let width = proxy.size.width
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(HUDPalette.track)
+                        Rectangle()
+                            .fill(Color.white.opacity(0.25))
+                            .frame(width: 1, height: 7)
+                            .offset(x: width * 0.5)
+                        if let position {
+                            let start = min(position, 0.5) * width
+                            let end = max(position, 0.5) * width
+                            Capsule()
+                                .fill(color.opacity(0.85))
+                                .frame(width: max(end - start, 8), height: 4)
+                                .offset(x: position == 0.5 ? width * 0.5 - 4 : start)
+                            RoundedRectangle(cornerRadius: 1)
+                                .fill(color)
+                                .frame(width: 2, height: 10)
+                                .offset(x: width * position - 1)
+                        }
                     }
+                    .frame(height: 10)
+                    .animation(.easeOut(duration: 0.2), value: position)
                 }
                 .frame(height: 10)
-                .animation(.easeOut(duration: 0.2), value: position)
-            }
-            .frame(height: 10)
 
-            HStack {
-                Text("BRAKE")
-                Spacer()
-                Text("HOLD")
-                Spacer()
-                Text("ACCEL")
+                HStack {
+                    Text("BRAKE")
+                    Spacer()
+                    Text("HOLD")
+                    Spacer()
+                    Text("ACCEL")
+                }
+                .font(.hudLabel(11))
+                .tracking(0.6)
+                .foregroundStyle(HUDPalette.faint)
             }
-            .font(.hudLabel(11))
-            .tracking(0.6)
-            .foregroundStyle(HUDPalette.faint)
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 14)
