@@ -1,5 +1,10 @@
 # Roadmap v2 implementation status
 
+> **Snapshot from 24 September 2026.** Later work is recorded in
+> [development history](DEVELOPMENT_HISTORY.md) and
+> [guidance review update](GUIDANCE_REVIEW_UPDATE.md). The baseline commit named
+> below as `c2dbacf` appears on GitHub as `ec804eb` (same file tree).
+
 Updated 24 September 2026. This records implemented code separately from planned acceptance gates.
 
 ## Canonical project and baseline
