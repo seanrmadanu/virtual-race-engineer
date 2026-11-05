@@ -293,6 +293,11 @@ phase timing before promoting it to the live HUD.
 Lane/obstacle perception, exact wheel degrees, automated input, other games and
 screen capture are deferred.
 
+## Contributors
+
+- [Sean Raj Madanu](https://github.com/seanrmadanu) — project creator and maintainer
+- OpenAI Codex — AI coding assistant for implementation, testing, and documentation
+
 ## Licensing
 
 No license has been chosen yet. Publishing code in a public repository does not
