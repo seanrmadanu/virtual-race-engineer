@@ -156,6 +156,7 @@ nonisolated final class MinimapRouteDetector {
         var unrestrictedYellowMask = [UInt8](repeating: 0, count: pixelCount)
         var cyanMask = [UInt8](repeating: 0, count: pixelCount)
         var cyanEvidenceMask = [UInt8](repeating: 0, count: pixelCount)
+        var redOverlayMask = [UInt8](repeating: 0, count: pixelCount)
         var cyanCandidateCount = 0
         var yellowCandidateCount = 0
 
@@ -178,6 +179,9 @@ nonisolated final class MinimapRouteDetector {
 
                 if isCyanEvidencePixel(red: red, green: green, blue: blue) {
                     cyanEvidenceMask[index] = 1
+                }
+                if red >= 165 && red - green >= 65 && red - blue >= 55 {
+                    redOverlayMask[index] = 1
                 }
 
                 let insidePlayerSearch =
@@ -210,6 +214,8 @@ nonisolated final class MinimapRouteDetector {
         )
         let playerDetection = detectPlayer(
             cyanMask: cyanMask,
+            yellowMask: yellowMask,
+            redOverlayMask: redOverlayMask,
             width: cropWidth,
             height: cropHeight,
             expectedCenter: expectedPlayerCenter
@@ -477,6 +483,8 @@ nonisolated final class MinimapRouteDetector {
 
     private func detectPlayer(
         cyanMask: [UInt8],
+        yellowMask: [UInt8],
+        redOverlayMask: [UInt8],
         width: Int,
         height: Int,
         expectedCenter: PixelPoint
@@ -515,17 +523,76 @@ nonisolated final class MinimapRouteDetector {
             )))
             let fillScore = min(component.fillRatio / 0.35, 1)
             let locationScore = max(0, 1 - locationDistance)
-            let confidence = clampedUnit(
+            var confidence = clampedUnit(
                 0.45 * areaScore +
                 0.25 * fillScore +
                 0.30 * locationScore
             )
+
+            // Escape/event mode zooms out and moves a smaller local arrow
+            // toward the map center. Recognize its tapered shape at either
+            // scale instead of penalizing a real arrow for its pixel area.
+            // Rectangles, dots and elongated HUD text cannot take this path.
+            let verifiedShape = isUprightPlayerArrow(component, labels: connected.labels, width: width)
+            let verifiedOcclusion = isOccludedPlayerArrow(component, yellow: yellowMask,
+                red: redOverlayMask, width: width, height: height)
+            if verifiedShape || verifiedOcclusion,
+               (0.40...0.74).contains(normalizedX), (0.50...0.90).contains(normalizedY) {
+                let verticalDistance = min(abs(normalizedY - 0.80), abs(normalizedY - 0.56))
+                let centered = max(0, 1 - abs(normalizedX - 0.62) / 0.20 - verticalDistance / 0.24)
+                confidence = max(confidence, 0.70 + 0.18 * centered + 0.06 * fillScore)
+            }
 
             if best == nil || confidence > best!.confidence {
                 best = PlayerDetection(center: center, confidence: confidence)
             }
         }
         return best
+    }
+
+    private func isUprightPlayerArrow(_ component: MaskComponent, labels: [Int], width: Int) -> Bool {
+        guard component.height >= 8, component.width >= 6,
+              (0.45...1.45).contains(Double(component.width) / Double(component.height)),
+              (0.20...0.80).contains(component.fillRatio) else { return false }
+        func span(in fractions: ClosedRange<Double>) -> Double {
+            var spans: [Double] = []
+            for y in component.minY...component.maxY {
+                let fraction = Double(y - component.minY) / Double(component.height - 1)
+                guard fractions.contains(fraction) else { continue }
+                let xs = (component.minX...component.maxX).filter { labels[y * width + $0] == component.label }
+                if let first = xs.first, let last = xs.last { spans.append(Double(last - first + 1)) }
+            }
+            return spans.isEmpty ? 0 : spans.reduce(0, +) / Double(spans.count)
+        }
+        let tip = span(in: 0...0.25), body = span(in: 0.45...0.70), base = span(in: 0.75...1)
+        // The red event marker may cover the lower tips at the smaller scale.
+        // Retain taper and broad lower support without requiring intact wings.
+        return tip > 0 && body >= tip * 1.6 && base >= body * 0.75
+    }
+
+    /// A red escape marker can overlap the small cyan arrow. Corroborate the
+    /// fragment using current-frame red occlusion AND the GPS trail above it.
+    /// No old anchor is retained when current pixels disappear.
+    private func isOccludedPlayerArrow(_ component: MaskComponent, yellow: [UInt8], red: [UInt8],
+                                       width: Int, height: Int) -> Bool {
+        let center = component.centroid
+        let nx = center.x / Double(width), ny = center.y / Double(height)
+        guard (0.54...0.72).contains(nx), (0.52...0.84).contains(ny),
+              component.height >= 6, component.width >= 5,
+              component.maximumSpan <= Double(min(width, height)) * 0.12,
+              (0.25...2.0).contains(Double(component.width) / Double(component.height)) else { return false }
+        func count(_ mask: [UInt8], halfWidth: Double, from: Double, to: Double) -> Int {
+            let x0 = max(0, Int(center.x - Double(width) * halfWidth))
+            let x1 = min(width - 1, Int(center.x + Double(width) * halfWidth))
+            let y0 = max(0, Int(center.y + Double(height) * from))
+            let y1 = min(height - 1, Int(center.y + Double(height) * to))
+            guard x0 <= x1, y0 <= y1 else { return 0 }
+            var result = 0
+            for y in y0...y1 { for x in x0...x1 { result += Int(mask[y * width + x]) } }
+            return result
+        }
+        return count(red, halfWidth: 0.045, from: -0.01, to: 0.085) >= 8
+            && count(yellow, halfWidth: 0.025, from: -0.09, to: -0.01) >= 10
     }
 
     private func detectMinimapRim(

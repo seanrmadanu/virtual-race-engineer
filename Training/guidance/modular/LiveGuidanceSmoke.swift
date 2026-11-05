@@ -22,6 +22,7 @@ import Foundation
         reader.add(output); precondition(reader.startReading())
         var nextTime = start, frames = 0, lastPublishedTime = -Double.infinity
         var stages: [String: Int] = [:]
+        var trace: [[String: Any]] = []
         while let sample = output.copyNextSampleBuffer() {
             let pts = CMSampleBufferGetPresentationTimeStamp(sample).seconds
             guard pts >= nextTime, let pixels = CMSampleBufferGetImageBuffer(sample) else { continue }
@@ -34,13 +35,28 @@ import Foundation
                 stages[result.cue.stage.rawValue, default: 0] += 1
                 let now = ProcessInfo.processInfo.systemUptime
                 let steering = result.steering(at: now)
+                if ProcessInfo.processInfo.environment["RACING_GUIDANCE_TRACE"] != nil {
+                    let coach = analyzer.coachSnapshot
+                    trace.append(["time": pts, "title": result.cue.title, "stage": result.cue.stage.rawValue,
+                        "next": result.cue.upcomingTitle ?? "none",
+                        "path": coach.orderedPath.map { [$0.x, $0.y] },
+                        "anchor": coach.playerAnchor.map { [$0.x, $0.y] } ?? []])
+                }
                 precondition(analyzer.coachSnapshot.action != .brake && analyzer.coachSnapshot.action != .accelerateIfClear)
                 if result.cue.stage == .headsUp { precondition(steering == .center || steering == .unavailable) }
                 print(String(format: "%.2f", pts), result.cue.stage.rawValue, result.cue.direction,
-                      steering.rawValue, "speed=\(analyzer.detectedSpeed.map(String.init) ?? "missing")")
+                      steering.rawValue, "current=\(result.cue.currentDirection ?? "unknown")",
+                      "title=\(result.cue.title)", "next=\(result.cue.upcomingTitle ?? "none")",
+                      "speed=\(analyzer.detectedSpeed.map(String.init) ?? "missing")",
+                      "map=\(analyzer.coachSnapshot.confidence.minimap)",
+                      "anchor=\(analyzer.coachSnapshot.confidence.playerAnchor)",
+                      "reason=\(result.cue.reason)")
             }
         }
         precondition(reader.status == .completed)
+        if let tracePath = ProcessInfo.processInfo.environment["RACING_GUIDANCE_TRACE"] {
+            try JSONSerialization.data(withJSONObject: trace, options: [.sortedKeys]).write(to: URL(fileURLWithPath: tracePath))
+        }
         try await Task.sleep(nanoseconds: 800_000_000)
         precondition(analyzer.turnGuidance.steering(at: ProcessInfo.processInfo.systemUptime) == .unavailable)
         precondition(stages["heads_up", default: 0] > 0, "No upcoming cue was published")

@@ -333,6 +333,7 @@ nonisolated struct MinimapCoachSnapshot:
     let trackingApplied: Bool
     let reason: String
     var guidanceExpiresAt: TimeInterval? = nil
+    var playerAnchor: MinimapPoint? = nil
 
     var overallConfidence: Float {
         confidence.criticalMinimum

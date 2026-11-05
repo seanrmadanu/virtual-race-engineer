@@ -152,10 +152,19 @@ final class FrameAnalyzer:
     @Published private var minimapSnapshot =
         MinimapAnalyzerSnapshot.empty
 
+    /// Lane lines with paint support in their own frame (smoothed). Used by guidance.
     @Published private(set) var roadLines = RoadLineObservation.empty
+    /// Lane lines for drawing: also holds a line briefly through a dropout.
+    @Published private(set) var roadDisplay = RoadLineObservation.empty
     @Published private(set) var turnGuidance = LiveTurnGuidanceSnapshot.empty
     private var liveTurnPipeline = LiveTurnGuidancePipeline()
-    private let roadLineDetector = RoadLineDetector()
+    /// Touched only on `roadAnalysisQueue`.
+    private var roadTracker = RoadLineTracker()
+    /// Guarded by `stateLock`.
+    private var roadAnalysisInProgress = false
+    /// Guarded by `stateLock`: recent lane observations, oldest first, so guidance
+    /// can use the one from the same (or an earlier) frame as its minimap result.
+    private var recentRoadObservations: [RoadLineObservation] = []
 
     var minimapAnalyzedFrameCount:
         Int {
@@ -354,6 +363,16 @@ final class FrameAnalyzer:
         DispatchQueue(
             label:
                 "com.racingtrainer.minimap-analysis",
+            qos:
+                .userInitiated
+        )
+
+    // Road lines run on every incoming frame (skipping only while the previous
+    // frame is still being processed), independent of the slower minimap work.
+    private let roadAnalysisQueue =
+        DispatchQueue(
+            label:
+                "com.racingtrainer.road-analysis",
             qos:
                 .userInitiated
         )
@@ -569,7 +588,22 @@ final class FrameAnalyzer:
                 currentUptime
         }
 
+        let shouldAnalyzeRoad = !roadAnalysisInProgress
+        if shouldAnalyzeRoad { roadAnalysisInProgress = true }
+
         stateLock.unlock()
+
+        if shouldAnalyzeRoad {
+            roadAnalysisQueue.async {
+                [weak self, pixelBuffer] in
+
+                self?.analyzeRoad(
+                    pixelBuffer: pixelBuffer,
+                    sourceFrameUptime: currentUptime,
+                    generation: currentGeneration
+                )
+            }
+        }
 
         if shouldAnalyzeSpeed {
             speedAnalysisQueue.async {
@@ -654,6 +688,9 @@ final class FrameAnalyzer:
         pendingTrackingFrameUptime =
             0
 
+        roadAnalysisInProgress = false
+        recentRoadObservations = []
+
         stableSpeedStorage =
             nil
 
@@ -672,6 +709,12 @@ final class FrameAnalyzer:
 
             self?.minimapCoachEngine.reset()
             self?.liveTurnPipeline.reset()
+        }
+
+        roadAnalysisQueue.async {
+            [weak self] in
+
+            self?.roadTracker.reset()
         }
 
         DispatchQueue.main.async {
@@ -701,6 +744,7 @@ final class FrameAnalyzer:
                 .empty
 
             self.roadLines = .empty
+            self.roadDisplay = .empty
             self.turnGuidance = .empty
 
             self.detectedSpeed = nil
@@ -885,6 +929,44 @@ final class FrameAnalyzer:
         }
     }
 
+    // MARK: - Road Analysis
+
+    private func analyzeRoad(
+        pixelBuffer: CVPixelBuffer,
+        sourceFrameUptime: TimeInterval,
+        generation currentGeneration: Int
+    ) {
+        autoreleasepool {
+            let camera = RoadCameraMode(rawValue: UserDefaults.standard.string(forKey: "hud.pathRibbonCamera") ?? "chase") ?? .chase
+            let result = roadTracker.update(pixelBuffer, at: sourceFrameUptime, camera: camera)
+            let completed = ProcessInfo.processInfo.systemUptime
+            var observation = result.observation, display = result.display
+            observation.availableAt = completed
+            display.availableAt = completed
+
+            stateLock.lock()
+            roadAnalysisInProgress = false
+            let current = currentGeneration == generation
+            if current {
+                recentRoadObservations.append(observation)
+                if recentRoadObservations.count > 30 { recentRoadObservations.removeFirst(recentRoadObservations.count - 30) }
+            }
+            stateLock.unlock()
+            guard current else { return }
+
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.isCurrentGeneration(currentGeneration) else { return }
+                self.roadLines = observation
+                self.roadDisplay = display
+            }
+        }
+    }
+
+    /// Newest lane observation from this frame or an earlier one. Caller holds `stateLock`.
+    private func roadObservationLocked(atOrBefore time: TimeInterval) -> RoadLineObservation? {
+        recentRoadObservations.last { $0.capturedAt <= time }
+    }
+
     // MARK: - Minimap Analysis
 
     private func analyzeMinimap(
@@ -896,12 +978,6 @@ final class FrameAnalyzer:
             Int
     ) {
         autoreleasepool {
-            let road = roadLineDetector.analyze(pixelBuffer, at: sourceFrameUptime,
-                camera: RoadCameraMode(rawValue: UserDefaults.standard.string(forKey: "hud.pathRibbonCamera") ?? "chase") ?? .chase)
-            DispatchQueue.main.async { [weak self] in
-                guard let self, self.isCurrentGeneration(currentGeneration) else { return }
-                self.roadLines = road
-            }
             let startUptime =
                 ProcessInfo
                     .processInfo
@@ -1056,10 +1132,12 @@ final class FrameAnalyzer:
                 1
 
             let currentSpeed = closestSpeedSampleLocked(to: coachResult.sourceFrameUptime)
+            let road = roadObservationLocked(atOrBefore: coachResult.sourceFrameUptime)
             let confirmedUnit = detectedSpeedUnitStorage?.lowercased()
             let liveGuidance = liveTurnPipeline.process(coach: coachResult,
                 minimapVisible: result.minimapVisible, minimapConfidence: result.minimapConfidence,
-                speed: currentSpeed, speedUnit: confirmedUnit, session: currentGeneration, completedAt: completionUptime)
+                speed: currentSpeed, speedUnit: confirmedUnit, session: currentGeneration, completedAt: completionUptime,
+                road: road)
             coachResult = coachResult.applying(liveGuidance, at: completionUptime)
 
             let resultSequence =

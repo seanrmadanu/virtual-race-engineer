@@ -83,6 +83,7 @@ final class ModelReviewStore: ObservableObject {
         return (bundle?.events ?? []).filter { event in
             switch filter {
             case "turn_cues": return event.turnGuidance?.isCueStart == true
+            case "corner_phases": return event.cornerTechnique?.isPhaseStart == true
             case "answered": return event.hasAnswer(in: category)
             case "unknown": return !event.hasAnswer(in: category)
             case "unreviewed": return notes["\(event.id)|\(category.rawValue)"]?.reviewed != true
@@ -124,6 +125,7 @@ final class ModelReviewStore: ObservableObject {
 
     var roadAtPlayhead: RoadLineObservation { bundle?.road(atPlaybackTime: currentTime) ?? .empty }
     var turnAtPlayhead: TurnGuidanceSample? { bundle?.turnGuidance(atPlaybackTime: currentTime) }
+    var cornerAtPlayhead: CornerTechniqueSample? { bundle?.cornerTechnique(atPlaybackTime: currentTime) }
 
     func start() {
         guard !started else { return }
@@ -143,6 +145,12 @@ final class ModelReviewStore: ObservableObject {
                 : resourceBundle.url(forResource: "ReviewPilot", withExtension: "json")
                     ?? storageDirectory.appendingPathComponent("last-test.review.json"))
         guard FileManager.default.fileExists(atPath: test.path), loadTest(url: test) else { return }
+        if Self.argument("--review-category") == ReviewSkillCategory.cornerTechnique.rawValue,
+           bundle?.cornerTechniqueSamples != nil {
+            category = .cornerTechnique
+            selectedID = bundle?.events.first(where: { $0.cornerTechnique?.isPhaseStart == true })?.id
+                ?? bundle?.events.first?.id
+        }
         if let video = Self.argument("--review-video") {
             attachVideo(url: URL(fileURLWithPath: video))
         } else {
@@ -427,6 +435,11 @@ final class ModelReviewStore: ObservableObject {
         select(events.first(where: { $0.time > currentTime + 0.05 }) ?? events[0])
     }
 
+    func nextCornerPhase() {
+        guard let events = bundle?.events.filter({ $0.cornerTechnique?.isPhaseStart == true }), !events.isEmpty else { return }
+        select(events.first(where: { $0.time > currentTime + 0.05 }) ?? events[0])
+    }
+
     func togglePlayback() {
         guard videoReady, !isSeeking else { return }
         cancelHistory()
@@ -475,6 +488,7 @@ final class ModelReviewStore: ObservableObject {
             // Compute against the complete log so an Unreviewed filter cannot skip a row.
             let following = events.dropFirst(index + 1).first { event in
                 switch filter {
+                case "corner_phases": return event.cornerTechnique?.isPhaseStart == true
                 case "answered": return event.hasAnswer(in: category)
                 case "unknown": return !event.hasAnswer(in: category)
                 case "unreviewed": return notes["\(event.id)|\(category.rawValue)"]?.reviewed != true

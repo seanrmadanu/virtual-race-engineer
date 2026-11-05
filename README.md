@@ -1,5 +1,8 @@
 # Virtual Race Engineer
 
+> **Experiment snapshot from October 15, 2026.** This branch preserves the separate Claude prototype for frame-to-frame road-paint tracking, smoother lane overlays, and steering-wheel stabilization.
+> Published November 5, 2026. See [main](https://github.com/seanrmadanu/virtual-race-engineer) for the canonical app. Local recordings, review data, and packaged builds are separate.
+
 Virtual Race Engineer (project folder: Racing Trainer) is an early-stage macOS
 driving coach for **The Crew Motorfest**. It takes gameplay video from a capture
 card or a local video file, reads the speedometer and minimap on the Mac, and
@@ -26,6 +29,10 @@ and tracker resets ([turn cue audit](docs/TURN_CUE_AUDIT_20261013.md)), plus at
 least one early *Turn now* cue. A fix is in progress.
 
 The full timeline is in [development history](docs/DEVELOPMENT_HISTORY.md).
+
+Active collaborator work is recorded in the [shared agent change log](docs/AGENT_CHANGELOG.md).
+The October 15 [Category 2 review prototype](docs/CORNER_TECHNIQUE.md) adds
+experimental corner-phase estimates; use **Open Corner Technique Review.command** to try it.
 
 ## Technical decisions
 

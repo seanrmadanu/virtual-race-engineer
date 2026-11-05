@@ -13,4 +13,4 @@ cp -X "$project_dir/Racing Trainer.xcodeproj/xcshareddata/xcschemes/Racing Train
 xcodebuild -project "$task_build_root/Racing Trainer.xcodeproj" -scheme 'Racing Trainer' \
     -configuration "$configuration" -destination 'platform=macOS' -derivedDataPath "$task_build_root/DerivedData" \
     CODE_SIGNING_ALLOWED=NO test
-printf '%s\n' "Verified app: $task_build_root/DerivedData/Build/Products/$configuration/Racing Trainer.app"
+printf '%s\n' "Verified app: $task_build_root/DerivedData/Build/Products/$configuration/Claude.app"

@@ -623,7 +623,7 @@ struct ContentView: View {
                     .windowBackgroundColor
             )
         )
-        .navigationTitle("Racing Trainer")
+        .navigationTitle("Claude")
         .navigationSubtitle(sourceStatusText)
         .toolbar {
             windowToolbar

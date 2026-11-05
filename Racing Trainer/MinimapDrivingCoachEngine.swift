@@ -262,7 +262,8 @@ nonisolated final class MinimapDrivingCoachEngine {
             reason: state == .ready
                 ? geometry.reason + " " + decision.explanation
                 : "A route was found, but one or more critical confidence gates are still below the safe threshold.",
-            guidanceExpiresAt: decision.expiresAt
+            guidanceExpiresAt: decision.expiresAt,
+            playerAnchor: playerAnchor
         )
     }
 
@@ -397,7 +398,8 @@ nonisolated final class MinimapDrivingCoachEngine {
             processingLatencyMilliseconds: latency * 1000,
             trackingApplied: true,
             reason: "Latest-frame route tracking: \(Int(tracking.rotationDegrees))° correction. " + decision.explanation,
-            guidanceExpiresAt: decision.expiresAt
+            guidanceExpiresAt: decision.expiresAt,
+            playerAnchor: self.trackingAnchor
         )
     }
 
@@ -464,7 +466,12 @@ nonisolated final class MinimapDrivingCoachEngine {
         sourceFrameUptime: TimeInterval
     ) -> Float {
         let expected = MinimapPoint(x: 0.50, y: 0.72)
-        let distance = hypot(anchor.x - expected.x, anchor.y - expected.y)
+        let normalDistance = hypot(anchor.x - expected.x, anchor.y - expected.y)
+        // Event/escape zoom moves a smaller arrow toward the map center.
+        // Accept that position only after the detector verifies its shape.
+        let compactDistance = analysis.playerDetectionConfidence >= 0.70
+            ? hypot(anchor.x - 0.62, anchor.y - 0.56) : Double.infinity
+        let distance = min(normalDistance, compactDistance)
         let positionScore = Float(clamped(1 - distance / 0.24))
         let pixelScore = Float(clamped(
             Double(analysis.cyanPlayerPixelCount - 30) / 240

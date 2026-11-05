@@ -18,7 +18,7 @@ nonisolated enum ReviewSkillCategory: String, Codable, CaseIterable, Identifiabl
     var detail: String {
         switch self {
         case .basicTurns: return "Left, right and straight · upcoming-turn heads-up, then turn now. Review direction and timing separately."
-        case .cornerTechnique: return "Approach, entry and exit are experimental. Apex and racing line are not trained yet."
+        case .cornerTechnique: return "Review route-phase estimates: approach, entry, in bend and exit. Apex and racing line remain unavailable."
         case .advanced: return "Planned: braking technique, linked corners, grip and traffic decisions. No trained outputs yet."
         case .slowdownTiming: return "Review proposed warnings, lift, brake and no-cue intervals. These are unreviewed proposals, not trained advice."
         }
@@ -65,11 +65,12 @@ nonisolated struct ModelReviewEvent: Codable, Identifiable, Equatable {
     var diagnostics: ModuleReviewDiagnostics? = nil
     var roadLines: RoadLineObservation? = nil
     var turnGuidance: TurnGuidanceSample? = nil
+    var cornerTechnique: CornerTechniqueSample? = nil
 
     func hasAnswer(in category: ReviewSkillCategory) -> Bool {
         switch category {
         case .basicTurns: return (turnGuidance?.direction ?? direction) != "unknown"
-        case .cornerTechnique: return phase != "unknown"
+        case .cornerTechnique: return cornerTechnique.map { $0.phase != .unavailable } ?? (phase != "unknown")
         case .advanced: return false
         case .slowdownTiming: return diagnostics?.cue != nil && diagnostics?.cue != "cannot_judge"
         }
@@ -79,7 +80,7 @@ nonisolated struct ModelReviewEvent: Codable, Identifiable, Equatable {
         case .basicTurns:
             if let turnGuidance { return turnGuidance.title }
             return direction == "unknown" ? "Unknown" : "\(reviewLabel(direction)) · \(reviewLabel(target))"
-        case .cornerTechnique: return reviewLabel(phase)
+        case .cornerTechnique: return cornerTechnique?.title ?? reviewLabel(phase)
         case .advanced: return "Not trained"
         case .slowdownTiming: return reviewLabel(diagnostics?.cue ?? "cannot_judge")
         }
@@ -95,6 +96,7 @@ nonisolated struct ModelReviewBundle: Codable, Equatable {
     let events: [ModelReviewEvent]
     var roadObservations: [RoadLineObservation]? = nil
     var turnGuidanceSamples: [TurnGuidanceSample]? = nil
+    var cornerTechniqueSamples: [CornerTechniqueSample]? = nil
 
     static let directions = ["unknown", "left", "right", "straight"]
     static let targets = ["unknown", "current_corner", "next_corner", "straight_segment"]
@@ -140,6 +142,10 @@ nonisolated struct ModelReviewBundle: Codable, Equatable {
                 try cue.validate()
                 guard cue.time == event.time else { throw ModelReviewError.invalid("Turn cue belongs to a different timestamp.") }
             }
+            if let phase = event.cornerTechnique {
+                try phase.validate()
+                guard phase.time == event.time else { throw ModelReviewError.invalid("Corner phase belongs to another timestamp.") }
+            }
             previous = event.time
         }
         var previousRoadTime = -Double.infinity
@@ -164,6 +170,25 @@ nonisolated struct ModelReviewBundle: Codable, Equatable {
                 throw ModelReviewError.invalid("Turn guidance contains unordered or out-of-range timestamps.")
             }
             previousCueTime = cue.time
+        }
+        guard (cornerTechniqueSamples?.count ?? 0) <= 100_000 else {
+            throw ModelReviewError.invalid("Too many corner phase samples.")
+        }
+        var previousPhaseTime = -Double.infinity
+        for phase in cornerTechniqueSamples ?? [] {
+            try phase.validate()
+            guard phase.time > previousPhaseTime, phase.time < source.duration else {
+                throw ModelReviewError.invalid("Corner phases contain unordered or out-of-range timestamps.")
+            }
+            previousPhaseTime = phase.time
+        }
+        if let samples = cornerTechniqueSamples {
+            let byTime = Dictionary(uniqueKeysWithValues: samples.map { ($0.time, $0) })
+            for event in events {
+                guard let expected = byTime[event.time], event.cornerTechnique == expected else {
+                    throw ModelReviewError.invalid("Corner phase log and playback samples disagree.")
+                }
+            }
         }
     }
 
@@ -193,7 +218,20 @@ nonisolated struct ModelReviewBundle: Codable, Equatable {
             let middle = (low + high) / 2
             if samples[middle].time <= time { low = middle + 1 } else { high = middle }
         }
-        guard low > 0, time - samples[low - 1].time <= 0.25 else { return nil }
+        guard low > 0, time - samples[low - 1].time <= 0.25,
+              time <= (samples[low - 1].validUntil ?? .infinity) else { return nil }
+        return samples[low - 1]
+    }
+
+    func cornerTechnique(atPlaybackTime time: Double) -> CornerTechniqueSample? {
+        guard time.isFinite, time >= 0, time < source.duration, let samples = cornerTechniqueSamples else { return nil }
+        var low = 0, high = samples.count
+        while low < high {
+            let middle = (low + high) / 2
+            if samples[middle].time <= time { low = middle + 1 } else { high = middle }
+        }
+        guard low > 0, time - samples[low - 1].time <= 0.25,
+              time <= (samples[low - 1].validUntil ?? samples[low - 1].time + 0.25) else { return nil }
         return samples[low - 1]
     }
 }
@@ -216,6 +254,12 @@ nonisolated struct ModelReviewNote: Codable, Equatable {
     var slowdown: SlowdownReview? = nil
     var aiReviewSHA256: [String: String]? = nil
     var turnTiming: TurnTimingReview? = nil
+    // Separate from historical learned phase labels; no automatic training promotion.
+    var cornerPhase: String? = nil
+    var cornerPhaseCorrection: String {
+        get { cornerPhase ?? "" }
+        set { cornerPhase = newValue.isEmpty ? nil : newValue }
+    }
 
     var key: String { "\(eventID)|\(category.rawValue)" }
     var canComplete: Bool {
@@ -236,6 +280,12 @@ nonisolated struct ModelReviewNote: Codable, Equatable {
             guard category == .basicTurns, !reviewed || turnTiming.isComplete,
                   !reviewed || !turnTiming.hasInterval || Double(turnTiming.end).map({ $0 < bundle.source.duration }) == true else {
                 throw ModelReviewError.invalid("Enter a timing verdict and an interval inside this recording, or mark timing unsure.")
+            }
+        }
+        if let cornerPhase {
+            guard category == .cornerTechnique, event.cornerTechnique != nil,
+                  CornerTechniquePhase(rawValue: cornerPhase) != nil else {
+                throw ModelReviewError.invalid("This phase correction does not belong to a Category 2 estimate.")
             }
         }
         if category == .slowdownTiming {
@@ -324,6 +374,7 @@ nonisolated func reviewLabel(_ value: String) -> String {
     case "next_corner": return "Upcoming corner"
     case "straight_segment": return "Straight segment"
     case "apex_region": return "Apex region"
+    case "cornering": return "In bend"
     case "advance_warning": return "Advance warning"
     case "no_cue": return "No cue needed"
     case "cannot_judge": return "Cannot judge"

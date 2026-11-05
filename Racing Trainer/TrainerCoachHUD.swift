@@ -324,6 +324,7 @@ struct TrainerCoachHUD: View {
     let videoRect: CGRect
 
     @State private var sessionStart = Date()
+    @State private var wheelTarget = SteeringWheelTargetFilter()
 
     @AppStorage(WheelPlacement.centerXKey) private var wheelCenterX = WheelPlacement.defaultCenterX
     @AppStorage(WheelPlacement.hubYKey) private var wheelHubY = WheelPlacement.defaultHubY
@@ -377,7 +378,8 @@ struct TrainerCoachHUD: View {
 
         ZStack {
             if showsPathHighlight {
-                RoadLineOverlay(observation: analyzer.roadLines, time: currentUptime, videoRect: videoRect)
+                RoadLineOverlay(observation: analyzer.roadDisplay, time: currentUptime, videoRect: videoRect,
+                                camera: RoadCameraMode(rawValue: pathRibbon.rawValue) ?? .chase)
                 .mask(alignment: .topLeading) {
                     Rectangle()
                         .frame(width: videoRect.width, height: videoRect.height)
@@ -388,7 +390,8 @@ struct TrainerCoachHUD: View {
 
             if showsSteeringWheel || editor.isAdjustingWheel {
                 SteeringWheelTargetView(
-                    steering: liveTurn.steering(at: currentUptime),
+                    targetDegrees: wheelTarget.degrees(
+                        turn: liveTurn, route: analyzer.coachSnapshot, at: currentUptime),
                     accent: turnIsFresh && liveTurn.cue.stage != .unavailable ? HUDPalette.amber : HUDPalette.inactive,
                     diameter: wheelDiameter,
                     rotationOverride: editor.isAdjustingWheel ? editor.testRotation : nil
@@ -548,8 +551,12 @@ private struct NavigationCardView: View {
     private var isTurnNow: Bool { turnCue?.stage == .turnNow }
     private var symbol: String {
         guard let turnCue, isAvailable else { return "ellipsis" }
-        if turnCue.stage == .straight { return "arrow.up" }
-        return turnCue.direction == "left" ? "arrow.turn.up.left" : "arrow.turn.up.right"
+        switch turnCue.primaryDirection {
+        case "straight": return "arrow.up"
+        case "left": return "arrow.turn.up.left"
+        case "right": return "arrow.turn.up.right"
+        default: return "ellipsis"
+        }
     }
     private var foreground: Color {
         isTurnNow ? HUDPalette.amber : Color.white.opacity(isAvailable ? 1 : 0.75)
@@ -561,11 +568,18 @@ private struct NavigationCardView: View {
                 .font(.system(size: 36, weight: .semibold))
                 .frame(width: 44)
                 .accessibilityHidden(true)
-            Text(instruction)
-                .font(.system(size: 28, weight: isTurnNow ? .bold : .semibold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(instruction)
+                    .font(.system(size: 28, weight: isTurnNow ? .bold : .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                if let upcoming = turnCue?.upcomingTitle {
+                    Text(upcoming)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(HUDPalette.label)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .foregroundStyle(foreground)
         .padding(.horizontal, 22)
@@ -732,42 +746,44 @@ private struct PedalActionCardView: View {
 
 // MARK: - Steering Wheel
 
-/// The wheel artwork rotated to the coach's categorical steering target. The
-/// angle is illustrative only: no wheel calibration exists (see
-/// `SteeringGuidance.normalizedTarget`).
+/// The wheel artwork turned toward the coach's illustrative target angle,
+/// animated every display frame by `SteeringWheelMotion`.
 private struct SteeringWheelTargetView: View {
-    let steering: SteeringGuidance
+    /// Degrees, negative = left; `nil` when guidance is unavailable.
+    let targetDegrees: Double?
     let accent: Color
     let diameter: CGFloat
     /// Replaces the coach's target angle, in degrees (used by the editor).
     var rotationOverride: Double? = nil
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var motion = SteeringWheelMotion()
 
-    /// Full-lock guidance is drawn as a quarter turn.
-    private let maximumRotation = 90.0
-    private let tickTargets: [Double] = [-0.6, -0.3, 0.3, 0.6]
-
-    private var rotation: Double {
-        rotationOverride ?? (steering.normalizedTarget ?? 0) * maximumRotation
-    }
+    /// Reference ticks outside the rim, in degrees.
+    private let ticks: [Double] = [-90, -45, 45, 90]
 
     var body: some View {
-        let radius = diameter / 2
-        let target = steering.normalizedTarget
+        TimelineView(.animation(minimumInterval: 1.0 / 60)) { context in
+            let now = context.date.timeIntervalSinceReferenceDate
+            let rotation = rotationOverride
+                ?? motion.advance(toward: targetDegrees, at: now, reduceMotion: reduceMotion)
+            wheel(rotation: rotation)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Steering wheel target")
+        .accessibilityValue(accessibilityValue)
+    }
 
-        ZStack {
-            // Fixed target ticks outside the rim.
-            ForEach(tickTargets, id: \.self) { value in
-                let angle = value * maximumRotation * .pi / 180
-                let isTarget = target.map { abs($0 - value) < 0.01 } ?? false
+    private func wheel(rotation: Double) -> some View {
+        let radius = diameter / 2
+        let target = rotationOverride ?? targetDegrees
+
+        return ZStack {
+            ForEach(ticks, id: \.self) { degrees in
                 Circle()
-                    .fill(isTarget ? accent : Color.white.opacity(0.28))
-                    .frame(width: isTarget ? 7 : 4, height: isTarget ? 7 : 4)
-                    .offset(
-                        x: CGFloat(sin(angle)) * radius * 1.08,
-                        y: -CGFloat(cos(angle)) * radius * 1.08
-                    )
+                    .fill(Color.white.opacity(0.28))
+                    .frame(width: 4, height: 4)
+                    .offset(rimOffset(degrees, radius: radius * 1.08))
             }
 
             Rectangle()
@@ -775,11 +791,44 @@ private struct SteeringWheelTargetView: View {
                 .frame(width: 2, height: diameter * 0.03)
                 .offset(y: -radius * 1.07)
 
+            // Where the wheel's top marker is heading.
+            if let target, abs(target) >= 1 {
+                Triangle()
+                    .fill(accent)
+                    .frame(width: diameter * 0.045, height: diameter * 0.04)
+                    .rotationEffect(.degrees(min(max(target, -150), 150)))
+                    .offset(rimOffset(min(max(target, -150), 150), radius: radius * 1.12))
+                    .shadow(color: accent.opacity(0.7), radius: 4)
+            }
+
             SteeringWheelShape(diameter: diameter, accent: accent, rotation: rotation)
-                .animation(reduceMotion ? nil : .spring(response: 0.45, dampingFraction: 0.78), value: rotation)
-                .opacity(steering == .unavailable ? 0.55 : 0.95)
+                .opacity(targetDegrees == nil && rotationOverride == nil ? 0.55 : 0.95)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: targetDegrees == nil)
         }
         .frame(width: diameter * 1.3, height: diameter * 1.3)
+    }
+
+    private func rimOffset(_ degrees: Double, radius: CGFloat) -> CGSize {
+        let angle = degrees * .pi / 180
+        return CGSize(width: CGFloat(sin(angle)) * radius, height: -CGFloat(cos(angle)) * radius)
+    }
+
+    private var accessibilityValue: String {
+        guard let targetDegrees else { return "Unavailable" }
+        if abs(targetDegrees) < 1 { return "Centered" }
+        return targetDegrees < 0 ? "Turn left" : "Turn right"
+    }
+}
+
+/// Points toward the rim, so it reads as "the top of the wheel goes here".
+private struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.closeSubpath()
+        return path
     }
 }
 

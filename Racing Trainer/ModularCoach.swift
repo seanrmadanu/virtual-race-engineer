@@ -15,6 +15,7 @@ nonisolated struct CoachModuleValue: Codable, Sendable {
     var flag: Bool? = nil
     var target: String? = nil
     var road: RoadLineObservation? = nil
+    var playerAnchor: [Double]? = nil
 }
 
 typealias CoachModuleObservation = PerceptionObservation<CoachModuleValue>

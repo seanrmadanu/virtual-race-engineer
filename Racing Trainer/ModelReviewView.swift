@@ -225,6 +225,10 @@ struct ModelReviewView: View {
                         .accessibilityLabel("Gameplay recording")
                     playbackControls
                     if store.category == .basicTurns { turnGuidanceReadout }
+                    if store.category == .cornerTechnique {
+                        CornerTechniqueReadout(sample: store.cornerAtPlayhead,
+                                               hasAnalysis: store.bundle?.cornerTechniqueSamples != nil)
+                    }
                     Label(store.bundle?.roadObservations == nil ? "Analyze this video to inspect white road markings"
                         : store.roadAtPlayhead.isFresh(at: store.currentTime) ? store.roadAtPlayhead.reason : "Waiting for fresh road markings",
                           systemImage: "road.lanes")
@@ -244,7 +248,9 @@ struct ModelReviewView: View {
                         if let event = store.playbackEvent {
                             Text("Model Log · \(reviewTimestamp(event.time))").font(.headline)
                             Text(event.summary(in: store.category)).font(.title3.weight(.semibold))
-                            Text(event.diagnostics == nil ? "Recorded output at this timestamp. Samples are five seconds apart."
+                            Text(store.category == .cornerTechnique && store.bundle?.cornerTechniqueSamples != nil
+                                ? "Experimental route phases · 10 Hz samples · phase changes included in the log."
+                                : event.diagnostics == nil ? "Recorded output at this timestamp. Samples are five seconds apart."
                                 : store.bundle?.turnGuidanceSamples != nil ? "Experimental turn timing · 10 Hz cues · exact cue onsets in the log."
                                 : store.bundle?.roadObservations != nil ? "Experimental guidance · 10 Hz module samples · one review moment per second."
                                 : "Frozen development pilot · selected moments from a 10 Hz module history.")
@@ -265,7 +271,7 @@ struct ModelReviewView: View {
                         if store.category == .basicTurns {
                             Text("Check the turn direction first. Then judge the heads-up and Turn Now separately: early, correctly timed, late, or missed. Mark the interval where the cue should occur. A bend being exited and the next turn can have different directions.")
                         } else if store.category == .cornerTechnique {
-                            Text("Approach means before the bend; entry means beginning it; exit means unwinding out of it. Leave uncertain phases unknown. Apex is available for your notes but is not trained in this model.")
+                            Text("Check approach, entry, continuing through the bend, and exit against the gameplay. These estimates use changes in the near route, not measured steering or a detected apex. Entry requires an observed direction change; starting playback in a bend should show In bend. Leave uncertain phases unknown.")
                         }
                         Text("Use Unusable View for camera orbits, cutscenes or obstructed footage. Unknown is a model answer worth reviewing too.")
                         Text("Your feedback is saved after you have seen the model output; it supports error review. Independent accuracy needs a separate blind check.")
@@ -295,15 +301,20 @@ struct ModelReviewView: View {
                     Button("Go to \(reviewTimestamp(selected.time))") { store.seek(to: selected.time) }
                 }
             }
-            if store.category == .basicTurns {
+            if store.category == .basicTurns || store.category == .cornerTechnique {
                 HStack {
                     Button("−0.1 s") { store.seek(to: store.currentTime - 0.1) }
                     Button("+0.1 s") { store.seek(to: store.currentTime + 0.1) }
                     Button("Replay Turn", action: store.replayTurn)
                         .help("Play six seconds before and two seconds after the selected moment.")
                     Spacer()
-                    Button("Next Cue", action: store.nextTurnCue)
-                        .disabled(store.bundle?.turnGuidanceSamples == nil)
+                    if store.category == .basicTurns {
+                        Button("Next Cue", action: store.nextTurnCue)
+                            .disabled(store.bundle?.turnGuidanceSamples == nil)
+                    } else {
+                        Button("Next Phase", action: store.nextCornerPhase)
+                            .disabled(store.bundle?.cornerTechniqueSamples == nil)
+                    }
                 }
             }
         }
@@ -339,6 +350,7 @@ struct ModelReviewView: View {
                     Text("All Moments").tag("all")
                     Text("AI Reviewed").tag("ai")
                     Text("Turn Cues").tag("turn_cues")
+                    Text("Corner Phase Changes").tag("corner_phases")
                     Text("Model Answered").tag("answered")
                     Text("Model Unknown").tag("unknown")
                     Text("Unreviewed").tag("unreviewed")
@@ -455,6 +467,9 @@ struct ModelReviewView: View {
                         turnTimingEditor(note)
                     } else if store.category == .slowdownTiming {
                         slowdownEditor(note)
+                    } else if event.cornerTechnique != nil {
+                        correctionPicker("Route phase", key: \.cornerPhaseCorrection,
+                                         choices: CornerTechniquePhase.allCases.map(\.rawValue))
                     } else {
                         correctionPicker("Phase", key: \.phase, choices: ModelReviewBundle.phases)
                     }
