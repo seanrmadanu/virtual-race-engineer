@@ -26,7 +26,7 @@ struct Racing_TrainerApp: App {
             height: 760
         )
 
-        Window("Corner Replay Lab", id: "corner-replay-lab") {
+        Window("Reference Video Lab", id: "corner-replay-lab") {
             CornerReplayLab(store: replayLab)
         }
         .defaultSize(width: 1240, height: 920)

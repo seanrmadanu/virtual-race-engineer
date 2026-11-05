@@ -613,9 +613,9 @@ struct ContentView: View {
                 videoFilePlayback.pause()
                 openWindow(id: "corner-replay-lab")
             } label: {
-                Label("Replay Lab", systemImage: "chart.xyaxis.line")
+                Label("Reference Video Lab", systemImage: "chart.xyaxis.line")
             }
-            .help("Compare reviewed corner recordings offline")
+            .help("Prepare downloaded driving videos; optionally compare a player recording")
 
             Button {
                 refreshAllSources()

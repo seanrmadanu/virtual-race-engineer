@@ -1,6 +1,7 @@
 import AppKit
 import AVFoundation
 import Combine
+import CryptoKit
 import Foundation
 import UniformTypeIdentifiers
 
@@ -57,6 +58,9 @@ final class ReplayClipController: ObservableObject {
     private var scopedURL: URL?
     private var generation = UUID()
     private var seekGeneration = UUID()
+    // Sampling settings belong to the observations, not the editable next-run controls.
+    private var sourceFingerprint: String?
+    private var referenceExport: ReferenceVideoDataset?
 
     init() {
         player.isMuted = true
@@ -79,7 +83,12 @@ final class ReplayClipController: ObservableObject {
     var reviewedCount: Int { session.samples.filter(\.reviewed).count }
     var canReview: Bool {
         guard let reviewTime else { return false }
-        return videoURL != nil && !isBusy && !isSeeking && player.rate == 0 && abs(currentTime - reviewTime) < 0.05
+        // The UI observer is throttled. Never let its cached position authorize
+        // a label after a native player scrub, failed load, or interrupted seek.
+        let actualTime = player.currentTime().seconds
+        return videoURL != nil && !isBusy && !isSeeking &&
+            player.currentItem?.status == .readyToPlay && player.rate == 0 &&
+            actualTime.isFinite && abs(actualTime - reviewTime) < 0.01
     }
 
     func openVideo(attach: Bool = false) {
@@ -118,14 +127,24 @@ final class ReplayClipController: ObservableObject {
                 if attach && (url.lastPathComponent != session.sourceFileName || abs(duration - session.duration) > 0.05) {
                     throw ReplayLabError.wrongVideo
                 }
+                let fingerprint = try await Task.detached(priority: .utility) {
+                    try Self.fingerprint(of: url)
+                }.value
+                try Task.checkCancellation()
+                guard generation == token else { return }
+                if attach, let expected = sourceFingerprint, expected != fingerprint {
+                    throw ReplayLabError.wrongVideo
+                }
                 player.pause()
                 player.replaceCurrentItem(with: AVPlayerItem(asset: asset))
                 scopedURL?.stopAccessingSecurityScopedResource()
                 scopedURL = accessed ? url : nil
                 keepAccess = accessed
                 videoURL = url
+                sourceFingerprint = fingerprint
                 currentTime = 0
                 if !attach {
+                    referenceExport = nil
                     session = ReplaySession(sourceFileName: url.lastPathComponent, duration: duration, metadata: .empty)
                     rangeStart = 0
                     rangeEnd = min(duration, 15)
@@ -156,7 +175,10 @@ final class ReplayClipController: ObservableObject {
             Task { @MainActor [weak self] in
                 guard let self, self.seekGeneration == token else { return }
                 self.isSeeking = false
-                if finished { self.currentTime = safeTime }
+                if finished {
+                    let actualTime = self.player.currentTime().seconds
+                    if actualTime.isFinite { self.currentTime = actualTime }
+                }
             }
         }
     }
@@ -184,16 +206,20 @@ final class ReplayClipController: ObservableObject {
             guard let self else { return }
             do {
                 let samples = try await sampler.sample(url: url, start: start, end: end, unit: selectedUnit) { [weak self] value in
-                    await MainActor.run {
-                        guard let self, self.generation == token else { return }
-                        self.progress = value
-                    }
+                    await self?.updateProgress(value, generation: token)
                 }
                 try Task.checkCancellation()
                 guard generation == token else { return }
                 session.samples = samples
+                var descriptor = ReferenceVideoDataset(
+                    sourceFileName: session.sourceFileName, duration: session.duration,
+                    sourceSpeedUnit: selectedUnit.rawValue, rangeStart: start, rangeEnd: end
+                )
+                descriptor.sourceSHA256 = sourceFingerprint
+                descriptor.sourceGroupID = sourceFingerprint.map { "sha256:\($0)" }
+                referenceExport = descriptor
                 isBusy = false
-                status = "\(samples.count) source-timestamped samples. Review the HUD at each frame before comparing."
+                status = "\(samples.count) source-timestamped observations ready to export. Review is optional for data preparation; comparisons require reviewed readings."
                 if let first = samples.first { selectSample(first) }
             } catch {
                 guard generation == token else { return }
@@ -212,15 +238,24 @@ final class ReplayClipController: ObservableObject {
         isSeeking = false
     }
 
+    private func updateProgress(_ value: Double, generation token: UUID) {
+        guard generation == token else { return }
+        progress = value
+    }
+
     func addLandmark() {
         let key = landmarkID.trimmingCharacters(in: .whitespacesAndNewlines)
         guard videoURL != nil, !key.isEmpty, !isBusy, !isSeeking else { return }
         player.pause()
-        guard !session.landmarks.contains(where: { $0.id == key || abs($0.time - currentTime) < 0.001 }) else {
+        let actualTime = player.currentTime().seconds
+        guard player.currentItem?.status == .readyToPlay, actualTime.isFinite,
+              (0...session.duration).contains(actualTime) else { return }
+        currentTime = actualTime
+        guard !session.landmarks.contains(where: { $0.id == key || abs($0.time - actualTime) < 0.001 }) else {
             errorMessage = "Use a unique landmark name and a distinct timestamp. Remove the old marker before moving it."
             return
         }
-        session.landmarks.append(ReplayLandmark(id: key, time: currentTime))
+        session.landmarks.append(ReplayLandmark(id: key, time: actualTime))
         session.landmarks.sort { $0.time < $1.time }
         landmarkID = key == "entry" ? "apex" : key == "apex" ? "exit" : ""
     }
@@ -254,8 +289,23 @@ final class ReplayClipController: ObservableObject {
         defer { if accessed { url.stopAccessingSecurityScopedResource() } }
         do {
             let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
-            guard size <= 10_000_000 else { throw ReplayLabError.largeFile }
-            let imported = try JSONDecoder().decode(ReplaySession.self, from: Data(contentsOf: url))
+            guard size <= 64_000_000 else { throw ReplayLabError.largeFile }
+            let data = try Data(contentsOf: url)
+            let fields = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+            let observations: ReferenceVideoDataset?
+            let imported: ReplaySession
+            if fields?["sourceSpeedUnit"] != nil {
+                let dataset = try JSONDecoder().decode(ReferenceVideoDataset.self, from: data)
+                observations = dataset
+                // Unknown compatibility metadata stays empty. It never becomes proof
+                // that two recordings can be compared just because both are unknown.
+                imported = ReplaySession(sourceFileName: dataset.sourceFileName, duration: dataset.duration,
+                                         metadata: ReplayMetadata(sourceGroupID: dataset.sourceGroupID ?? ""),
+                                         samples: dataset.samples)
+            } else {
+                observations = nil
+                imported = try JSONDecoder().decode(ReplaySession.self, from: data)
+            }
             cancelWork()
             player.pause()
             player.replaceCurrentItem(with: nil)
@@ -263,9 +313,16 @@ final class ReplayClipController: ObservableObject {
             scopedURL = nil
             videoURL = nil
             session = imported
+            referenceExport = observations
+            sourceFingerprint = observations?.sourceSHA256
+            if let observations {
+                unit = ReplaySpeedUnit(rawValue: observations.sourceSpeedUnit) ?? .kmh
+                rangeStart = observations.rangeStart
+                rangeEnd = min(observations.rangeEnd, rangeStart + 60)
+            }
             currentTime = 0
             reviewTime = nil
-            status = "Labels imported. Attach the exact original video to inspect or correct samples."
+            status = "Data imported. Attach the original video only if you want to inspect or correct samples."
         } catch { errorMessage = error.localizedDescription }
     }
 
@@ -274,6 +331,28 @@ final class ReplayClipController: ObservableObject {
             try session.validate()
             try ReplayJSONFile.save(session, suggestedName: "\(session.sourceFileName)-labels.json")
         } catch { errorMessage = error.localizedDescription }
+    }
+
+    func exportObservations() {
+        do {
+            guard var dataset = referenceExport, !session.samples.isEmpty else {
+                throw ReplayValidationError(message: "Sample this video or import a reference dataset first. Existing comparison labels can still be exported in comparison mode.")
+            }
+            dataset.samples = session.samples
+            try dataset.validate()
+            try ReplayJSONFile.save(dataset, suggestedName: "\(session.sourceFileName)-observations.json")
+        } catch { errorMessage = error.localizedDescription }
+    }
+
+    private nonisolated static func fingerprint(of url: URL) throws -> String {
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        var hash = SHA256()
+        while let data = try handle.read(upToCount: 1_048_576), !data.isEmpty {
+            try Task.checkCancellation()
+            hash.update(data: data)
+        }
+        return hash.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
     private func confirmReplace() -> Bool {
@@ -292,8 +371,8 @@ private enum ReplayLabError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidVideo: "The recording has no finite, positive duration."
-        case .wrongVideo: "This video's filename or duration differs from the imported labels. Attach the original, unedited recording."
-        case .largeFile: "The JSON file is larger than the 10 MB replay-label limit."
+        case .wrongVideo: "This video's filename, duration or available file fingerprint differs from the imported data. Attach the original, unedited recording."
+        case .largeFile: "The JSON file is larger than the 64 MB observation-import limit."
         }
     }
 }

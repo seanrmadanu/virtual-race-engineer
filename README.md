@@ -1,5 +1,18 @@
 # Virtual Race Engineer
 
+> **Experiment snapshot from September 29, 2026.** This branch preserves the separate Reference Video Lab prototype for offline gameplay sampling, speed OCR review, and dataset export.
+> Published November 5, 2026. See [main](https://github.com/seanrmadanu/virtual-race-engineer) for the canonical app. Local recordings, review data, and packaged builds are separate.
+
+> **Isolated Codex testing copy:** this folder was copied from the original
+> project at `185f33d`. Changes here are not merged back. Start with the
+> [reference-video workflow](docs/REFERENCE_VIDEO_WORKFLOW.md) for the offline workflow
+> and its verification limits.
+
+**Reference Video Lab** now opens with a single downloaded recording. Player
+recordings are optional and can wait until live testing. The batch command
+`scripts/extract-reference-videos.sh` prepares videos without opening the app.
+See the [workflow and command examples](docs/REFERENCE_VIDEO_WORKFLOW.md).
+
 Virtual Race Engineer is an early-stage macOS racing coach for **The Crew
 Motorfest**. It accepts gameplay from a capture card or a local video file,
 reads HUD information locally, and is being developed toward real-time braking,

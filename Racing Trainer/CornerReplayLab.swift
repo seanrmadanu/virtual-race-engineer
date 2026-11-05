@@ -4,40 +4,56 @@ import SwiftUI
 /// First dataset/evaluation milestone, deliberately separate from live guidance.
 struct CornerReplayLab: View {
     @ObservedObject var store: CornerReplayLabStore
+    @State private var showsPlayerComparison = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Corner Replay Lab").font(.title2.bold())
-                    Text("Offline reference comparison · no driving commands")
+                    Text("Reference Video Lab").font(.title2.bold())
+                    Text("Prepare downloaded driving footage for offline experiments")
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Compare reviewed samples", action: store.compare)
-                    .buttonStyle(.borderedProminent)
-                Button("Export report…", action: store.exportReport)
-                    .disabled(store.report == nil)
+                Toggle("Compare player recording", isOn: $showsPlayerComparison)
+                    .toggleStyle(.switch)
+                if showsPlayerComparison {
+                    Button("Compare reviewed samples", action: store.compare)
+                        .buttonStyle(.borderedProminent)
+                    Button("Export report…", action: store.exportReport)
+                        .disabled(store.report == nil)
+                }
             }
 
-            Text("1. Load clips and identify the same car/setup and corner.  2. Mark matching entry, apex and exit landmarks.  3. Sample and review speeds, then compare.")
+            Text(showsPlayerComparison
+                 ? "Load matching recordings, mark the same corner landmarks, then compare reviewed speeds."
+                 : "Open a downloaded driving video, select its HUD unit, sample an interval and export observations. Player footage is optional and can wait until live testing.")
                 .font(.callout)
-            Text("Landmark timing is only approximate alignment—not measured road position. Reference speed is not an optimal target. Export labels before quitting; video files are not copied.")
+            Text(showsPlayerComparison
+                 ? "Landmark alignment is approximate. Reference speed is not an optimal target. Export before quitting."
+                 : "Automatic readings can be exported without reviewing every frame. They retain their review status. For whole folders, use the batch extraction script in the project’s scripts directory.")
                 .font(.caption).foregroundStyle(.secondary)
 
-            HSplitView {
-                ReplayClipPane(title: "Player recording", clip: store.playerClip)
-                ReplayClipPane(title: "Reference recording", clip: store.referenceClip)
+            if showsPlayerComparison {
+                HSplitView {
+                    ReplayClipPane(title: "Player recording", clip: store.playerClip)
+                    ReplayClipPane(title: "Reference recording", clip: store.referenceClip)
+                }
+                .frame(minHeight: 400)
+            } else {
+                ReplayClipPane(title: "Downloaded reference video", clip: store.referenceClip,
+                               preparesReference: true)
+                    .frame(maxWidth: 900, maxHeight: .infinity)
+                    .frame(maxWidth: .infinity)
             }
-            .frame(minHeight: 400)
 
-            if let report = store.report {
+            if showsPlayerComparison, let report = store.report {
                 ReplayReportView(report: report) { row in
                     store.playerClip.seek(to: row.time)
                     if let time = row.referenceTime { store.referenceClip.seek(to: time) }
                 }
                 .frame(height: 230)
-            } else {
+            } else if showsPlayerComparison {
                 Label("Compare after labeling. Any label or metadata edit clears the previous report.", systemImage: "info.circle")
                     .font(.callout).foregroundStyle(.secondary)
             }
@@ -57,6 +73,7 @@ struct CornerReplayLab: View {
 private struct ReplayClipPane: View {
     let title: String
     @ObservedObject var clip: ReplayClipController
+    var preparesReference = false
 
     var body: some View {
         ScrollView {
@@ -66,11 +83,14 @@ private struct ReplayClipPane: View {
                     Spacer()
                     Menu("File") {
                         Button("Open video…") { clip.openVideo() }
-                        Button("Import labels…", action: clip.importLabels)
+                        Button("Import observations or labels…", action: clip.importLabels)
                         Button("Attach original video…") { clip.openVideo(attach: true) }
                             .disabled(clip.session.sourceFileName.isEmpty)
                         Divider()
-                        Button("Export labels…", action: clip.exportLabels)
+                        Button(preparesReference ? "Export observations…" : "Export labels…") {
+                            if preparesReference { clip.exportObservations() }
+                            else { clip.exportLabels() }
+                        }
                             .disabled(clip.session.sourceFileName.isEmpty)
                     }
                     .disabled(clip.isBusy)
@@ -103,7 +123,17 @@ private struct ReplayClipPane: View {
                 Text(clip.session.sourceFileName.isEmpty ? "No recording selected" : clip.session.sourceFileName)
                     .font(.caption).foregroundStyle(.secondary).lineLimit(1).help(clip.session.sourceFileName)
 
-                GroupBox("Recording identity") {
+                if preparesReference {
+                    HStack {
+                        Button("Export observations…", action: clip.exportObservations)
+                            .disabled(clip.session.samples.isEmpty || clip.isBusy)
+                        Text("No player recording, route identity or corner markers required.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+
+                if !preparesReference {
+                  GroupBox("Recording identity") {
                     Grid(alignment: .leading, horizontalSpacing: 8, verticalSpacing: 6) {
                         GridRow { Text("Route"); TextField("e.g. island-route-01", text: $clip.session.metadata.routeID) }
                         GridRow { Text("Corner"); TextField("e.g. corner-03", text: $clip.session.metadata.cornerID) }
@@ -113,11 +143,16 @@ private struct ReplayClipPane: View {
                     .textFieldStyle(.roundedBorder)
                     .font(.callout)
                     .padding(4)
-                }
+                  }
 
-                landmarks
+                  landmarks
+                }
                 sampling
-                if !clip.session.samples.isEmpty { review }
+                if !clip.session.samples.isEmpty {
+                    if preparesReference {
+                        DisclosureGroup("Optional audit and corrections (\(clip.reviewedCount) reviewed)") { review }
+                    } else { review }
+                }
                 Text(clip.status).font(.caption).foregroundStyle(.secondary)
             }
             .padding(12)
