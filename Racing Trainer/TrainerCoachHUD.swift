@@ -57,7 +57,6 @@ enum OverlayVisibility {
     static let sessionPanel = "view.sessionPanel"
     static let steeringWheel = "view.steeringWheel"
     static let speed = "view.speed"
-    static let pedalAction = "view.pedalAction"
     static let pathHighlight = "view.pathHighlight"
     static let analyzer = "preview.showsAnalyzerOverlay"
     static let hudRegions = "preview.showsHUDRegions"
@@ -73,7 +72,6 @@ enum OverlayItem: CaseIterable {
     case sessionPanel
     case steeringWheel
     case speed
-    case pedalAction
     case pathHighlight
 
     var title: String {
@@ -82,7 +80,6 @@ enum OverlayItem: CaseIterable {
         case .sessionPanel: return "Session Timer"
         case .steeringWheel: return "Steering Wheel"
         case .speed: return "Speed"
-        case .pedalAction: return "Pedal Action"
         case .pathHighlight: return "Path Highlight"
         }
     }
@@ -93,7 +90,6 @@ enum OverlayItem: CaseIterable {
         case .sessionPanel: return NSColor(srgbRed: 0.79, green: 0.64, blue: 1.00, alpha: 1)   // lilac
         case .steeringWheel: return NSColor(srgbRed: 0.37, green: 0.92, blue: 0.83, alpha: 1)  // teal
         case .speed: return NSColor(srgbRed: 1.00, green: 0.56, blue: 0.69, alpha: 1)          // rose
-        case .pedalAction: return NSColor(srgbRed: 0.91, green: 0.84, blue: 0.63, alpha: 1)    // sand
         case .pathHighlight: return NSColor(srgbRed: 0.85, green: 0.90, blue: 0.54, alpha: 1)  // chartreuse
         }
     }
@@ -182,7 +178,6 @@ struct OverlayViewMenu<MenuLabel: View>: View {
     @AppStorage(OverlayVisibility.sessionPanel) private var sessionPanel = true
     @AppStorage(OverlayVisibility.steeringWheel) private var steeringWheel = true
     @AppStorage(OverlayVisibility.speed) private var speed = true
-    @AppStorage(OverlayVisibility.pedalAction) private var pedalAction = true
     @AppStorage(OverlayVisibility.pathHighlight) private var pathHighlight = true
     @AppStorage(OverlayVisibility.analyzer) private var analyzer = false
     @AppStorage(OverlayVisibility.hudRegions) private var hudRegions = false
@@ -192,7 +187,7 @@ struct OverlayViewMenu<MenuLabel: View>: View {
 
     private var switches: [Binding<Bool>] {
         [$navigationCard, $sessionPanel, $steeringWheel, $speed,
-         $pedalAction, $pathHighlight, $analyzer, $hudRegions]
+         $pathHighlight, $analyzer, $hudRegions]
     }
 
     private var allVisible: Bool {
@@ -215,7 +210,6 @@ struct OverlayViewMenu<MenuLabel: View>: View {
                 itemToggle(.sessionPanel, $sessionPanel)
                 itemToggle(.steeringWheel, $steeringWheel)
                 itemToggle(.speed, $speed)
-                itemToggle(.pedalAction, $pedalAction)
                 itemToggle(.pathHighlight, $pathHighlight)
             }
 
@@ -313,8 +307,7 @@ struct HUDLayoutMenu<MenuLabel: View>: View {
 
 /// Full-preview coaching overlay: turn banner (top), session panel
 /// (top right), steering wheel target (bottom center), speed (bottom
-/// left) and pedal action (bottom right). Every value comes from the live
-/// `MinimapCoachSnapshot`; nothing here makes its own driving decisions.
+/// left). The wheel follows the same confirmed live cue as the navigation card.
 struct TrainerCoachHUD: View {
     @ObservedObject var analyzer: FrameAnalyzer
 
@@ -333,7 +326,6 @@ struct TrainerCoachHUD: View {
     @AppStorage(OverlayVisibility.sessionPanel) private var showsSessionPanel = true
     @AppStorage(OverlayVisibility.steeringWheel) private var showsSteeringWheel = true
     @AppStorage(OverlayVisibility.speed) private var showsSpeed = true
-    @AppStorage(OverlayVisibility.pedalAction) private var showsPedalAction = true
     @AppStorage(OverlayVisibility.pathHighlight) private var showsPathHighlight = true
     @AppStorage(OverlayVisibility.highlightItems) private var highlightsItems = false
 
@@ -377,7 +369,8 @@ struct TrainerCoachHUD: View {
 
         ZStack {
             if showsPathHighlight {
-                RoadLineOverlay(observation: analyzer.roadLines, time: currentUptime, videoRect: videoRect)
+                RoadLineOverlay(observation: analyzer.roadLines, time: currentUptime, videoRect: videoRect,
+                                camera: RoadCameraMode(rawValue: pathRibbon.rawValue) ?? .chase)
                 .mask(alignment: .topLeading) {
                     Rectangle()
                         .frame(width: videoRect.width, height: videoRect.height)
@@ -388,11 +381,14 @@ struct TrainerCoachHUD: View {
 
             if showsSteeringWheel || editor.isAdjustingWheel {
                 SteeringWheelTargetView(
-                    steering: liveTurn.steering(at: currentUptime),
+                    targetDegrees: SteeringWheelTarget.degrees(
+                        turn: liveTurn, at: currentUptime),
+                    sourceSessionID: liveTurn.sourceSessionID,
                     accent: turnIsFresh && liveTurn.cue.stage != .unavailable ? HUDPalette.amber : HUDPalette.inactive,
                     diameter: wheelDiameter,
                     rotationOverride: editor.isAdjustingWheel ? editor.testRotation : nil
                 )
+                .id(liveTurn.sourceSessionID)
                 .overlay {
                     if highlightsItems {
                         Color.clear
@@ -411,7 +407,8 @@ struct TrainerCoachHUD: View {
             }
 
             if showsNavigationCard {
-                NavigationCardView(turnCue: turnIsFresh ? liveTurn.cue : nil)
+                NavigationCardView(turnCue: turnIsFresh ? liveTurn.cue : nil,
+                    waitingDetail: liveTurn.waitingMessage(at: currentUptime))
                     .fixedSize()
                     .overlayHighlight(.navigationCard, highlightsItems)
                     .scaleEffect(scale, anchor: .top)
@@ -439,17 +436,6 @@ struct TrainerCoachHUD: View {
                     .padding(.leading, width * 0.138)
                     .padding(.bottom, bottomInset(scale: scale))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
-                    .allowsHitTesting(false)
-            }
-
-            if showsPedalAction {
-                PedalActionCardView(action: .unavailable, timingOnly: true)
-                    .fixedSize()
-                    .overlayHighlight(.pedalAction, highlightsItems)
-                    .scaleEffect(scale, anchor: .bottomTrailing)
-                    .padding(.trailing, width * 0.138)
-                    .padding(.bottom, bottomInset(scale: scale))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                     .allowsHitTesting(false)
             }
 
@@ -498,14 +484,7 @@ private enum HUDPalette {
         }
     }
 
-    static func action(_ action: DrivingCoachAction) -> Color {
-        switch action {
-        case .brake: return red
-        case .hold: return amber
-        case .accelerateIfClear: return green
-        case .unavailable, .setWaypoint: return inactive
-        }
-    }
+
 }
 
 private extension Font {
@@ -540,6 +519,7 @@ private extension View {
 /// Preview and heads-up share wording; their internal distinction stays in review.
 private struct NavigationCardView: View {
     let turnCue: TurnGuidanceSample?
+    let waitingDetail: String?
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
@@ -548,8 +528,12 @@ private struct NavigationCardView: View {
     private var isTurnNow: Bool { turnCue?.stage == .turnNow }
     private var symbol: String {
         guard let turnCue, isAvailable else { return "ellipsis" }
-        if turnCue.stage == .straight { return "arrow.up" }
-        return turnCue.direction == "left" ? "arrow.turn.up.left" : "arrow.turn.up.right"
+        switch turnCue.primaryDirection {
+        case "straight": return "arrow.up"
+        case "left": return "arrow.turn.up.left"
+        case "right": return "arrow.turn.up.right"
+        default: return "ellipsis"
+        }
     }
     private var foreground: Color {
         isTurnNow ? HUDPalette.amber : Color.white.opacity(isAvailable ? 1 : 0.75)
@@ -561,11 +545,22 @@ private struct NavigationCardView: View {
                 .font(.system(size: 36, weight: .semibold))
                 .frame(width: 44)
                 .accessibilityHidden(true)
-            Text(instruction)
-                .font(.system(size: 28, weight: isTurnNow ? .bold : .semibold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(instruction)
+                    .font(.system(size: 28, weight: isTurnNow ? .bold : .semibold))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                if let upcoming = turnCue?.upcomingTitle {
+                    Text(upcoming)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(HUDPalette.label)
+                } else if !isAvailable, let waitingDetail {
+                    Text(waitingDetail)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(HUDPalette.label)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .foregroundStyle(foreground)
         .padding(.horizontal, 22)
@@ -635,192 +630,6 @@ private struct SpeedCardView: View {
         .padding(.horizontal, 22)
         .frame(minWidth: 180, minHeight: 76)
         .hudPanel(cornerRadius: 18)
-    }
-}
-
-// MARK: - Pedal Action Card
-
-private struct PedalActionCardView: View {
-    let action: DrivingCoachAction
-    var timingOnly = false
-
-    /// 0 = full brake, 0.5 = hold, 1 = accelerate.
-    private var position: CGFloat? {
-        switch action {
-        case .brake: return 0.12
-        case .hold: return 0.5
-        case .accelerateIfClear: return 0.88
-        case .unavailable, .setWaypoint: return nil
-        }
-    }
-
-    private var title: String {
-        if timingOnly { return "TURN GUIDANCE" }
-        switch action {
-        case .unavailable: return "NO GUIDANCE"
-        default: return action.title
-        }
-    }
-
-    private var symbol: String {
-        switch action {
-        case .brake: return "arrow.down.to.line"
-        case .hold: return "equal"
-        case .accelerateIfClear: return "arrow.up"
-        case .unavailable, .setWaypoint: return "minus"
-        }
-    }
-
-    var body: some View {
-        let color = HUDPalette.action(action)
-
-        VStack(alignment: .leading, spacing: 12) {
-            Label(title, systemImage: symbol)
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(color)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-
-            if timingOnly {
-                Text("Pedal timing is not calibrated")
-                    .font(.hudLabel(12)).foregroundStyle(HUDPalette.label)
-            } else {
-                GeometryReader { proxy in
-                    let width = proxy.size.width
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(HUDPalette.track)
-                        Rectangle()
-                            .fill(Color.white.opacity(0.25))
-                            .frame(width: 1, height: 7)
-                            .offset(x: width * 0.5)
-                        if let position {
-                            let start = min(position, 0.5) * width
-                            let end = max(position, 0.5) * width
-                            Capsule()
-                                .fill(color.opacity(0.85))
-                                .frame(width: max(end - start, 8), height: 4)
-                                .offset(x: position == 0.5 ? width * 0.5 - 4 : start)
-                            RoundedRectangle(cornerRadius: 1)
-                                .fill(color)
-                                .frame(width: 2, height: 10)
-                                .offset(x: width * position - 1)
-                        }
-                    }
-                    .frame(height: 10)
-                    .animation(.easeOut(duration: 0.2), value: position)
-                }
-                .frame(height: 10)
-
-                HStack {
-                    Text("BRAKE")
-                    Spacer()
-                    Text("HOLD")
-                    Spacer()
-                    Text("ACCEL")
-                }
-                .font(.hudLabel(11))
-                .tracking(0.6)
-                .foregroundStyle(HUDPalette.faint)
-            }
-        }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 14)
-        .frame(width: 262)
-        .hudPanel(cornerRadius: 18)
-    }
-}
-
-// MARK: - Steering Wheel
-
-/// The wheel artwork rotated to the coach's categorical steering target. The
-/// angle is illustrative only: no wheel calibration exists (see
-/// `SteeringGuidance.normalizedTarget`).
-private struct SteeringWheelTargetView: View {
-    let steering: SteeringGuidance
-    let accent: Color
-    let diameter: CGFloat
-    /// Replaces the coach's target angle, in degrees (used by the editor).
-    var rotationOverride: Double? = nil
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    /// Full-lock guidance is drawn as a quarter turn.
-    private let maximumRotation = 90.0
-    private let tickTargets: [Double] = [-0.6, -0.3, 0.3, 0.6]
-
-    private var rotation: Double {
-        rotationOverride ?? (steering.normalizedTarget ?? 0) * maximumRotation
-    }
-
-    var body: some View {
-        let radius = diameter / 2
-        let target = steering.normalizedTarget
-
-        ZStack {
-            // Fixed target ticks outside the rim.
-            ForEach(tickTargets, id: \.self) { value in
-                let angle = value * maximumRotation * .pi / 180
-                let isTarget = target.map { abs($0 - value) < 0.01 } ?? false
-                Circle()
-                    .fill(isTarget ? accent : Color.white.opacity(0.28))
-                    .frame(width: isTarget ? 7 : 4, height: isTarget ? 7 : 4)
-                    .offset(
-                        x: CGFloat(sin(angle)) * radius * 1.08,
-                        y: -CGFloat(cos(angle)) * radius * 1.08
-                    )
-            }
-
-            Rectangle()
-                .fill(Color.white.opacity(0.55))
-                .frame(width: 2, height: diameter * 0.03)
-                .offset(y: -radius * 1.07)
-
-            SteeringWheelShape(diameter: diameter, accent: accent, rotation: rotation)
-                .animation(reduceMotion ? nil : .spring(response: 0.45, dampingFraction: 0.78), value: rotation)
-                .opacity(steering == .unavailable ? 0.55 : 0.95)
-        }
-        .frame(width: diameter * 1.3, height: diameter * 1.3)
-    }
-}
-
-/// The wheel artwork (`SteeringWheel` in the asset catalog), rotated about its
-/// hub. The PNG's hub sits below the image centre and its rim does not reach
-/// the image edges, so both are corrected here to keep the rim at `diameter`.
-private struct SteeringWheelShape: View {
-    let diameter: CGFloat
-    let accent: Color
-    let rotation: Double
-
-    /// Measured on the 1254 px source: rim spans x 47...1205, hub at y 678.
-    private static let rimFraction: CGFloat = 1158.0 / 1254.0
-
-    /// Hub-to-rim-top distance and the farthest opaque pixel from the hub,
-    /// both as fractions of the rim diameter.
-    static let hubToRimTop: CGFloat = 629.0 / 1158.0
-    static let turningRadius: CGFloat = 640.0 / 1158.0
-    private static let hubAnchor = UnitPoint(x: 0.5, y: 678.0 / 1254.0)
-    private static let rimTopFraction: CGFloat = 95.0 / 1254.0
-
-    var body: some View {
-        let size = diameter / Self.rimFraction
-
-        Image("SteeringWheel")
-            .resizable()
-            .interpolation(.high)
-            .frame(width: size, height: size)
-            .overlay(alignment: .top) {
-                // Top-dead-center marker
-                RoundedRectangle(cornerRadius: size * 0.006, style: .continuous)
-                    .fill(accent)
-                    .frame(width: size * 0.022, height: size * 0.06)
-                    .shadow(color: accent.opacity(0.8), radius: size * 0.018)
-                    .offset(y: size * Self.rimTopFraction - size * 0.03)
-            }
-            .shadow(color: .black.opacity(0.55), radius: diameter * 0.03, y: diameter * 0.015)
-            .rotationEffect(.degrees(rotation), anchor: Self.hubAnchor)
-            // Centre the hub, not the image, in the layout frame.
-            .offset(y: -(Self.hubAnchor.y - 0.5) * size)
-            .frame(width: diameter, height: diameter)
     }
 }
 

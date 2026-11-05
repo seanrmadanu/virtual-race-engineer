@@ -7,12 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		AB0000000000000000000001 /* MinimapRouteDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000002; };
+		AB0000000000000000000003 /* LearnedRouteSegmenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000004; };
+		AB0000000000000000000005 /* LearnedRouteSegmenterWeights.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000006; };
+		AB0000000000000000000007 /* RouteComponentVerifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB0000000000000000000008; };
+		AB0000000000000000000009 /* RouteComponentVerifierWeights.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000000000000000000000A; };
 		A90000000000000000000001 /* LiveTurnGuidance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A90000000000000000000002; };
 		A80000000000000000000003 /* TurnGuidanceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80000000000000000000004; };
 		A80000000000000000000001 /* TurnGuidance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A80000000000000000000002; };
 		A70000000000000000000005 /* RouteTurnSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70000000000000000000006; };
 		A70000000000000000000003 /* AIReviewModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70000000000000000000004; };
 		A70000000000000000000001 /* RoadLineDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70000000000000000000002; };
+		AC0000000000000000000001 /* SteeringWheelMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000002; };
 		A60000000000000000000001 /* ShadowCaptureState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000002; };
 		A60000000000000000000003 /* ShadowCapturePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000004; };
 		A60000000000000000000005 /* ShadowSessionRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000006; };
@@ -21,25 +27,37 @@
 		A20000000000000000000001 /* Racing Trainer/CoachSafetyPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* Racing Trainer/CoachSafetyPolicy.swift */; };
 		A20000000000000000000003 /* Racing Trainer/MinimapCoachModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* Racing Trainer/MinimapCoachModels.swift */; };
 		A30000000000000000000001 /* Racing Trainer/CornerReplayModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002 /* Racing Trainer/CornerReplayModels.swift */; };
+		AD1000000000000000000001 /* CornerTechnique.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1000000000000000000002; };
+		AD1000000000000000000003 /* CornerTechniqueTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD1000000000000000000004; };
+		AE1000000000000000000001 /* LinkedTurns.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE1000000000000000000002; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		AB0000000000000000000002 /* MinimapRouteDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/MinimapRouteDetector.swift"; sourceTree = SOURCE_ROOT; };
+		AB0000000000000000000004 /* LearnedRouteSegmenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/LearnedRouteSegmenter.swift"; sourceTree = SOURCE_ROOT; };
+		AB0000000000000000000006 /* LearnedRouteSegmenterWeights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/LearnedRouteSegmenterWeights.swift"; sourceTree = SOURCE_ROOT; };
+		AB0000000000000000000008 /* RouteComponentVerifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/RouteComponentVerifier.swift"; sourceTree = SOURCE_ROOT; };
+		AB000000000000000000000A /* RouteComponentVerifierWeights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/RouteComponentVerifierWeights.swift"; sourceTree = SOURCE_ROOT; };
 		A90000000000000000000002 /* LiveTurnGuidance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/LiveTurnGuidance.swift"; sourceTree = SOURCE_ROOT; };
 		A80000000000000000000004 /* TurnGuidanceTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/TurnGuidanceTracker.swift"; sourceTree = SOURCE_ROOT; };
 		A80000000000000000000002 /* TurnGuidance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/TurnGuidance.swift"; sourceTree = SOURCE_ROOT; };
 		A70000000000000000000006 /* RouteTurnSelector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/RouteTurnSelector.swift"; sourceTree = SOURCE_ROOT; };
 		A70000000000000000000004 /* AIReviewModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/AIReviewModels.swift"; sourceTree = SOURCE_ROOT; };
 		A70000000000000000000002 /* RoadLineDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/RoadLineDetector.swift"; sourceTree = SOURCE_ROOT; };
+		AC0000000000000000000002 /* SteeringWheelMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/SteeringWheelMotion.swift"; sourceTree = SOURCE_ROOT; };
 		A60000000000000000000002 /* ShadowCaptureState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/ShadowCaptureState.swift"; sourceTree = SOURCE_ROOT; };
 		A60000000000000000000004 /* ShadowCapturePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/ShadowCapturePipeline.swift"; sourceTree = SOURCE_ROOT; };
 		A60000000000000000000006 /* ShadowSessionRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/ShadowSessionRecorder.swift"; sourceTree = SOURCE_ROOT; };
 		A50000000000000000000002 /* ModularCoach.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/ModularCoach.swift"; sourceTree = SOURCE_ROOT; };
 		A40000000000000000000002 /* ModelReviewModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/ModelReviewModels.swift"; sourceTree = SOURCE_ROOT; };
-		1421652F3022DCAA00291EBF /* Racing Trainer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Racing Trainer.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		1421652F3022DCAA00291EBF /* chatgpt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "chatgpt.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000002 /* Racing Trainer/CoachSafetyPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/CoachSafetyPolicy.swift"; sourceTree = SOURCE_ROOT; };
 		A20000000000000000000004 /* Racing Trainer/MinimapCoachModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/MinimapCoachModels.swift"; sourceTree = SOURCE_ROOT; };
 		A20000000000000000000005 /* RacingTrainerSafetyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = RacingTrainerSafetyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A30000000000000000000002 /* Racing Trainer/CornerReplayModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/CornerReplayModels.swift"; sourceTree = SOURCE_ROOT; };
+		AD1000000000000000000002 /* CornerTechnique.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/CornerTechnique.swift"; sourceTree = SOURCE_ROOT; };
+		AD1000000000000000000004 /* CornerTechniqueTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/CornerTechniqueTracker.swift"; sourceTree = SOURCE_ROOT; };
+		AE1000000000000000000002 /* LinkedTurns.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/LinkedTurns.swift"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -93,7 +111,7 @@
 		142165303022DCAA00291EBF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				1421652F3022DCAA00291EBF /* Racing Trainer.app */,
+				1421652F3022DCAA00291EBF /* chatgpt.app */,
 				A20000000000000000000005 /* RacingTrainerSafetyTests.xctest */,
 			);
 			name = Products;
@@ -120,8 +138,8 @@
 			name = "Racing Trainer";
 			packageProductDependencies = (
 			);
-			productName = "Racing Trainer";
-			productReference = 1421652F3022DCAA00291EBF /* Racing Trainer.app */;
+			productName = chatgpt;
+			productReference = 1421652F3022DCAA00291EBF /* chatgpt.app */;
 			productType = "com.apple.product-type.application";
 		};
 		A20000000000000000000008 /* RacingTrainerSafetyTests */ = {
@@ -208,9 +226,18 @@
 				A70000000000000000000005 /* RouteTurnSelector.swift in Sources */,
 				A80000000000000000000003 /* TurnGuidanceTracker.swift in Sources */,
 				A90000000000000000000001 /* LiveTurnGuidance.swift in Sources */,
+				AB0000000000000000000001 /* MinimapRouteDetector.swift in Sources */,
+				AB0000000000000000000003 /* LearnedRouteSegmenter.swift in Sources */,
+				AB0000000000000000000005 /* LearnedRouteSegmenterWeights.swift in Sources */,
+				AB0000000000000000000007 /* RouteComponentVerifier.swift in Sources */,
+				AB0000000000000000000009 /* RouteComponentVerifierWeights.swift in Sources */,
 				A80000000000000000000001 /* TurnGuidance.swift in Sources */,
 				A70000000000000000000003 /* AIReviewModels.swift in Sources */,
 				A70000000000000000000001 /* RoadLineDetector.swift in Sources */,
+				AD1000000000000000000003 /* CornerTechniqueTracker.swift in Sources */,
+				AD1000000000000000000001 /* CornerTechnique.swift in Sources */,
+				AE1000000000000000000001 /* LinkedTurns.swift in Sources */,
+				AC0000000000000000000001 /* SteeringWheelMotion.swift in Sources */,
 				A60000000000000000000001 /* ShadowCaptureState.swift in Sources */,
 				A60000000000000000000003 /* ShadowCapturePipeline.swift in Sources */,
 				A60000000000000000000005 /* ShadowSessionRecorder.swift in Sources */,
@@ -369,16 +396,18 @@
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Racing Trainer needs access to display video from your capture card.";
+				INFOPLIST_KEY_CFBundleDisplayName = chatgpt;
+				INFOPLIST_KEY_NSCameraUsageDescription = "chatgpt needs access to display video from your capture card.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Racing Trainer needs access to play audio from your capture card.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "chatgpt needs access to play audio from your capture card.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "NoName.Racing-Trainer";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = Racing_Trainer;
+				PRODUCT_NAME = chatgpt;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -414,16 +443,18 @@
 				ENABLE_RESOURCE_ACCESS_USB = NO;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_NSCameraUsageDescription = "Racing Trainer needs access to display video from your capture card.";
+				INFOPLIST_KEY_CFBundleDisplayName = chatgpt;
+				INFOPLIST_KEY_NSCameraUsageDescription = "chatgpt needs access to display video from your capture card.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Racing Trainer needs access to play audio from your capture card.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "chatgpt needs access to play audio from your capture card.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "NoName.Racing-Trainer";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = Racing_Trainer;
+				PRODUCT_NAME = chatgpt;
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;

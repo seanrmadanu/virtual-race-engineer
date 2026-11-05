@@ -80,10 +80,11 @@ nonisolated final class ModularVideoModules {
         let routeValue = hasRoute ? CoachModuleValue(direction: selected.direction,
             severity: selected.severity, timing: selected.target == "near_route" ? "now" : selected.direction == "straight" ? "none" : "later",
             turnDistance: selected.distance,
-            path: route.orderedPath.map { [$0.x, $0.y] }, target: selected.target) : nil
+            path: route.orderedPath.map { [$0.x, $0.y] }, target: selected.target,
+            playerAnchor: map.playerAnchor.map { [$0.x, $0.y] }) : nil
         let geometryOutput = observation("route-geometry", value: routeValue,
             state: hasRoute ? .fresh : .missing, confidence: min(route.geometryConfidence, route.forwardPathConfidence),
-            units: "normalized_map", reason: hasRoute ? nil : route.reason,
+            units: "normalized_map", reason: hasRoute ? nil : (route.isValid ? selected.reason : route.reason),
             evidence: ["reason": route.reason, "branches": String(route.branchPointCount),
                        "selection": selected.reason, "target": selected.target,
                        "scope": "selected_route_geometry_not_vehicle_steering",

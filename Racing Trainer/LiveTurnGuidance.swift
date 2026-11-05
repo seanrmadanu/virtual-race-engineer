@@ -10,6 +10,14 @@ nonisolated struct LiveTurnGuidanceSnapshot: Sendable {
         time.isFinite && time >= cue.time && time >= sourceFrameUptime && time <= expiresAt
     }
 
+    /// A recent failure may explain the empty HUD without reviving a direction
+    /// or extending the lifetime of its last supporting frame.
+    func waitingMessage(at time: Double) -> String? {
+        guard cue.stage == .unavailable, time.isFinite, time >= cue.time,
+              time - cue.time <= CoachSafetyPolicy.maximumRouteAge else { return nil }
+        return cue.waitingFor?.message
+    }
+
     func steering(at time: Double) -> SteeringGuidance {
         guard isFresh(at: time) else { return .unavailable }
         switch cue.stage {
@@ -32,16 +40,24 @@ nonisolated struct LiveTurnGuidancePipeline {
 
     mutating func process(coach: MinimapCoachSnapshot, minimapVisible: Bool, minimapConfidence: Float,
                           speed: MinimapSpeedSample?, speedUnit: String?, session: Int,
-                          completedAt time: Double) -> LiveTurnGuidanceSnapshot {
+                          completedAt time: Double, road: RoadLineObservation? = nil) -> LiveTurnGuidanceSnapshot {
         let capture = coach.sourceFrameUptime
         let selected = RouteTurnSelector.select(coach.orderedPath)
         func observation(_ name: String, value: CoachModuleValue, confidence: Float,
                          fresh: Bool, units: String? = nil) -> CoachModuleObservation {
             CoachModuleObservation(value: value, state: fresh ? .fresh : .uncertain, confidence: confidence,
                 capturedAt: capture, completedAt: time, sourceSessionID: session, implementation: name,
-                version: "live-turn-guidance-v1", failureReason: fresh ? nil : coach.reason, units: units)
+                version: "live-turn-guidance-v5", failureReason: fresh ? nil : coach.reason, units: units)
         }
-        let routeFresh = coach.displayedState(at: time) == .ready
+        // The legacy engine's temporal score describes a different, farther
+        // turn. Confirm current/Next once, in the shared tracker, while retaining
+        // every pixel-evidence and age gate used by the engine.
+        let routeScores = [coach.confidence.minimap, coach.confidence.playerAnchor,
+                           coach.confidence.routeMask, coach.confidence.forwardPath,
+                           coach.confidence.geometry, coach.confidence.freshness]
+        let routeFresh = [.ready, .routeUncertain].contains(coach.state)
+            && time >= capture && time - capture <= CoachSafetyPolicy.maximumRouteAge
+            && routeScores.allSatisfy { $0.isFinite && $0 >= 0.52 }
         var observations: [String: CoachModuleObservation] = [
             "validity": observation("live-input", value: CoachModuleValue(flag: routeFresh), confidence: routeFresh ? 1 : 0,
                                      fresh: routeFresh),
@@ -49,7 +65,8 @@ nonisolated struct LiveTurnGuidancePipeline {
                                     confidence: minimapConfidence, fresh: minimapVisible),
             "geometry": observation("live-route", value: CoachModuleValue(direction: selected.direction,
                 severity: selected.severity, turnDistance: selected.distance,
-                path: coach.orderedPath.map { [$0.x, $0.y] }, target: selected.target),
+                path: coach.orderedPath.map { [$0.x, $0.y] }, target: selected.target,
+                playerAnchor: coach.playerAnchor.map { [$0.x, $0.y] }),
                 confidence: min(coach.confidence.geometry, coach.confidence.forwardPath), fresh: routeFresh,
                 units: "normalized_map")
         ]
@@ -59,9 +76,17 @@ nonisolated struct LiveTurnGuidancePipeline {
                 completedAt: speed.completionUptime, sourceSessionID: speed.sourceSessionID,
                 implementation: "live-speed-ocr", version: "1", failureReason: nil, units: speedUnit)
         }
+        if let road {
+            observations["road"] = CoachModuleObservation(value: CoachModuleValue(direction: road.roadDirection,
+                flag: road.hasCorridor, road: road), state: road.hasCorridor ? .fresh : .uncertain,
+                confidence: Float(road.confidence), capturedAt: road.capturedAt,
+                completedAt: road.availableAt ?? time, sourceSessionID: session,
+                implementation: "live-road", version: "1", failureReason: nil, units: "normalized_frame")
+        }
         let cue = tracker.update(row: CoachHistoryRow(time: time, observations: observations, ages: [:]), session: session)
-        return LiveTurnGuidanceSnapshot(cue: cue, sourceFrameUptime: capture,
-                                       expiresAt: capture + CoachSafetyPolicy.maximumRouteAge, sourceSessionID: session)
+        let evidence = cue.evidenceCapturedAt ?? capture
+        return LiveTurnGuidanceSnapshot(cue: cue, sourceFrameUptime: evidence,
+            expiresAt: min(evidence + CoachSafetyPolicy.maximumRouteAge, cue.validUntil ?? .infinity), sourceSessionID: session)
     }
 }
 
@@ -87,6 +112,8 @@ nonisolated extension MinimapCoachSnapshot {
             pathPointCount: pathPointCount, branchPointCount: branchPointCount, speedUsed: speedUsed,
             speedAgeMilliseconds: speedAgeMilliseconds, sourceFrameUptime: sourceFrameUptime,
             processingLatencyMilliseconds: processingLatencyMilliseconds, trackingApplied: trackingApplied,
-            reason: guidance.cue.reason, guidanceExpiresAt: min(guidanceExpiresAt ?? .infinity, guidance.expiresAt))
+            reason: guidance.cue.stage == .unavailable ? "\(guidance.cue.reason) · \(reason)" : guidance.cue.reason,
+            guidanceExpiresAt: min(guidanceExpiresAt ?? .infinity, guidance.expiresAt),
+            playerAnchor: playerAnchor)
     }
 }

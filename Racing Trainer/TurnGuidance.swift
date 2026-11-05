@@ -4,6 +4,20 @@ nonisolated enum TurnGuidanceStage: String, Codable, CaseIterable, Sendable {
     case unavailable, straight, preview, headsUp = "heads_up", turnNow = "turn_now", following
 }
 
+nonisolated enum TurnGuidanceWaitReason: String, Codable, Sendable {
+    case minimap, route, freshFrame, movement, confirmation
+
+    var message: String {
+        switch self {
+        case .minimap: return "Waiting for the minimap"
+        case .route: return "Waiting for a clear route ahead"
+        case .freshFrame: return "Waiting for a fresh gameplay frame"
+        case .movement: return "Vehicle stopped"
+        case .confirmation: return "Confirming the nearby direction"
+        }
+    }
+}
+
 /// A navigation cue, independent of slowdown advice and observed corner phase.
 nonisolated struct TurnGuidanceSample: Codable, Equatable, Sendable {
     let time: Double
@@ -12,14 +26,40 @@ nonisolated struct TurnGuidanceSample: Codable, Equatable, Sendable {
     let reason: String
     var secondsToTurn: Double? = nil
     var isCueStart = false
+    // Optional for backward compatibility with frozen review bundles. New cues
+    // explicitly separate the near route from the bend farther ahead.
+    var currentDirection: String? = nil
+    var currentManeuver: String? = nil
+    var upcomingDirection: String? = nil
+    // Retained presentation never renews the age of its supporting frame.
+    var evidenceCapturedAt: Double? = nil
+    var validUntil: Double? = nil
+    var waitingFor: TurnGuidanceWaitReason? = nil
+
+    var primaryDirection: String {
+        if [.preview, .headsUp].contains(stage), let currentDirection { return currentDirection }
+        return direction
+    }
+
+    var upcomingTitle: String? {
+        if let upcomingDirection {
+            guard ["straight", "left", "right"].contains(upcomingDirection) else { return nil }
+            return "Next: \(upcomingDirection.capitalized)"
+        }
+        guard currentDirection != nil, [.preview, .headsUp].contains(stage),
+              ["left", "right"].contains(direction) else { return nil }
+        return "Next: \(direction.capitalized)"
+    }
 
     var title: String {
         switch stage {
         case .unavailable: return "Guidance unavailable"
-        case .straight: return "Continue straight"
-        case .preview, .headsUp: return "\(direction.capitalized) turn ahead"
-        case .turnNow: return "Turn \(direction) now"
-        case .following: return "Keep turning \(direction)"
+        case .straight: return "Go straight"
+        case .preview, .headsUp:
+            guard let currentDirection else { return "\(direction.capitalized) turn ahead" }
+            return currentDirection == "straight" ? "Go straight" : "Follow the road"
+        case .turnNow: return "Turn \(direction)"
+        case .following: return currentManeuver == "turn" ? "Turn \(direction)" : "Follow the \(direction) bend"
         }
     }
 
@@ -27,6 +67,12 @@ nonisolated struct TurnGuidanceSample: Codable, Equatable, Sendable {
         guard time.isFinite, time >= 0,
               (stage == .unavailable ? direction == "unknown" : stage == .straight ? direction == "straight" : ["left", "right"].contains(direction)),
               secondsToTurn == nil || (secondsToTurn!.isFinite && secondsToTurn! >= 0),
+              currentDirection == nil || ["unknown", "straight", "left", "right"].contains(currentDirection!),
+              currentManeuver == nil || ["turn", "bend"].contains(currentManeuver!),
+              upcomingDirection == nil || ["unknown", "straight", "left", "right"].contains(upcomingDirection!),
+              evidenceCapturedAt == nil || (evidenceCapturedAt!.isFinite && evidenceCapturedAt! >= 0 && evidenceCapturedAt! <= time),
+              validUntil == nil || (validUntil!.isFinite && validUntil! >= time),
+              (waitingFor == nil || stage == .unavailable),
               !isCueStart || stage == .headsUp || stage == .turnNow else {
             throw ModelReviewError.invalid("Invalid turn guidance sample.")
         }

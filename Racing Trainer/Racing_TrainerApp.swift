@@ -2,7 +2,6 @@ import SwiftUI
 
 @main
 struct Racing_TrainerApp: App {
-    @StateObject private var replayLab = CornerReplayLabStore()
     @StateObject private var modelReview = ModelReviewStore()
 
     @StateObject private var captureDevices =
@@ -13,10 +12,10 @@ struct Racing_TrainerApp: App {
             if CommandLine.arguments.contains("--model-review") {
                 ModelReviewView(store: modelReview)
             } else if CommandLine.arguments.contains("--corner-replay-lab") {
-                CornerReplayLab(store: replayLab)
+                CornerReplayWorkspace()
             } else {
                 ContentView(
-                    captureDevices: captureDevices
+                    captureDevices: captureDevices, modelReview: modelReview
                 )
                 .frame(
                     minWidth: 1000,
@@ -36,7 +35,7 @@ struct Racing_TrainerApp: App {
         .defaultSize(width: 1360, height: 900)
 
         Window("Corner Replay Lab", id: "corner-replay-lab") {
-            CornerReplayLab(store: replayLab)
+            CornerReplayWorkspace()
         }
         .defaultSize(width: 1240, height: 920)
 
@@ -50,4 +49,10 @@ struct Racing_TrainerApp: App {
             )
         }
     }
+}
+
+/// The comparison lab owns its players only while its workspace exists.
+private struct CornerReplayWorkspace: View {
+    @StateObject private var store = CornerReplayLabStore()
+    var body: some View { CornerReplayLab(store: store) }
 }

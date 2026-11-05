@@ -9,7 +9,7 @@ struct ModelReviewView: View {
         VStack(alignment: .leading, spacing: 14) {
             header
             Picker("Skill Category", selection: $store.category) {
-                ForEach(ReviewSkillCategory.allCases.filter { $0 != .slowdownTiming || store.bundle?.schemaVersion == "racing-trainer-review-v2" }) { Text($0.title).tag($0) }
+                ForEach(ReviewSkillCategory.allCases.filter { ($0 != .advanced || store.bundle?.linkedTurnSamples != nil) && ($0 != .slowdownTiming || store.bundle?.schemaVersion == "racing-trainer-review-v2") }) { Text($0.title).tag($0) }
             }
             .pickerStyle(.segmented)
             Text(store.category.detail).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
@@ -17,11 +17,7 @@ struct ModelReviewView: View {
             if store.bundle != nil {
                 HSplitView {
                     playbackPane.frame(minWidth: 400, idealWidth: 600)
-                    if store.category == .advanced {
-                        advancedPane.frame(minWidth: 340, idealWidth: 420)
-                    } else {
-                        reviewPane.frame(minWidth: 590, idealWidth: 680)
-                    }
+                    reviewPane.frame(minWidth: 590, idealWidth: 680)
                 }
             } else {
                 ContentUnavailableView {
@@ -39,7 +35,7 @@ struct ModelReviewView: View {
         .frame(minWidth: 1060, minHeight: 720)
         .background(Color(nsColor: .windowBackgroundColor))
         .navigationTitle("Model Review")
-        .navigationSubtitle(store.bundle?.source.filename ?? "Racing Trainer")
+        .navigationSubtitle(store.bundle?.source.filename ?? "chatgpt")
         .toolbar {
             Button("Analyze Video…", systemImage: "video.badge.waveform", action: store.chooseAnalysisVideo).disabled(store.isBusy)
             Button("Open Test…", systemImage: "folder", action: store.openTest).disabled(store.isBusy)
@@ -165,7 +161,7 @@ struct ModelReviewView: View {
                     Text("Watch a moment. Check the answer. Leave your review.").foregroundStyle(.secondary)
                 }
                 Spacer()
-                if let bundle = store.bundle, store.category != .advanced {
+                if let bundle = store.bundle {
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("\(store.reviewedCount) / \(bundle.events.count) Reviewed").font(.headline).monospacedDigit()
                         Text("Model answered \(store.answeredCount) / \(bundle.events.count)")
@@ -225,6 +221,13 @@ struct ModelReviewView: View {
                         .accessibilityLabel("Gameplay recording")
                     playbackControls
                     if store.category == .basicTurns { turnGuidanceReadout }
+                    if store.category == .advanced {
+                        LinkedTurnReadout(sample: store.linkedAtPlayhead, current: store.cornerAtPlayhead)
+                    }
+                    if store.category == .cornerTechnique {
+                        CornerTechniqueReadout(sample: store.cornerAtPlayhead,
+                                               hasAnalysis: store.bundle?.cornerTechniqueSamples != nil)
+                    }
                     Label(store.bundle?.roadObservations == nil ? "Analyze this video to inspect white road markings"
                         : store.roadAtPlayhead.isFresh(at: store.currentTime) ? store.roadAtPlayhead.reason : "Waiting for fresh road markings",
                           systemImage: "road.lanes")
@@ -244,7 +247,9 @@ struct ModelReviewView: View {
                         if let event = store.playbackEvent {
                             Text("Model Log · \(reviewTimestamp(event.time))").font(.headline)
                             Text(event.summary(in: store.category)).font(.title3.weight(.semibold))
-                            Text(event.diagnostics == nil ? "Recorded output at this timestamp. Samples are five seconds apart."
+                            Text(store.category == .cornerTechnique && store.bundle?.cornerTechniqueSamples != nil
+                                ? "Experimental route phases · 10 Hz samples · phase changes included in the log."
+                                : event.diagnostics == nil ? "Recorded output at this timestamp. Samples are five seconds apart."
                                 : store.bundle?.turnGuidanceSamples != nil ? "Experimental turn timing · 10 Hz cues · exact cue onsets in the log."
                                 : store.bundle?.roadObservations != nil ? "Experimental guidance · 10 Hz module samples · one review moment per second."
                                 : "Frozen development pilot · selected moments from a 10 Hz module history.")
@@ -264,8 +269,10 @@ struct ModelReviewView: View {
                         Text("Use the road, minimap and two-second history. Ignore the steering-wheel inset.")
                         if store.category == .basicTurns {
                             Text("Check the turn direction first. Then judge the heads-up and Turn Now separately: early, correctly timed, late, or missed. Mark the interval where the cue should occur. A bend being exited and the next turn can have different directions.")
+                        } else if store.category == .advanced {
+                            Text("Judge the order of visible route bends, separately from the current bend. A second bend requires a separated reversal. A single corner, a straight-looking crop, or missing evidence does not establish a chicane, an apex, braking, or exact turn timing.")
                         } else if store.category == .cornerTechnique {
-                            Text("Approach means before the bend; entry means beginning it; exit means unwinding out of it. Leave uncertain phases unknown. Apex is available for your notes but is not trained in this model.")
+                            Text("Check approach, entry, continuing through the bend, and exit against the gameplay. These estimates use changes in the near route, not measured steering or a detected apex. Entry requires an observed direction change; starting playback in a bend should show In bend. Leave uncertain phases unknown.")
                         }
                         Text("Use Unusable View for camera orbits, cutscenes or obstructed footage. Unknown is a model answer worth reviewing too.")
                         Text("Your feedback is saved after you have seen the model output; it supports error review. Independent accuracy needs a separate blind check.")
@@ -295,15 +302,23 @@ struct ModelReviewView: View {
                     Button("Go to \(reviewTimestamp(selected.time))") { store.seek(to: selected.time) }
                 }
             }
-            if store.category == .basicTurns {
+            if store.category != .slowdownTiming {
                 HStack {
                     Button("−0.1 s") { store.seek(to: store.currentTime - 0.1) }
                     Button("+0.1 s") { store.seek(to: store.currentTime + 0.1) }
                     Button("Replay Turn", action: store.replayTurn)
                         .help("Play six seconds before and two seconds after the selected moment.")
                     Spacer()
-                    Button("Next Cue", action: store.nextTurnCue)
-                        .disabled(store.bundle?.turnGuidanceSamples == nil)
+                    if store.category == .basicTurns {
+                        Button("Next Cue", action: store.nextTurnCue)
+                            .disabled(store.bundle?.turnGuidanceSamples == nil)
+                    } else if store.category == .advanced {
+                        Button("Next Sequence", action: store.nextLinkedSequence)
+                            .disabled(store.bundle?.linkedTurnSamples == nil)
+                    } else {
+                        Button("Next Phase", action: store.nextCornerPhase)
+                            .disabled(store.bundle?.cornerTechniqueSamples == nil)
+                    }
                 }
             }
         }
@@ -339,6 +354,8 @@ struct ModelReviewView: View {
                     Text("All Moments").tag("all")
                     Text("AI Reviewed").tag("ai")
                     Text("Turn Cues").tag("turn_cues")
+                    Text("Corner Phase Changes").tag("corner_phases")
+                    if store.bundle?.linkedTurnSamples != nil { Text("Sequence Changes").tag("linked_turns") }
                     Text("Model Answered").tag("answered")
                     Text("Model Unknown").tag("unknown")
                     Text("Unreviewed").tag("unreviewed")
@@ -455,6 +472,14 @@ struct ModelReviewView: View {
                         turnTimingEditor(note)
                     } else if store.category == .slowdownTiming {
                         slowdownEditor(note)
+                    } else if store.category == .advanced {
+                        Picker("Visible sequence", selection: noteBinding(\.linkedTurnCorrection)) {
+                            Text("No correction").tag("")
+                            ForEach(LinkedTurnPattern.allCases, id: \.rawValue) { Text($0.title).tag($0.rawValue) }
+                        }
+                    } else if event.cornerTechnique != nil {
+                        correctionPicker("Route phase", key: \.cornerPhaseCorrection,
+                                         choices: CornerTechniquePhase.allCases.map(\.rawValue))
                     } else {
                         correctionPicker("Phase", key: \.phase, choices: ModelReviewBundle.phases)
                     }
@@ -590,16 +615,7 @@ struct ModelReviewView: View {
         }
     }
 
-    private var advancedPane: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Label("Category 3 · Planned", systemImage: "flag.checkered").font(.title3.bold())
-            Text("This category will cover braking technique, linked corners, grip management and traffic decisions.")
-            Text("The current model produces basic direction and coarse corner phases. Advanced outputs will appear here when a trained version supports them.")
-                .foregroundStyle(.secondary)
-            Button("Review Basic Turns") { store.category = .basicTurns }
-            Spacer()
-        }.padding(20)
-    }
+
 }
 
 /// Keep the AppKit player linked explicitly; also supplies native seek/volume controls.

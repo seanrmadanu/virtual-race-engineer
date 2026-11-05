@@ -474,7 +474,7 @@ final class CaptureSessionManager:
             error =
                 CaptureSessionError(
                     message:
-                        "Racing Trainer could not create its video output."
+                        "chatgpt could not create its video output."
                 )
         }
     }
@@ -679,7 +679,7 @@ final class CaptureSessionManager:
             error =
                 CaptureSessionError(
                     message:
-                        "Racing Trainer could not create its game-audio preview output."
+                        "chatgpt could not create its game-audio preview output."
                 )
         }
     }

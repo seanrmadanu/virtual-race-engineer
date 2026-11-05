@@ -9,8 +9,8 @@ the main window or **Model Review → Show Model Review** in the menu bar
 
 | Category | Skills | Current support |
 | --- | --- | --- |
-| 1. Basic turns | Left/right/straight, current vs. upcoming corner, unknown handling | Experimental v1 outputs available for review |
-| 2. Corner technique | Approach, entry, apex region, exit, racing line | Only coarse approach/entry/exit/straight outputs are trained; apex and racing line remain planned |
+| 1. Turns & Timing | Left/right/straight, current vs. upcoming corner, turn cues, unknown handling | Experimental causal turn tracker; historical v1 outputs remain readable |
+| 2. Corner technique | Approach, entry, in bend, exit; future apex and racing line | New analyses include a causal route-phase estimate; historical bootstrap phase labels remain separate. Apex and racing line remain planned |
 | 3. Advanced driving | Braking technique, linked corners, grip and traffic decisions | Planned; no model outputs or action advice |
 
 Categories organize skills and feedback, not separate trained models or unlocked
@@ -19,6 +19,12 @@ recordings and camera conditions; resolve basic perception and uncertainty error
 then build defensible supervision for category 2; qualify category 3 only after
 its required perception and action evidence exists. Literature supplies definitions,
 not game-specific optimal actions. Each category needs its own held-out evaluation.
+
+The October 15 Category 2 increment adds continuous phase readouts, **Next Phase**,
+**Corner Phase Changes**, and separate phase corrections. See
+[Corner Technique](CORNER_TECHNIQUE.md) for the prepared review launcher, evidence,
+and limitations. This is a deterministic review prototype, not a newly trained
+technique coach. Agent changes are tracked in the [shared log](AGENT_CHANGELOG.md).
 
 ## Review a test
 

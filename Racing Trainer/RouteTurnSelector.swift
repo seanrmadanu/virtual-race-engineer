@@ -4,6 +4,61 @@ import Foundation
 /// tangent. A slightly angled straight is not automatically a turn. Distances
 /// stay in normalized map coordinates; no timing in seconds is inferred.
 nonisolated enum RouteTurnSelector {
+    struct NearRoute: Sendable {
+        let bearing: Double
+        let startGap: Double
+        let tangent: Double
+
+        /// The first visible segment can already be the far side of a junction
+        /// while the marker-to-route connection still points straight ahead.
+        /// Do not promote that segment to a current bend through an unseen gap.
+        /// This is an image-space direction check, not a calibrated turn-in time.
+        var currentHeading: Double {
+            if startGap > 0.035, abs(tangent) >= 14,
+               abs(bearing) < 6 || bearing.sign != tangent.sign { return 0 }
+            return tangent
+        }
+    }
+
+    /// Near-route bearing is measured from the detected player, including the
+    /// hidden gap under the marker. Curvature farther along the path is not the
+    /// current driving direction. This is image geometry, not a steering angle.
+    static func nearRoute(_ path: [MinimapPoint], anchor: MinimapPoint?) -> NearRoute? {
+        guard let anchor, anchor.x.isFinite, anchor.y.isFinite,
+              (0...1).contains(anchor.x), (0...1).contains(anchor.y), path.count >= 6,
+              path.allSatisfy({ $0.x.isFinite && $0.y.isFinite }), let first = path.first else { return nil }
+        let gap = hypot(first.x - anchor.x, first.y - anchor.y)
+        guard gap <= 0.095, first.y <= anchor.y + 0.012 else { return nil }
+        // A fixed local window, rather than the bend's farthest heading change.
+        let horizon = 0.09
+        var remaining = horizon - gap
+        var target: MinimapPoint?
+        if remaining <= 0 { target = first }
+        for (a, b) in zip(path, path.dropFirst()) where target == nil {
+            let length = hypot(b.x - a.x, b.y - a.y)
+            guard length > 0 else { continue }
+            if remaining <= length {
+                let fraction = remaining / length
+                target = MinimapPoint(x: a.x + fraction * (b.x - a.x), y: a.y + fraction * (b.y - a.y))
+            } else { remaining -= length }
+        }
+        guard let target, anchor.y - target.y > 0.025 else { return nil }
+        // The player-to-path gap is largely the marker's occluded footprint.
+        // Its bearing alone stays upright while the visible road already bends.
+        // Measure the first short visible segment independently of that gap.
+        var localEnd = first, localLength = 0.0
+        for (a, b) in zip(path, path.dropFirst()) {
+            let length = hypot(b.x - a.x, b.y - a.y)
+            guard length > 0 else { continue }
+            let fraction = min(1, (0.06 - localLength) / length)
+            localEnd = MinimapPoint(x: a.x + fraction * (b.x - a.x), y: a.y + fraction * (b.y - a.y))
+            localLength += length * fraction
+            if localLength >= 0.06 - 1e-9 { break }
+        }
+        guard localLength >= 0.05 else { return nil }
+        return NearRoute(bearing: atan2(target.x - anchor.x, anchor.y - target.y) * 180 / .pi,
+                         startGap: gap, tangent: atan2(localEnd.x - first.x, first.y - localEnd.y) * 180 / .pi)
+    }
     struct Selection: Equatable, Sendable {
         let direction: String
         let severity: String
@@ -12,19 +67,45 @@ nonisolated enum RouteTurnSelector {
         let reason: String
     }
 
-    static func select(_ path: [MinimapPoint], preferUpcoming: Bool = true) -> Selection {
+    static func select(_ path: [MinimapPoint], preferUpcoming: Bool = true, minimumChange: Double = 24) -> Selection {
         func unknown(_ reason: String) -> Selection {
             Selection(direction: "unknown", severity: "unknown", distance: nil, target: "unknown", reason: reason)
         }
+        let scan = scanBends(path, minimumChange: minimumChange)
+        if let failure = scan.failure { return unknown(failure) }
+        let candidates = scan.bends
+        guard !candidates.isEmpty else {
+            return Selection(direction: "straight", severity: "straight", distance: nil,
+                             target: "straight_segment", reason: "No sustained route heading change of \(Int(minimumChange)) degrees")
+        }
+        // A near segment and a subsequent turn have separate identities.
+        // Near alone is not an assertion that the vehicle is already steering.
+        let selected = preferUpcoming ? (candidates.first(where: { $0.distance >= 0.08 }) ?? candidates[0]) : candidates[0]
+        let magnitude = abs(selected.change)
+        return Selection(direction: selected.change < 0 ? "left" : "right",
+                         severity: magnitude >= 135 ? "uTurn" : magnitude >= 80 ? "sharp" : magnitude >= 42 ? "medium" : "gentle",
+                         distance: selected.distance,
+                         target: selected.distance < 0.08 ? "near_route" : "upcoming_route",
+                         reason: "Sustained route change \(Int(magnitude))°; \(candidates.count) visible bend segment(s)")
+    }
+    /// All supported changes in route order. Exposes the same scan used by
+    /// Category 1 without selecting a different bend for its existing caller.
+    static func visibleBends(_ path: [MinimapPoint], minimumChange: Double = 24) -> [(distance: Double, change: Double)]? {
+        let scan = scanBends(path, minimumChange: minimumChange)
+        return scan.failure == nil ? scan.bends : nil
+    }
+
+    private static func scanBends(_ path: [MinimapPoint], minimumChange: Double)
+        -> (bends: [(distance: Double, change: Double)], failure: String?) {
         guard path.count >= 8, path.allSatisfy({ $0.x.isFinite && $0.y.isFinite }) else {
-            return unknown("Insufficient forward route samples")
+            return ([], "Insufficient forward route samples")
         }
         var distances = [0.0]
         for i in 1..<path.count {
             distances.append(distances.last! + hypot(path[i].x - path[i-1].x, path[i].y - path[i-1].y))
         }
         guard distances.last! >= 0.16, path[0].y - path[min(4, path.count-1)].y > 0.015 else {
-            return unknown("Selected route does not establish forward continuity")
+            return ([], "Selected route does not establish forward continuity")
         }
         var headings: [Double] = []
         for i in path.indices {
@@ -40,7 +121,7 @@ nonisolated enum RouteTurnSelector {
         var baseline = headings[0], anchor = 0, i = 2
         while i < headings.count - 1 {
             let change = headings[i] - baseline
-            guard abs(change) >= 24, abs(headings[i+1] - baseline) >= 24 else { i += 1; continue }
+            guard abs(change) >= minimumChange, abs(headings[i+1] - baseline) >= minimumChange else { i += 1; continue }
             let sign = change > 0 ? 1.0 : -1.0
             var peak = i, end = i + 1
             while end < headings.count {
@@ -50,23 +131,20 @@ nonisolated enum RouteTurnSelector {
             }
             var onset = anchor
             for j in anchor...i where abs(headings[j] - baseline) < 8 { onset = j }
-            if distances[peak] - distances[onset] >= 0.055 {
+            // A gentle bend can reach its shallow peak quickly and then hold
+            // it. Count that sustained arc for Next, not only the rise to peak.
+            let support = minimumChange < 24 ? min(end - 1, headings.count - 1) : peak
+            // A near-path kink returning toward forward is an exit/straightening,
+            // not a new opposite bend. Require a gentle Next candidate to reach
+            // that side of forward, and never count its reversal as support.
+            let reachesSide = minimumChange >= 24
+                || (headings[peak] * sign >= 8)
+            if reachesSide, distances[support] - distances[onset] >= 0.055 {
                 candidates.append((distances[onset], headings[peak] - baseline))
             }
             baseline = headings[peak]; anchor = peak; i = max(i+1, peak+1)
         }
-        guard !candidates.isEmpty else {
-            return Selection(direction: "straight", severity: "straight", distance: nil,
-                             target: "straight_segment", reason: "No sustained route heading change of 24 degrees")
-        }
-        // A near segment and a subsequent turn have separate identities.
-        // Near alone is not an assertion that the vehicle is already steering.
-        let selected = preferUpcoming ? (candidates.first(where: { $0.distance >= 0.08 }) ?? candidates[0]) : candidates[0]
-        let magnitude = abs(selected.change)
-        return Selection(direction: selected.change < 0 ? "left" : "right",
-                         severity: magnitude >= 135 ? "uTurn" : magnitude >= 80 ? "sharp" : magnitude >= 42 ? "medium" : "gentle",
-                         distance: selected.distance,
-                         target: selected.distance < 0.08 ? "near_route" : "upcoming_route",
-                         reason: "Sustained route change \(Int(magnitude))°; \(candidates.count) visible bend segment(s)")
+        return (candidates, nil)
     }
+
 }

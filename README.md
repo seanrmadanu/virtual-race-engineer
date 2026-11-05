@@ -1,31 +1,42 @@
 # Virtual Race Engineer
 
-Virtual Race Engineer (project folder: Racing Trainer) is an early-stage macOS
-driving coach for **The Crew Motorfest**. It takes gameplay video from a capture
+Virtual Race Engineer (local app name: `chatgpt`, project folder: Racing Trainer)
+is an early-stage macOS driving coach for **The Crew Motorfest**. It takes gameplay video from a capture
 card or a local video file, reads the speedometer and minimap on the Mac, and
 shows experimental turn guidance on an animated steering wheel.
 
 All analysis runs locally. The app needs no paid API and sends no gameplay
 anywhere.
 
-## Status — October 13, 2026
+## Status — October 18, 2026 build
 
 | Area | State |
 | --- | --- |
 | Capture and playback | Live capture-card video and audio, plus `.mov`/`.mp4` playback for testing without a console |
-| Perception | Speedometer OCR, minimap and player-marker detection, hybrid GPS-route detection, experimental white road-marking detection |
-| Live guidance | **Category 1 "Turns & Timing"** (experimental): one instruction and arrow (*Continue straight*, *Left/right turn ahead*, *Turn left/right now*, *Keep turning left/right*, *Guidance unavailable*) with an animated wheel |
+| Perception | Speedometer OCR, minimap and player-marker detection, hybrid GPS-route detection, experimental white/yellow road-marking detection |
+| Live guidance | **Category 1 "Turns & Timing"** (experimental): one confirmed instruction (*Go straight*, *Follow the left/right bend*, *Turn left/right*, *Guidance unavailable*), a separate upcoming turn, and a stable illustrative wheel |
 | Not shown | Brake, throttle and target-speed advice. Wheel angle is illustrative, not a calibrated steering angle |
-| Review tools | Model Review window: timestamped verdicts beside saved ChatGPT and Claude reviews, plus in-app video analysis |
+| Review tools | Model Review window: timestamped verdicts beside saved ChatGPT and Claude reviews, plus in-app video analysis. Category 2 corner phases and Category 3 linked turns are available for recorded-video review. |
 | Data tools | Route-mask dataset recorder and reviewer, opt-in shadow capture, offline training and replay scripts |
-| Tests | 91 XCTest tests and 66 Python tests pass (run October 13, 2026) |
+| Tests | 155 XCTest tests passed in Release on October 18; 66 Python tests passed on October 13 |
 
 Turn timing is a deterministic prototype. It has not been calibrated or validated
 on a live capture-card session. Reviews found missed cues, direction switching
 and tracker resets ([turn cue audit](docs/TURN_CUE_AUDIT_20261013.md)), plus at
-least one early *Turn now* cue. A fix is in progress.
+least one early *Turn now* cue. October 18 replay reduced instruction changes
+from 14 to 6 and from 17 to 8 in two clips. The full Video 2 replay had
+2,052 of 6,193 samples unavailable and zero *Turn now* cue starts. Independent
+timing checks and live capture-card validation remain open.
 
 The full timeline is in [development history](docs/DEVELOPMENT_HISTORY.md).
+
+Active collaborator work is recorded in the [shared agent change log](docs/AGENT_CHANGELOG.md).
+The October 15 [Category 2 review prototype](docs/CORNER_TECHNIQUE.md) adds
+experimental corner-phase estimates; use **Open Corner Technique Review.command** to try it.
+[Category 3 · Linked Turns](docs/LINKED_TURNS.md) previews visible left–right and
+right–left bend sequences; use **Open Linked Turn Review.command** to try it.
+The [October 15 app update](docs/STEERING_AND_APP_CLEANUP.md) fixes curve-wheel jitter,
+removes inactive controls, and separates practice, category review, and diagnostics.
 
 ## Technical decisions
 
@@ -89,18 +100,14 @@ perception models are learned, and neither makes driving decisions.
    needs at least 24°. Gentle is under 42°, medium 42–80°, sharp 80–135° and
    U-turn 135° or more.
 4. **Turn timing** ([`TurnGuidanceTracker.swift`](Racing%20Trainer/TurnGuidanceTracker.swift)).
-   The tracker follows the closest bend through *straight → turn ahead → turn
-   now → keep turning*, plus *unavailable*. *Turn now* needs all of the following:
-   - at least 0.7 s of tracked approach;
-   - the bend seen at least 0.08 map units away earlier in that approach;
-   - the bend now within 0.035 units;
-   - an estimated arrival within 0.6 s.
-
-   History resets after gaps over 0.75 s, a direction change, or a distance jump
-   over 0.075 units. These thresholds were chosen by hand, not trained.
-5. **Display.** The banner shows one instruction. The wheel stays centered for
-   *turn ahead* and rotates for *turn now* and *keep turning*. Missing or expired
-   evidence clears the target.
+   Current guidance and the next bend are tracked separately. The current cue
+   uses fresh near-route and player evidence. A short uncertainty interval can
+   hold a previously confirmed instruction without renewing its expiry.
+   *Turn now* requires a tracked approach and fresh road evidence that agrees
+   with the near route. The thresholds are experimental.
+5. **Display.** The banner distinguishes *Go straight*, *Turn*, and *Follow
+   the bend*, with the next bend shown separately. The wheel follows the current
+   cue and remains illustrative. Expired evidence clears the target.
 
 Offline only (not used by the live coach):
 
@@ -189,9 +196,10 @@ choose the capture card or **Open Video File…** from the source menu (labeled
 Under **Guidance**, choose the HUD layout and speed unit that match the footage.
 Open Model Review with **Model Review → Show Model Review** (Shift–Command–R).
 
-`Open Racing Trainer.command` and `Open Guidance Review.command` launch a
+`Open chatgpt.command` and `Open Guidance Review.command` launch a
 packaged test build from the local `data/` folder. That folder is not in the
 repository, so on a fresh clone use Xcode instead.
+`Open Racing Trainer.command` remains a compatibility shortcut to the same app.
 
 ## Route states
 
@@ -208,7 +216,7 @@ while turn timing is unavailable.
 ## Build the route-mask dataset
 
 1. Load a full 16:9 Motorfest recording or use live capture.
-2. In the right sidebar, press the red record button under **Minimap Dataset**.
+2. Open **Input Diagnostics… → Datasets**, then press the red record button under **Minimap Dataset**.
 3. Play footage with waypoint routes, no waypoint, and varied scenery.
 4. Stop recording. Each saved crop gets a same-sized automatic binary mask.
 5. Press the paintbrush button in **Route Mask Dataset**.
@@ -278,9 +286,9 @@ repository. In short:
 7. Validate three complete capture-card sessions on the M4 MacBook Air.
 8. Address public distribution after the dependable local milestone.
 
-Next for turn guidance: one shared bend identity for the banner and wheel,
-direction confirmation across frames, approach tracking that survives brief
-glitches, and scoring missed, false, early and late cues on reviewed intervals.
+The banner and wheel now share the confirmed cue. Next: score missed, false,
+early and late cues on independently reviewed intervals, then evaluate Category 2
+phase timing before promoting it to the live HUD.
 
 Lane/obstacle perception, exact wheel degrees, automated input, other games and
 screen capture are deferred.

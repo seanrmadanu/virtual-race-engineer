@@ -79,10 +79,12 @@ final class ModelReviewStore: ObservableObject {
     var selectedEvent: ModelReviewEvent? { bundle?.events.first { $0.id == selectedID } }
     var playbackEvent: ModelReviewEvent? { bundle?.event(atPlaybackTime: currentTime) }
     var visibleEvents: [ModelReviewEvent] {
-        guard category != .advanced else { return [] }
+        guard category != .advanced || bundle?.linkedTurnSamples != nil else { return [] }
         return (bundle?.events ?? []).filter { event in
             switch filter {
             case "turn_cues": return event.turnGuidance?.isCueStart == true
+            case "corner_phases": return event.cornerTechnique?.isPhaseStart == true
+            case "linked_turns": return event.linkedTurns?.isSequenceStart == true
             case "answered": return event.hasAnswer(in: category)
             case "unknown": return !event.hasAnswer(in: category)
             case "unreviewed": return notes["\(event.id)|\(category.rawValue)"]?.reviewed != true
@@ -108,7 +110,7 @@ final class ModelReviewStore: ObservableObject {
         select(next)
     }
     var currentNote: ModelReviewNote? {
-        guard let event = selectedEvent, category != .advanced else { return nil }
+        guard let event = selectedEvent, category != .advanced || event.linkedTurns != nil else { return nil }
         if let saved = notes["\(event.id)|\(category.rawValue)"] { return saved }
         var note = ModelReviewNote(eventID: event.id, time: event.time, category: category, reviewer: lastReviewer)
         if category == .basicTurns, bundle?.turnGuidanceSamples != nil {
@@ -124,6 +126,8 @@ final class ModelReviewStore: ObservableObject {
 
     var roadAtPlayhead: RoadLineObservation { bundle?.road(atPlaybackTime: currentTime) ?? .empty }
     var turnAtPlayhead: TurnGuidanceSample? { bundle?.turnGuidance(atPlaybackTime: currentTime) }
+    var linkedAtPlayhead: LinkedTurnSample? { bundle?.linkedTurns(atPlaybackTime: currentTime) }
+    var cornerAtPlayhead: CornerTechniqueSample? { bundle?.cornerTechnique(atPlaybackTime: currentTime) }
 
     func start() {
         guard !started else { return }
@@ -143,6 +147,19 @@ final class ModelReviewStore: ObservableObject {
                 : resourceBundle.url(forResource: "ReviewPilot", withExtension: "json")
                     ?? storageDirectory.appendingPathComponent("last-test.review.json"))
         guard FileManager.default.fileExists(atPath: test.path), loadTest(url: test) else { return }
+        if Self.argument("--review-category") == ReviewSkillCategory.cornerTechnique.rawValue,
+           bundle?.cornerTechniqueSamples != nil {
+            category = .cornerTechnique
+            selectedID = bundle?.events.first(where: { $0.cornerTechnique?.isPhaseStart == true })?.id
+                ?? bundle?.events.first?.id
+        }
+        if Self.argument("--review-category") == ReviewSkillCategory.advanced.rawValue,
+           bundle?.linkedTurnSamples != nil {
+            category = .advanced
+            filter = "linked_turns"
+            selectedID = bundle?.events.first(where: { $0.linkedTurns?.isSequenceStart == true && $0.linkedTurns?.distances.count == 2 })?.id
+                ?? bundle?.events.first?.id
+        }
         if let video = Self.argument("--review-video") {
             attachVideo(url: URL(fileURLWithPath: video))
         } else {
@@ -427,6 +444,16 @@ final class ModelReviewStore: ObservableObject {
         select(events.first(where: { $0.time > currentTime + 0.05 }) ?? events[0])
     }
 
+    func nextLinkedSequence() {
+        guard let events = bundle?.events.filter({ $0.linkedTurns?.isSequenceStart == true }), !events.isEmpty else { return }
+        select(events.first(where: { $0.time > currentTime + 0.05 }) ?? events[0])
+    }
+
+    func nextCornerPhase() {
+        guard let events = bundle?.events.filter({ $0.cornerTechnique?.isPhaseStart == true }), !events.isEmpty else { return }
+        select(events.first(where: { $0.time > currentTime + 0.05 }) ?? events[0])
+    }
+
     func togglePlayback() {
         guard videoReady, !isSeeking else { return }
         cancelHistory()
@@ -475,6 +502,8 @@ final class ModelReviewStore: ObservableObject {
             // Compute against the complete log so an Unreviewed filter cannot skip a row.
             let following = events.dropFirst(index + 1).first { event in
                 switch filter {
+                case "corner_phases": return event.cornerTechnique?.isPhaseStart == true
+            case "linked_turns": return event.linkedTurns?.isSequenceStart == true
                 case "answered": return event.hasAnswer(in: category)
                 case "unknown": return !event.hasAnswer(in: category)
                 case "unreviewed": return notes["\(event.id)|\(category.rawValue)"]?.reviewed != true

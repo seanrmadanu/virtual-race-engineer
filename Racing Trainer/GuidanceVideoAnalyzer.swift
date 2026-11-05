@@ -26,7 +26,7 @@ nonisolated enum ReviewFileIdentity {
 /// Native offline analysis, owned serially by this actor. UI never shells out
 /// to Python or reuses predictions from a different recording.
 actor GuidanceVideoAnalyzer {
-    static let version = "guidance-route-v2-road-lines-v1-turn-timing-v1"
+    static let version = "guidance-route-v3-road-lines-v1-turn-timing-v5-corner-technique-v1-linked-turns-v1"
 
     func analyze(url: URL, output: URL, configuration config: GuidanceAnalysisConfiguration,
                  progress: @Sendable (Double, String) async -> Void) async throws -> URL {
@@ -81,6 +81,10 @@ actor GuidanceVideoAnalyzer {
         var availableAt = historyStart, processedPTS = -1.0, events: [ModelReviewEvent] = [], sampleCount = 0
         var turnTracker = TurnGuidanceTracker()
         var turnSamples: [TurnGuidanceSample] = []
+        var linkedTracker = LinkedTurnTracker()
+        var linkedSamples: [LinkedTurnSample] = []
+        var cornerTracker = CornerTechniqueTracker()
+        var cornerSamples: [CornerTechniqueSample] = []
         var roadObservations: [RoadLineObservation] = []
 
         func process(_ sample: CMSampleBuffer, time: Double) throws {
@@ -98,13 +102,21 @@ actor GuidanceVideoAnalyzer {
                 availableAt = observations.values.map(\.completedAt).max() ?? time
                 processedPTS = pts
             }
-            guard let row = history.sample(at: time).last, time >= config.start else { return }
+            guard let row = history.sample(at: time).last else { return }
+            // Warm the phase tracker with the causal lead-in, without publishing
+            // pre-range samples or changing Category 1's existing initialization.
+            let corner = cornerTracker.update(row: row, session: 1)
+            let linked = linkedTracker.update(row: row, session: 1)
+            guard time >= config.start else { return }
             let proposal = SlowdownRules.propose(row: row, calibration: nil, carSetup: "", hud: config.hudProfile)
             let decision = SlowdownEvidenceGuard.apply(proposal, row: row, session: 1, calibration: nil,
                                                        carSetup: "", hud: config.hudProfile)
             let turn = turnTracker.update(row: row, session: 1)
             turnSamples.append(turn)
-            let record = TraceRow(time: time, sourcePTS: pts, observations: row.observations, ages: row.ages, decision: decision, turnGuidance: turn)
+            cornerSamples.append(corner)
+            linkedSamples.append(linked)
+            let record = TraceRow(time: time, sourcePTS: pts, observations: row.observations, ages: row.ages,
+                                  decision: decision, turnGuidance: turn, cornerTechnique: corner, linkedTurns: linked)
             try handle.write(contentsOf: encoder.encode(record)); try handle.write(contentsOf: Data([10]))
             sampleCount += 1
             if let item = row.observations["road"], var road = item.value?.road,
@@ -113,8 +125,8 @@ actor GuidanceVideoAnalyzer {
                 roadObservations.append(road)
             }
             // Keep integer moments for AI comparisons and exact cue onset moments.
-            guard events.isEmpty || tick % 10 == 0 || turn.isCueStart else { return }
-            events.append(Self.reviewEvent(row: row, decision: decision, turn: turn))
+            guard events.isEmpty || tick % 10 == 0 || turn.isCueStart || corner.isPhaseStart || linked.isSequenceStart else { return }
+            events.append(Self.reviewEvent(row: row, decision: decision, turn: turn, corner: corner, linked: linked))
         }
 
         while let sample = readerOutput.copyNextSampleBuffer() {
@@ -145,7 +157,7 @@ actor GuidanceVideoAnalyzer {
         let bundle = ModelReviewBundle(schemaVersion: "racing-trainer-review-v2", title: "\(url.deletingPathExtension().lastPathComponent) · Guidance Test",
             source: ModelReviewSource(filename: url.lastPathComponent, sha256: sourceHash, duration: duration),
             modelSHA256: pipelineHash, predictionsSHA256: try ReviewFileIdentity.hash(trace), events: events,
-            roadObservations: roadObservations, turnGuidanceSamples: turnSamples)
+            roadObservations: roadObservations, turnGuidanceSamples: turnSamples, cornerTechniqueSamples: cornerSamples, linkedTurnSamples: linkedSamples)
         try bundle.validate()
         let bundleURL = output.appendingPathComponent("video.review.json")
         try encoder.encode(config).write(to: output.appendingPathComponent("configuration.json"), options: .atomic)
@@ -156,7 +168,7 @@ actor GuidanceVideoAnalyzer {
     }
 
     nonisolated static func reviewEvent(row: CoachHistoryRow, decision: SlowdownDecision,
-                                        turn: TurnGuidanceSample) -> ModelReviewEvent {
+                                        turn: TurnGuidanceSample, corner: CornerTechniqueSample? = nil, linked: LinkedTurnSample? = nil) -> ModelReviewEvent {
         let time = row.time
         let route = row.observations["geometry"]?.value
         let rawDirection = route?.direction ?? "unknown"
@@ -180,7 +192,7 @@ actor GuidanceVideoAnalyzer {
             diagnostics: ModuleReviewDiagnostics(cue: decision.acceptedCue.rawValue, proposedCue: decision.proposal.cue.rawValue,
                 proposalReason: decision.proposal.reason, origin: decision.proposal.origin, suppressionReasons: decision.suppressionReasons,
                 legacyPolicy: "Not evaluated in this run", modules: diagnostics),
-            roadLines: row.observations["road"]?.value?.road, turnGuidance: turn)
+            roadLines: row.observations["road"]?.value?.road, turnGuidance: turn, cornerTechnique: corner, linkedTurns: linked)
     }
 
     private struct TraceRow: Encodable {
@@ -190,5 +202,7 @@ actor GuidanceVideoAnalyzer {
         let ages: [String: Double]
         let decision: SlowdownDecision
         let turnGuidance: TurnGuidanceSample
+        let cornerTechnique: CornerTechniqueSample
+        let linkedTurns: LinkedTurnSample
     }
 }

@@ -8,6 +8,8 @@ struct ContentView: View {
     @Environment(\.openWindow) private var openWindow
     @AppStorage("guidance.hudProfile") private var guidanceHUDProfile = "motorfest-standard-v1"
     @AppStorage("guidance.speedUnit") private var guidanceSpeedUnit = "km/h"
+    let modelReview: ModelReviewStore
+    @State private var showsDiagnostics = false
     @State private var loadedArgumentVideo = false
     @State private var loadedArgumentStart = false
 
@@ -44,19 +46,15 @@ struct ContentView: View {
     @State private var gameVolume =
         0.80
 
-    @State private var trainerVolume =
-        0.65
-
     @State private var gameMuted =
-        false
-
-    @State private var trainerMuted =
         false
 
     init(
         captureDevices:
-            CaptureDeviceManager
+            CaptureDeviceManager,
+        modelReview: ModelReviewStore
     ) {
+        self.modelReview = modelReview
         _captureDevices =
             ObservedObject(
                 wrappedValue:
@@ -328,6 +326,10 @@ struct ContentView: View {
             }
         }
         .background(Color.black)
+        .sheet(isPresented: $showsDiagnostics) {
+            TrainerDiagnosticsView(analyzer: captureSession.frameAnalyzer,
+                                   datasetRecorder: captureSession.minimapDatasetRecorder)
+        }
 
         .onAppear {
             captureDevices.start()
@@ -573,29 +575,13 @@ struct ContentView: View {
                     showsIndicators:
                         true
                 ) {
-                    AudioMixerView(
-                        gameVolume:
-                            $gameVolume,
-                        trainerVolume:
-                            $trainerVolume,
-                        gameMuted:
-                            $gameMuted,
-                        trainerMuted:
-                            $trainerMuted,
-                        gameAudioAvailable:
-                            isUsingVideoFile
-                            ? videoFilePlayback
-                                .isReady
-                            : captureSession
-                                .isGameAudioAvailable,
-                        gameAudioStatus:
-                            gameAudioStatusText,
-                        analyzer:
-                            captureSession
-                                .frameAnalyzer,
-                        datasetRecorder:
-                            captureSession
-                                .minimapDatasetRecorder
+                    TrainerSidebar(
+                        gameVolume: $gameVolume, gameMuted: $gameMuted,
+                        gameAudioAvailable: isUsingVideoFile ? videoFilePlayback.isReady : captureSession.isGameAudioAvailable,
+                        gameAudioStatus: gameAudioStatusText,
+                        onReviewTurns: { openReview(.basicTurns) },
+                        onReviewTechnique: { openReview(.cornerTechnique) },
+                        onDiagnostics: { showsDiagnostics = true }
                     )
                 }
                 .frame(
@@ -623,11 +609,18 @@ struct ContentView: View {
                     .windowBackgroundColor
             )
         )
-        .navigationTitle("Racing Trainer")
+        .navigationTitle("chatgpt")
         .navigationSubtitle(sourceStatusText)
         .toolbar {
             windowToolbar
         }
+    }
+
+    private func openReview(_ category: ReviewSkillCategory) {
+        videoFilePlayback.pause()
+        modelReview.start()
+        modelReview.category = category
+        openWindow(id: "model-review")
     }
 
     // MARK: - Toolbar
@@ -641,7 +634,7 @@ struct ContentView: View {
 
             Menu {
                 Text("Category 1 · Turns & Timing")
-                Text("Turn timing and wheel angles are experimental")
+                Text("Wheel motion illustrates the confirmed direction")
                 Picker("HUD Layout", selection: $guidanceHUDProfile) {
                     Text("Standard Motorfest HUD").tag("motorfest-standard-v1")
                     Text("Reference Recording HUD").tag("reference-video2-v1")
@@ -657,18 +650,20 @@ struct ContentView: View {
             .help("Turn timing and wheel targets use the selected input HUD layout and speed unit")
 
             Menu {
-                Button("Model Review") {
-                    videoFilePlayback.pause()
-                    openWindow(id: "model-review")
-                }
-                Button("Corner Replay Lab") {
-                    videoFilePlayback.pause()
-                    openWindow(id: "corner-replay-lab")
+                Button("Turns & Timing") { openReview(.basicTurns) }
+                Button("Corner Technique") { openReview(.cornerTechnique) }
+                Divider()
+                Menu("Development Tools") {
+                    Button("Input Diagnostics…") { showsDiagnostics = true }
+                    Button("Corner Replay Lab") {
+                        videoFilePlayback.pause()
+                        openWindow(id: "corner-replay-lab")
+                    }
                 }
             } label: {
-                Label("Replay", systemImage: "play.rectangle.on.rectangle")
+                Label("Review", systemImage: "play.rectangle.on.rectangle")
             }
-            .help("Review timestamped model outputs or compare corner recordings")
+            .help("Review turns and corner phases from recorded gameplay")
 
             Button {
                 refreshAllSources()
@@ -895,7 +890,7 @@ struct ContentView: View {
             "Use a local video for analyzer testing"
 
         alert.informativeText =
-            "A YouTube watch link plays inside YouTube's web player, but it does not give Racing Trainer the raw video frames required by the minimap analyzer. Use a video you own, make a permitted clean full-screen 16:9 recording and open it here, or send the full-screen browser video through OBS Virtual Camera and use Live Capture."
+            "A YouTube watch link plays inside YouTube's web player, but it does not give chatgpt the raw video frames required by the minimap analyzer. Use a video you own, make a permitted clean full-screen 16:9 recording and open it here, or send the full-screen browser video through OBS Virtual Camera and use Live Capture."
 
         alert.addButton(
             withTitle:
@@ -4960,781 +4955,5 @@ struct DatasetMetadataCounterView:
             )
         )
         .monospacedDigit()
-    }
-}
-
-// Kept for compatibility with any older metadata already on disk. The new
-// route-mask workflow above is the user-facing dataset tool.
-
-struct LegacyDatasetMetadataCounterView:
-    View {
-
-    @ObservedObject var store:
-        DatasetMetadataStore
-
-    let isOverlay:
-        Bool
-
-    private var primaryText:
-        Color {
-
-        isOverlay
-        ? .white
-        : .primary
-    }
-
-    private var secondaryText:
-        Color {
-
-        isOverlay
-        ? Color.white.opacity(
-            0.66
-        )
-        : .secondary
-    }
-
-    var body:
-        some View {
-
-        VStack(
-            alignment: .leading,
-            spacing: 6
-        ) {
-
-            HStack(
-                spacing: 8
-            ) {
-
-                Text(
-                    "DATASET AUDIT"
-                )
-                .font(
-                    .system(
-                        size: 12,
-                        weight: .bold,
-                        design: .monospaced
-                    )
-                )
-                .foregroundStyle(
-                    primaryText
-                )
-
-                Spacer()
-
-                if !isOverlay {
-
-                    DatasetLabelerLaunchButton(
-                        store:
-                            store
-                    )
-                    .foregroundStyle(
-                        primaryText
-                    )
-                }
-
-                Button {
-
-                    store.refresh()
-
-                } label: {
-
-                    Image(
-                        systemName:
-                            "arrow.clockwise"
-                    )
-                    .font(
-                        .system(
-                            size: 10,
-                            weight: .semibold
-                        )
-                    )
-                }
-                .buttonStyle(
-                    .plain
-                )
-                .foregroundStyle(
-                    primaryText
-                )
-                .help(
-                    "Refresh Dataset Metadata Counts"
-                )
-            }
-
-            Divider()
-                .overlay(
-                    dividerColor
-                )
-
-            auditSummaryRow(
-                title:
-                    "Raw Images",
-                value:
-                    "\(store.rawImageCount)"
-            )
-
-            auditSummaryRow(
-                title:
-                    "Labeled",
-                value:
-                    "\(store.labeledImageCount)"
-            )
-
-            auditSummaryRow(
-                title:
-                    "Unlabeled",
-                value:
-                    "\(store.unlabeledImageCount)"
-            )
-
-            Divider()
-                .overlay(
-                    dividerColor
-                )
-
-            sectionLabel(
-                "MINIMAP STATE"
-            )
-
-            ForEach(
-                DatasetMinimapState
-                    .allCases
-            ) { state in
-
-                targetRow(
-                    title:
-                        state
-                            .displayName,
-                    count:
-                        store.count(
-                            for:
-                                state
-                        ),
-                    target:
-                        state
-                            .targetCount
-                )
-            }
-
-            Divider()
-                .overlay(
-                    dividerColor
-                )
-
-            sectionLabel(
-                "ROUTE STATE"
-            )
-
-            ForEach(
-                DatasetRouteState
-                    .allCases
-            ) { state in
-
-                if let target =
-                        state
-                            .targetCount {
-
-                    targetRow(
-                        title:
-                            state
-                                .displayName,
-                        count:
-                            store.count(
-                                for:
-                                    state
-                            ),
-                        target:
-                            target
-                    )
-
-                } else {
-
-                    countOnlyRow(
-                        title:
-                            state
-                                .displayName,
-                        count:
-                            store.count(
-                                for:
-                                    state
-                            )
-                    )
-                }
-            }
-
-            Divider()
-                .overlay(
-                    dividerColor
-                )
-
-            sectionLabel(
-                "ROUTE SHAPE"
-            )
-
-            ForEach(
-                DatasetRouteCategory
-                    .allCases
-            ) { category in
-
-                targetRow(
-                    title:
-                        category
-                            .displayName,
-                    count:
-                        store.count(
-                            for:
-                                category
-                        ),
-                    target:
-                        category
-                            .targetCount
-                )
-            }
-
-            Divider()
-                .overlay(
-                    dividerColor
-                )
-
-            sectionLabel(
-                "CONDITIONS"
-            )
-
-            ForEach(
-                DatasetConditionCategory
-                    .allCases
-            ) { category in
-
-                targetRow(
-                    title:
-                        category
-                            .displayName,
-                    count:
-                        store.count(
-                            for:
-                                category
-                        ),
-                    target:
-                        category
-                            .targetCount
-                )
-            }
-
-            if let errorMessage =
-                    store
-                        .lastErrorMessage {
-
-                Divider()
-                    .overlay(
-                        dividerColor
-                    )
-
-                Text(
-                    errorMessage
-                )
-                .font(
-                    .system(
-                        size: 9,
-                        design: .monospaced
-                    )
-                )
-                .foregroundStyle(
-                    .red
-                )
-                .lineLimit(
-                    3
-                )
-            }
-
-            Text(
-                store.labeledImageCount == 0
-                ? "Coverage counts begin when complete metadata labels are added."
-                : "Targets are minimum coverage goals. Missing / invalid frames are useful negative examples."
-            )
-            .font(
-                .system(
-                    size: 9,
-                    design: .monospaced
-                )
-            )
-            .foregroundStyle(
-                secondaryText
-            )
-            .fixedSize(
-                horizontal: false,
-                vertical: true
-            )
-            .padding(
-                .top,
-                2
-            )
-        }
-        .padding(
-            isOverlay
-            ? 12
-            : 0
-        )
-        .frame(
-            width:
-                isOverlay
-                ? 330
-                : nil,
-            alignment:
-                .leading
-        )
-        .background(
-            isOverlay
-            ? Color.black.opacity(
-                0.72
-            )
-            : Color.clear,
-            in:
-                RoundedRectangle(
-                    cornerRadius: 10
-                )
-        )
-        .overlay(
-            RoundedRectangle(
-                cornerRadius: 10
-            )
-            .stroke(
-                isOverlay
-                ? Color.white.opacity(
-                    0.18
-                )
-                : Color.clear,
-                lineWidth: 1
-            )
-        )
-        .shadow(
-            color:
-                isOverlay
-                ? Color.black.opacity(
-                    0.35
-                )
-                : Color.clear,
-            radius:
-                isOverlay
-                ? 3
-                : 0
-        )
-    }
-
-    // MARK: Divider
-
-    private var dividerColor:
-        Color {
-
-        isOverlay
-        ? Color.white.opacity(
-            0.22
-        )
-        : Color.secondary.opacity(
-            0.25
-        )
-    }
-
-    // MARK: Section Label
-
-    private func sectionLabel(
-        _ title:
-            String
-    ) -> some View {
-
-        Text(
-            title
-        )
-        .font(
-            .system(
-                size: 9,
-                weight: .bold,
-                design: .monospaced
-            )
-        )
-        .foregroundStyle(
-            secondaryText
-        )
-    }
-
-    // MARK: Summary Row
-
-    private func auditSummaryRow(
-        title:
-            String,
-        value:
-            String
-    ) -> some View {
-
-        HStack(
-            spacing: 8
-        ) {
-
-            Text(
-                title
-            )
-            .foregroundStyle(
-                secondaryText
-            )
-
-            Spacer()
-
-            Text(
-                value
-            )
-            .foregroundStyle(
-                primaryText
-            )
-            .fontWeight(
-                .semibold
-            )
-        }
-        .font(
-            .system(
-                size: 10,
-                design: .monospaced
-            )
-        )
-        .monospacedDigit()
-    }
-
-    // MARK: Target Row
-
-    private func targetRow(
-        title:
-            String,
-        count:
-            Int,
-        target:
-            Int
-    ) -> some View {
-
-        let complete =
-            count >=
-            target
-
-        let missing =
-            max(
-                target -
-                count,
-                0
-            )
-
-        return HStack(
-            spacing: 8
-        ) {
-
-            Text(
-                title
-            )
-            .foregroundStyle(
-                secondaryText
-            )
-            .lineLimit(
-                1
-            )
-
-            Spacer()
-
-            Text(
-                "\(count) / \(target)"
-            )
-            .foregroundStyle(
-                primaryText
-            )
-
-            Text(
-                complete
-                ? "✓"
-                : "+\(missing)"
-            )
-            .foregroundStyle(
-                complete
-                ? Color.green
-                : Color.orange
-            )
-            .frame(
-                width: 28,
-                alignment: .trailing
-            )
-        }
-        .font(
-            .system(
-                size: 10,
-                design: .monospaced
-            )
-        )
-        .monospacedDigit()
-    }
-
-    // MARK: Count Only Row
-
-    private func countOnlyRow(
-        title:
-            String,
-        count:
-            Int
-    ) -> some View {
-
-        HStack(
-            spacing: 8
-        ) {
-
-            Text(
-                title
-            )
-            .foregroundStyle(
-                secondaryText
-            )
-            .lineLimit(
-                1
-            )
-
-            Spacer()
-
-            Text(
-                "\(count)"
-            )
-            .foregroundStyle(
-                primaryText
-            )
-            .fontWeight(
-                .semibold
-            )
-
-            Text(
-                "—"
-            )
-            .foregroundStyle(
-                secondaryText
-            )
-            .frame(
-                width: 28,
-                alignment: .trailing
-            )
-        }
-        .font(
-            .system(
-                size: 10,
-                design: .monospaced
-            )
-        )
-        .monospacedDigit()
-    }
-}
-
-// MARK: - Audio Mixer
-
-struct AudioMixerView: View {
-    @Binding var gameVolume: Double
-    @Binding var trainerVolume: Double
-    @Binding var gameMuted: Bool
-    @Binding var trainerMuted: Bool
-
-    let gameAudioAvailable: Bool
-    let gameAudioStatus: String
-
-    @ObservedObject var analyzer: FrameAnalyzer
-    @ObservedObject var datasetRecorder: MinimapDatasetRecorder
-
-    @AppStorage("sidebar.showsTools")
-    private var showsTools = false
-
-    var body: some View {
-        VStack(
-            alignment: .leading,
-            spacing: 16
-        ) {
-            Text("Audio")
-                .font(.headline)
-
-            AudioChannelRow(
-                title: "Game Audio",
-                statusText: gameAudioStatus,
-                volume: $gameVolume,
-                isMuted: $gameMuted,
-                controlsEnabled: gameAudioAvailable
-            )
-
-            AudioChannelRow(
-                title: "Trainer Voice",
-                statusText: "Not connected yet",
-                volume: $trainerVolume,
-                isMuted: $trainerMuted,
-                controlsEnabled: false
-            )
-
-            Divider()
-
-            // Bench tools aren't needed while driving, so they start collapsed.
-            DisclosureGroup(
-                isExpanded:
-                    $showsTools.animation(.easeOut(duration: 0.2))
-            ) {
-                VStack(
-                    alignment: .leading,
-                    spacing: 18
-                ) {
-                    toolSection("Route Detection") {
-                        RouteDetectionStatusBadge(
-                            analyzer: analyzer
-                        )
-                    }
-
-                    toolSection("Frame Analyzer") {
-                        FrameDebugView(
-                            analyzer: analyzer,
-                            maximumHeight: 1_200,
-                            allowsDragging: false,
-                            isEmbedded: true
-                        )
-                    }
-
-                    toolSection("Minimap Dataset") {
-                        MinimapDatasetControls(
-                            recorder: datasetRecorder
-                        )
-                    }
-
-                    toolSection("Route Mask Dataset") {
-                        DatasetMetadataCounterView(
-                            store:
-                                datasetRecorder
-                                    .routeMaskDatasetStore,
-                            isOverlay: false
-                        )
-                    }
-                }
-                .padding(.top, 12)
-            } label: {
-                Label(
-                    "Tools & Diagnostics",
-                    systemImage: "wrench.and.screwdriver"
-                )
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    withAnimation(.easeOut(duration: 0.2)) {
-                        showsTools.toggle()
-                    }
-                }
-            }
-
-            Spacer(minLength: 0)
-        }
-        .padding(20)
-        .frame(
-            maxWidth: .infinity,
-            alignment: .topLeading
-        )
-    }
-
-    private func toolSection<Content: View>(
-        _ title: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        VStack(
-            alignment: .leading,
-            spacing: 8
-        ) {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
-
-            content()
-        }
-    }
-}
-
-// MARK: - Audio Channel
-
-struct AudioChannelRow: View {
-    let title:
-        String
-
-    let statusText:
-        String
-
-    @Binding var volume:
-        Double
-
-    @Binding var isMuted:
-        Bool
-
-    let controlsEnabled:
-        Bool
-
-    var body: some View {
-        VStack(
-            alignment: .leading,
-            spacing: 8
-        ) {
-            Text(title)
-                .font(
-                    .system(
-                        size: 14,
-                        weight: .semibold
-                    )
-                )
-
-            Text(statusText)
-                .font(.caption)
-                .foregroundStyle(
-                    controlsEnabled
-                    ? .secondary
-                    : .tertiary
-                )
-                .lineLimit(2)
-
-            HStack(spacing: 10) {
-                Button {
-                    isMuted.toggle()
-                } label: {
-                    Image(
-                        systemName:
-                            isMuted
-                            ? "speaker.slash.fill"
-                            : "speaker.wave.2.fill"
-                    )
-                    .frame(width: 22)
-                }
-                .buttonStyle(.plain)
-                .disabled(
-                    !controlsEnabled
-                )
-                .help(
-                    isMuted
-                    ? "Unmute \(title)"
-                    : "Mute \(title)"
-                )
-
-                Slider(
-                    value:
-                        $volume,
-                    in:
-                        0...1
-                )
-                .disabled(
-                    isMuted ||
-                    !controlsEnabled
-                )
-
-                Text(
-                    "\(Int(volume * 100))%"
-                )
-                .font(
-                    .system(
-                        size: 12,
-                        design: .monospaced
-                    )
-                )
-                .foregroundStyle(
-                    .secondary
-                )
-                .frame(
-                    width: 38,
-                    alignment: .trailing
-                )
-            }
-        }
     }
 }

@@ -1059,7 +1059,8 @@ final class FrameAnalyzer:
             let confirmedUnit = detectedSpeedUnitStorage?.lowercased()
             let liveGuidance = liveTurnPipeline.process(coach: coachResult,
                 minimapVisible: result.minimapVisible, minimapConfidence: result.minimapConfidence,
-                speed: currentSpeed, speedUnit: confirmedUnit, session: currentGeneration, completedAt: completionUptime)
+                speed: currentSpeed, speedUnit: confirmedUnit, session: currentGeneration, completedAt: completionUptime,
+                road: road)
             coachResult = coachResult.applying(liveGuidance, at: completionUptime)
 
             let resultSequence =

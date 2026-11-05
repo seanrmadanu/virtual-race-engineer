@@ -16,10 +16,13 @@ import Foundation
         let hasTiming = store.bundle?.turnGuidanceSamples != nil
         if hasTiming {
             precondition(store.category == .basicTurns && store.filter == "all")
-            precondition(store.selectedEvent?.turnGuidance?.stage == .turnNow)
+            let expectedFirst = store.bundle?.events.first(where: { $0.turnGuidance?.stage == .turnNow && $0.turnGuidance?.isCueStart == true })
+                ?? store.bundle?.events.first
+            precondition(store.selectedEvent?.id == expectedFirst?.id)
             precondition(store.currentNote?.turnTiming != nil)
             store.filter = "turn_cues"
             precondition(!store.visibleEvents.isEmpty && store.visibleEvents.allSatisfy { $0.turnGuidance?.isCueStart == true })
+            store.select(store.visibleEvents[0])
             store.editNote { note in
                 note.reviewer = "Integration fixture"
                 note.verdict = .correct

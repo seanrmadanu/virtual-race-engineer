@@ -2,6 +2,61 @@ import CoreVideo
 import XCTest
 
 final class GuidanceReviewUpdateTests: XCTestCase {
+    private func mapFrame(centerY: Double, arrowHeight: Double, rectangle: Bool = false,
+                          eventOverlay: Bool = false, hasRoute: Bool = true) -> CVPixelBuffer {
+        var result: CVPixelBuffer?
+        CVPixelBufferCreate(nil, 320, 320, kCVPixelFormatType_32BGRA, nil, &result)
+        let buffer = result!
+        CVPixelBufferLockBaseAddress(buffer, [])
+        let bytes = CVPixelBufferGetBaseAddress(buffer)!.assumingMemoryBound(to: UInt8.self)
+        let stride = CVPixelBufferGetBytesPerRow(buffer)
+        for y in 0..<320 { for x in 0..<320 {
+            let nx = Double(x) / 320, ny = Double(y) / 320
+            let fy = (ny - (centerY - arrowHeight * 0.60)) / arrowHeight
+            let dx = abs(nx - 0.63)
+            let marker = rectangle ? (abs(ny - centerY) < arrowHeight / 2 && dx < arrowHeight / 2)
+                : ((0...1).contains(fy) && dx < arrowHeight * 0.48 * fy
+                   && !(fy > 0.72 && dx < (fy - 0.72) * arrowHeight * 0.65))
+            let route = hasRoute && ny > 0.14 && ny < centerY - arrowHeight * 0.60 && dx < 0.007
+            let red = eventOverlay && ny > centerY + arrowHeight * 0.55
+                && ny < centerY + arrowHeight * 1.2 && dx < arrowHeight * 0.5
+            let i = y * stride + x * 4
+            bytes[i] = marker ? 230 : 30
+            bytes[i+1] = marker ? 220 : route ? 230 : 30
+            bytes[i+2] = route || red ? 240 : 30
+            bytes[i+3] = 255
+        } }
+        CVPixelBufferUnlockBaseAddress(buffer, [])
+        return buffer
+    }
+
+    func testPlayerArrowSurvivesMinimapZoomAndPositionChange() {
+        for (y, height) in [(0.80, 0.105), (0.56, 0.055)] {
+            let result = MinimapRouteDetector().analyze(pixelBuffer: mapFrame(centerY: y, arrowHeight: height),
+                normalizedCropRect: CGRect(x: 0, y: 0, width: 1, height: 1))
+            XCTAssertTrue(result.minimapVisible)
+            XCTAssertGreaterThanOrEqual(result.minimapConfidence, 0.52)
+            XCTAssertEqual(result.playerAnchor?.x ?? 0, 0.63, accuracy: 0.02)
+            XCTAssertEqual(result.playerAnchor?.y ?? 0, y, accuracy: 0.03)
+        }
+    }
+
+    func testSmallCyanRectangleDoesNotReceiveArrowConfidence() {
+        let result = MinimapRouteDetector().analyze(pixelBuffer: mapFrame(centerY: 0.56, arrowHeight: 0.035, rectangle: true),
+            normalizedCropRect: CGRect(x: 0, y: 0, width: 1, height: 1))
+        XCTAssertLessThan(result.minimapConfidence, 0.52)
+    }
+
+    func testOccludedMarkerRequiresBothCurrentRouteAndEventPixels() {
+        for (red, route) in [(true, true), (false, true), (true, false)] {
+            let result = MinimapRouteDetector().analyze(pixelBuffer:
+                mapFrame(centerY: 0.56, arrowHeight: 0.035, rectangle: true, eventOverlay: red, hasRoute: route),
+                normalizedCropRect: CGRect(x: 0, y: 0, width: 1, height: 1))
+            if red && route { XCTAssertGreaterThanOrEqual(result.minimapConfidence, 0.52) }
+            else { XCTAssertLessThan(result.minimapConfidence, 0.52) }
+        }
+    }
+
     private func paintedFrame(left: Bool, right: Bool, hudOnly: Bool = false) -> CVPixelBuffer {
         var result: CVPixelBuffer?
         CVPixelBufferCreate(nil, 640, 360, kCVPixelFormatType_32BGRA, nil, &result)

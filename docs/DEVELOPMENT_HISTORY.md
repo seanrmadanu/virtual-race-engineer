@@ -71,8 +71,8 @@ as `ec804eb`.
 | Sep 29 | Guidance model implementation plan v1.0 | doc: [GUIDANCE_MODEL_IMPLEMENTATION.md](GUIDANCE_MODEL_IMPLEMENTATION.md) |
 
 A separate Codex copy was made on September 29 to develop a "Reference Video
-Lab". That work stayed in the separate copy and **is not part of this
-repository**.
+Lab". Its source snapshot is available on the
+[Reference Video Lab experiment branch](https://github.com/seanrmadanu/virtual-race-engineer/tree/experiments/reference-video-lab).
 
 ## Guidance research and offline tooling (September 30 – October 1, 2026)
 
@@ -138,6 +138,26 @@ At the time of the October 13 commits:
 - **Excluded:** Afternoon edits that pass the player's minimap position into
   route snapshots were left uncommitted. They are the start of the tracker fix
   and were unfinished.
+
+## Local guidance improvements — October 13–21, 2026
+
+These dates come from the dated change logs and saved replay evidence. The
+source snapshots were published on November 5, 2026.
+
+| Date | Work | Source |
+| --- | --- | --- |
+| Oct 13–14 | Accounted for the gap between the player marker and the first visible route point. Separated the current road instruction from the upcoming bend and improved recovery when the minimap zooms out. | [Guidance review update](GUIDANCE_REVIEW_UPDATE.md) |
+| Oct 14–15 | Added white/yellow paint detection and smoother illustrative steering. Category 1 held confirmed instructions briefly through uncertainty and distinguished turning, following a bend, and going straight. | [Guidance review update](GUIDANCE_REVIEW_UPDATE.md), [Claude change log](CLAUDE_CHANGELOG.md) |
+| Oct 15 | Added Category 2 corner-phase review, separated practice, review, and diagnostics, and renamed the local app `chatgpt`. Added Category 3 linked-turn review. The linked-turn build passed 151 Release XCTest tests. Both new categories run on recorded video. | [Shared change log](AGENT_CHANGELOG.md), [Corner Technique](CORNER_TECHNIQUE.md), [Linked Turns](LINKED_TURNS.md) |
+| Oct 15 | Claude developed frame-to-frame road-marking tracking, smoother lane fill, and wheel stabilization in a separate prototype. | [Claude change log](CLAUDE_CHANGELOG.md), [road-tracking experiment branch](https://github.com/seanrmadanu/virtual-race-engineer/tree/experiments/claude-road-tracking) |
+| Oct 18 | Improved Category 1 confirmation, kept upcoming directions stable through small route kinks, and added clearer unavailable reasons. The local package passed 155 Release XCTest tests. | Saved local comparison and test logs under `data/guidance/category1-reliability-20261018/` |
+| Oct 20–21 | Reviewed the remaining coverage gap and opened the local package with OBS Virtual Camera. The app was waiting for minimap input. | Project status review and local launch check |
+
+On October 18, instruction changes fell from 14 to 6 in the Video 2 clip and
+from 17 to 8 in the Video 1 clip. The full Video 2 replay had 2,052 unavailable
+samples out of 6,193 and zero *Turn Now* cue starts. These results measure
+stability and coverage. Exact timing still needs independently reviewed
+intervals and a live capture-card evaluation.
 
 ## Open problems
 

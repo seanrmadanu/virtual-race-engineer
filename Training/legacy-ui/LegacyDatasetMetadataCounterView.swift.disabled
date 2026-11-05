@@ -1,0 +1,560 @@
+import SwiftUI
+
+// Kept for compatibility with any older metadata already on disk. The new
+// route-mask workflow above is the user-facing dataset tool.
+
+struct LegacyDatasetMetadataCounterView:
+    View {
+
+    @ObservedObject var store:
+        DatasetMetadataStore
+
+    let isOverlay:
+        Bool
+
+    private var primaryText:
+        Color {
+
+        isOverlay
+        ? .white
+        : .primary
+    }
+
+    private var secondaryText:
+        Color {
+
+        isOverlay
+        ? Color.white.opacity(
+            0.66
+        )
+        : .secondary
+    }
+
+    var body:
+        some View {
+
+        VStack(
+            alignment: .leading,
+            spacing: 6
+        ) {
+
+            HStack(
+                spacing: 8
+            ) {
+
+                Text(
+                    "DATASET AUDIT"
+                )
+                .font(
+                    .system(
+                        size: 12,
+                        weight: .bold,
+                        design: .monospaced
+                    )
+                )
+                .foregroundStyle(
+                    primaryText
+                )
+
+                Spacer()
+
+                if !isOverlay {
+
+                    DatasetLabelerLaunchButton(
+                        store:
+                            store
+                    )
+                    .foregroundStyle(
+                        primaryText
+                    )
+                }
+
+                Button {
+
+                    store.refresh()
+
+                } label: {
+
+                    Image(
+                        systemName:
+                            "arrow.clockwise"
+                    )
+                    .font(
+                        .system(
+                            size: 10,
+                            weight: .semibold
+                        )
+                    )
+                }
+                .buttonStyle(
+                    .plain
+                )
+                .foregroundStyle(
+                    primaryText
+                )
+                .help(
+                    "Refresh Dataset Metadata Counts"
+                )
+            }
+
+            Divider()
+                .overlay(
+                    dividerColor
+                )
+
+            auditSummaryRow(
+                title:
+                    "Raw Images",
+                value:
+                    "\(store.rawImageCount)"
+            )
+
+            auditSummaryRow(
+                title:
+                    "Labeled",
+                value:
+                    "\(store.labeledImageCount)"
+            )
+
+            auditSummaryRow(
+                title:
+                    "Unlabeled",
+                value:
+                    "\(store.unlabeledImageCount)"
+            )
+
+            Divider()
+                .overlay(
+                    dividerColor
+                )
+
+            sectionLabel(
+                "MINIMAP STATE"
+            )
+
+            ForEach(
+                DatasetMinimapState
+                    .allCases
+            ) { state in
+
+                targetRow(
+                    title:
+                        state
+                            .displayName,
+                    count:
+                        store.count(
+                            for:
+                                state
+                        ),
+                    target:
+                        state
+                            .targetCount
+                )
+            }
+
+            Divider()
+                .overlay(
+                    dividerColor
+                )
+
+            sectionLabel(
+                "ROUTE STATE"
+            )
+
+            ForEach(
+                DatasetRouteState
+                    .allCases
+            ) { state in
+
+                if let target =
+                        state
+                            .targetCount {
+
+                    targetRow(
+                        title:
+                            state
+                                .displayName,
+                        count:
+                            store.count(
+                                for:
+                                    state
+                            ),
+                        target:
+                            target
+                    )
+
+                } else {
+
+                    countOnlyRow(
+                        title:
+                            state
+                                .displayName,
+                        count:
+                            store.count(
+                                for:
+                                    state
+                            )
+                    )
+                }
+            }
+
+            Divider()
+                .overlay(
+                    dividerColor
+                )
+
+            sectionLabel(
+                "ROUTE SHAPE"
+            )
+
+            ForEach(
+                DatasetRouteCategory
+                    .allCases
+            ) { category in
+
+                targetRow(
+                    title:
+                        category
+                            .displayName,
+                    count:
+                        store.count(
+                            for:
+                                category
+                        ),
+                    target:
+                        category
+                            .targetCount
+                )
+            }
+
+            Divider()
+                .overlay(
+                    dividerColor
+                )
+
+            sectionLabel(
+                "CONDITIONS"
+            )
+
+            ForEach(
+                DatasetConditionCategory
+                    .allCases
+            ) { category in
+
+                targetRow(
+                    title:
+                        category
+                            .displayName,
+                    count:
+                        store.count(
+                            for:
+                                category
+                        ),
+                    target:
+                        category
+                            .targetCount
+                )
+            }
+
+            if let errorMessage =
+                    store
+                        .lastErrorMessage {
+
+                Divider()
+                    .overlay(
+                        dividerColor
+                    )
+
+                Text(
+                    errorMessage
+                )
+                .font(
+                    .system(
+                        size: 9,
+                        design: .monospaced
+                    )
+                )
+                .foregroundStyle(
+                    .red
+                )
+                .lineLimit(
+                    3
+                )
+            }
+
+            Text(
+                store.labeledImageCount == 0
+                ? "Coverage counts begin when complete metadata labels are added."
+                : "Targets are minimum coverage goals. Missing / invalid frames are useful negative examples."
+            )
+            .font(
+                .system(
+                    size: 9,
+                    design: .monospaced
+                )
+            )
+            .foregroundStyle(
+                secondaryText
+            )
+            .fixedSize(
+                horizontal: false,
+                vertical: true
+            )
+            .padding(
+                .top,
+                2
+            )
+        }
+        .padding(
+            isOverlay
+            ? 12
+            : 0
+        )
+        .frame(
+            width:
+                isOverlay
+                ? 330
+                : nil,
+            alignment:
+                .leading
+        )
+        .background(
+            isOverlay
+            ? Color.black.opacity(
+                0.72
+            )
+            : Color.clear,
+            in:
+                RoundedRectangle(
+                    cornerRadius: 10
+                )
+        )
+        .overlay(
+            RoundedRectangle(
+                cornerRadius: 10
+            )
+            .stroke(
+                isOverlay
+                ? Color.white.opacity(
+                    0.18
+                )
+                : Color.clear,
+                lineWidth: 1
+            )
+        )
+        .shadow(
+            color:
+                isOverlay
+                ? Color.black.opacity(
+                    0.35
+                )
+                : Color.clear,
+            radius:
+                isOverlay
+                ? 3
+                : 0
+        )
+    }
+
+    // MARK: Divider
+
+    private var dividerColor:
+        Color {
+
+        isOverlay
+        ? Color.white.opacity(
+            0.22
+        )
+        : Color.secondary.opacity(
+            0.25
+        )
+    }
+
+    // MARK: Section Label
+
+    private func sectionLabel(
+        _ title:
+            String
+    ) -> some View {
+
+        Text(
+            title
+        )
+        .font(
+            .system(
+                size: 9,
+                weight: .bold,
+                design: .monospaced
+            )
+        )
+        .foregroundStyle(
+            secondaryText
+        )
+    }
+
+    // MARK: Summary Row
+
+    private func auditSummaryRow(
+        title:
+            String,
+        value:
+            String
+    ) -> some View {
+
+        HStack(
+            spacing: 8
+        ) {
+
+            Text(
+                title
+            )
+            .foregroundStyle(
+                secondaryText
+            )
+
+            Spacer()
+
+            Text(
+                value
+            )
+            .foregroundStyle(
+                primaryText
+            )
+            .fontWeight(
+                .semibold
+            )
+        }
+        .font(
+            .system(
+                size: 10,
+                design: .monospaced
+            )
+        )
+        .monospacedDigit()
+    }
+
+    // MARK: Target Row
+
+    private func targetRow(
+        title:
+            String,
+        count:
+            Int,
+        target:
+            Int
+    ) -> some View {
+
+        let complete =
+            count >=
+            target
+
+        let missing =
+            max(
+                target -
+                count,
+                0
+            )
+
+        return HStack(
+            spacing: 8
+        ) {
+
+            Text(
+                title
+            )
+            .foregroundStyle(
+                secondaryText
+            )
+            .lineLimit(
+                1
+            )
+
+            Spacer()
+
+            Text(
+                "\(count) / \(target)"
+            )
+            .foregroundStyle(
+                primaryText
+            )
+
+            Text(
+                complete
+                ? "✓"
+                : "+\(missing)"
+            )
+            .foregroundStyle(
+                complete
+                ? Color.green
+                : Color.orange
+            )
+            .frame(
+                width: 28,
+                alignment: .trailing
+            )
+        }
+        .font(
+            .system(
+                size: 10,
+                design: .monospaced
+            )
+        )
+        .monospacedDigit()
+    }
+
+    // MARK: Count Only Row
+
+    private func countOnlyRow(
+        title:
+            String,
+        count:
+            Int
+    ) -> some View {
+
+        HStack(
+            spacing: 8
+        ) {
+
+            Text(
+                title
+            )
+            .foregroundStyle(
+                secondaryText
+            )
+            .lineLimit(
+                1
+            )
+
+            Spacer()
+
+            Text(
+                "\(count)"
+            )
+            .foregroundStyle(
+                primaryText
+            )
+            .fontWeight(
+                .semibold
+            )
+
+            Text(
+                "—"
+            )
+            .foregroundStyle(
+                secondaryText
+            )
+            .frame(
+                width: 28,
+                alignment: .trailing
+            )
+        }
+        .font(
+            .system(
+                size: 10,
+                design: .monospaced
+            )
+        )
+        .monospacedDigit()
+    }
+}
+

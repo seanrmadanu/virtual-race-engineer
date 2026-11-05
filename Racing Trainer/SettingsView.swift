@@ -90,7 +90,7 @@ struct SettingsView: View {
                         .cameraPermissionDenied {
 
                         Text(
-                            "Camera access is denied. Enable Racing Trainer in System Settings → Privacy & Security → Camera."
+                            "Camera access is denied. Enable chatgpt in System Settings → Privacy & Security → Camera."
                         )
                         .font(.caption)
                         .foregroundStyle(.red)
@@ -155,7 +155,7 @@ struct SettingsView: View {
                         .audioPermissionDenied {
 
                         Text(
-                            "Audio access is denied. Enable Racing Trainer in System Settings → Privacy & Security → Microphone."
+                            "Audio access is denied. Enable chatgpt in System Settings → Privacy & Security → Microphone."
                         )
                         .font(.caption)
                         .foregroundStyle(.red)

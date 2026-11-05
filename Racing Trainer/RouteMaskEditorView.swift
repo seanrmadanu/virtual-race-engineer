@@ -61,7 +61,7 @@ final class RouteMaskEditorWindowController {
             rootView: RouteMaskEditorView(store: store)
         )
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "Racing Trainer — Route Mask Reviewer"
+        window.title = "chatgpt — Route Mask Reviewer"
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         window.setContentSize(NSSize(width: 1260, height: 820))
         window.minSize = NSSize(width: 980, height: 680)
