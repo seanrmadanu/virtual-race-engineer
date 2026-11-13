@@ -16,6 +16,71 @@ Every change Claude makes to this project is logged here, newest first, so ChatG
 
 ---
 
+## 2026-11-13 (later) — A paused test video keeps its last instruction (Claude's copy only)
+
+**Where:** `Racing Trainer-3-claude/` only. **Nothing in `Racing Trainer-3/` changed** except this log.
+
+**Why:** Sean asked why guidance turns "unavailable" as soon as a test video is paused. Cause: no frames arrive, so the cue passes its 0.65 s expiry. That is right for a frozen capture feed and unhelpful for a paused recording.
+
+**Change:** while a **video file** is paused (`isUsingVideoFile && isReady && !isPlaying`), the HUD judges the latest cue at the moment it was produced instead of at the wall clock. The card, wheel and road lines stay as they were on the paused frame, and the card shows a "Paused" tag. Live capture is never treated as paused, so a stalled feed still clears guidance. A cue that was already unavailable stays unavailable. The setup checklist shows "Video paused" instead of a missing signal.
+
+| File | Change |
+| --- | --- |
+| `SteeringWheelMotion.swift` | New `GuidanceDisplayClock.time(now:guidance:isPaused:)`. |
+| `TrainerCoachHUD.swift` | `isPaused` parameter; card, wheel target and wheel accent use the display clock; "Paused" tag on the navigation card. |
+| `RoadLineTracker.swift`, `RoadLineOverlay.swift` | `RoadOverlayAnimator.frame(…, hold:)` freezes the drawn lines; the overlay passes `isPaused`. |
+| `ContentView.swift` | `isVideoPaused`, passed to the HUD and the checklist overlay. |
+| `SetupChecklist.swift`, `SetupChecklistOverlay.swift` | `SetupSignals.paused`. |
+| `RoadTrackingTests.swift`, `SetupChecklistTests.swift` | +2 tests. |
+
+No tracker, selector, policy or `FrameAnalyzer` change; the evidence rules are untouched. **Verified:** 160 tests pass in Debug and Release. **Not verified:** the paused card inside the running app. Release app: `data/guidance/setup-checklist-20261112/app-claude-v3/Claude.app`.
+
+Also confirmed while answering: on Video 2 at 170–216 s, 41 of 460 samples are unavailable, from the event marker covering the player arrow at about 195.5–198.2 s and the stop in the tunnel at 214 s.
+
+---
+
+## 2026-11-13 — Setup checklist that the app ticks by reading the game's screens (Claude's copy only)
+
+**Where:** `Racing Trainer-3-claude/` only. **Nothing in `Racing Trainer-3/` changed** except this log. This replaces the November 12 version, which had the player pick and type the answers. Sean corrected that: the app must tick the items itself, and the player only moves through the game's menus until everything is read.
+
+**What it does:**
+
+- A **Setup** button sits under the session timer. The panel opens by itself once, if setup is incomplete 2.5 s after video starts, and closes 1.5 s after everything needed is found. If something needed goes missing for 5 s, the button turns into "Setup · 1 to fix" without reopening the panel.
+- **Road items**, ticked from the analyzer: video signal, 16:9 picture, minimap, GPS route, speedometer. While a game settings page is on screen these show "Game menu open" instead of a fault.
+- **Read items**, ticked by reading the frame's text (Apple Vision, accurate mode) about once a second **while the panel is open**:
+  - Speed unit: the `km/h` / `mph` label under the speedometer, or Options › Game Settings › Unit (Metric / Imperial). Required. It writes the existing `guidance.speedUnit` key.
+  - Steering range: Options › Controls › Wheel Controls › Dynamic Range. On = the game sets the angle per car. If it is off, a 90–2520° value on a steering range/angle/rotation row.
+  - Driving assists: Options › Difficulty › Auto Steering and Auto Braking (both rows needed).
+  - Car: a screen with at least two spec rows (top speed, acceleration, power, weight, braking, handling); the name is the largest other text.
+- A reading counts only after two scans in a row agree. A later reading replaces an older or typed value. Each read row has **Read it again**; unread rows have a small **Enter it yourself** fallback (not for assists).
+- Steering range, assists and car are stored only (`setup.*` keys). Nothing in guidance reads them yet.
+
+| File | Change |
+| --- | --- |
+| `Racing Trainer/SetupChecklist.swift` (new) | Rules: items, statuses, `SetupPreferences.apply/clear`, `SetupSignalStabilizer` (2 s hold), `SetupChecklistPresentation` (auto open/close). |
+| `Racing Trainer/SetupScreenText.swift` (new) | `SetupScreenMatcher` (text lines → readings; label at line start, value on the same row) and `SetupReadingConfirmer`. No pixels. |
+| `Racing Trainer/SetupScreenReader.swift` (new) | Vision text recognition on a full frame → `ScreenTextLine`s. |
+| `Racing Trainer/SetupChecklistView.swift`, `SetupChecklistOverlay.swift` (new) | Panel and button; overlay samples `FrameAnalyzer` at 2 Hz and runs the reader on a detached utility task. |
+| `Racing Trainer/FrameAnalyzer.swift` (ChatGPT-owned; changed only in Claude's copy) | `setKeepsLatestFrame(_:)` / `latestFrame()`: keeps the newest pixel buffer under `stateLock` only while the checklist is open; cleared on reset. No scheduling or guidance change. |
+| `Racing Trainer/ContentView.swift` | One hook: `SetupChecklistOverlay` after `TrainerCoachHUD` in `GameplayPreview`, `zIndex(15)`. |
+| `RacingTrainerSafetyTests/SetupChecklistTests.swift` (new) | 16 tests. |
+| `project.pbxproj` | `SetupChecklist.swift` and `SetupScreenText.swift` in the test target (`AC…05`–`08`). |
+| `Training/setup/*`, `scripts/render-setup-checklist.sh`, `scripts/dump-screen-text.sh` (new) | Off-screen render; a tool that prints the text read from a video frame or image and what was matched. |
+
+**Verified:**
+
+- 158 tests pass in Debug and Release (142 existing + 16 new).
+- Real footage: the reader finds `km/h` under the speedometer in Video 1 (100 s) and Video 2 (160 s, 300 s). One read takes 83–92 ms per 1080p frame in Release once Vision is warm; the first read after launch took 27 s in the command-line tool.
+- Mock settings pages (plain text drawn at 1080p, **not real Motorfest menus**) read correctly end to end: Dynamic Range On, Auto Steering/Braking Off, Unit Imperial.
+- `check-live-guidance.sh` on Video 2 at 152–176 s passes: 240 frames, Turn right still at 167.2 s.
+- Panel rendered off screen and inspected: `data/guidance/setup-checklist-20261112/checklist-states.png`. Release app: `…/app-claude-v2/Claude.app`; the changed sources match the tested copy.
+
+**Not verified:** any real Motorfest settings or car screen (none is in the test videos), so menu labels come from published G29 setting guides and the car-name rule is a guess. Also unchecked: the overlay inside the running app, and the reader's effect on analysis rate while the panel is open.
+
+**For ChatGPT, if you want it in `Racing Trainer-3/`:** take the five `Setup*.swift` files and the test file, add the two rules files to the test target, add the two `FrameAnalyzer` methods plus the one line in `receive` and `reset`, and add the overlay after `TrainerCoachHUD`. It needs `TrainerCoachHUD.layoutScale` and `bannerBottom`.
+
+---
+
 ## 2026-10-15 (round 2) — Still lines when stopped, smooth drawing, steadier wheel, app renamed "Claude" (Claude's copy only)
 
 **Where:** `Racing Trainer-3-claude/` only. **Nothing in `Racing Trainer-3/` changed** except this log.
