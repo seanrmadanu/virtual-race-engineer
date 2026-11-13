@@ -20,6 +20,8 @@
 		A70000000000000000000001 /* RoadLineDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70000000000000000000002; };
 		AC0000000000000000000001 /* SteeringWheelMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000002; };
 		AC0000000000000000000003 /* RoadLineTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000004; };
+		AC0000000000000000000005 /* SetupChecklist.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000006; };
+		AC0000000000000000000007 /* SetupScreenText.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000008; };
 		A60000000000000000000001 /* ShadowCaptureState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000002; };
 		A60000000000000000000003 /* ShadowCapturePipeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000004; };
 		A60000000000000000000005 /* ShadowSessionRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60000000000000000000006; };
@@ -46,6 +48,8 @@
 		A70000000000000000000002 /* RoadLineDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/RoadLineDetector.swift"; sourceTree = SOURCE_ROOT; };
 		AC0000000000000000000002 /* SteeringWheelMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/SteeringWheelMotion.swift"; sourceTree = SOURCE_ROOT; };
 		AC0000000000000000000004 /* RoadLineTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/RoadLineTracker.swift"; sourceTree = SOURCE_ROOT; };
+		AC0000000000000000000006 /* SetupChecklist.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/SetupChecklist.swift"; sourceTree = SOURCE_ROOT; };
+		AC0000000000000000000008 /* SetupScreenText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/SetupScreenText.swift"; sourceTree = SOURCE_ROOT; };
 		A60000000000000000000002 /* ShadowCaptureState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/ShadowCaptureState.swift"; sourceTree = SOURCE_ROOT; };
 		A60000000000000000000004 /* ShadowCapturePipeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/ShadowCapturePipeline.swift"; sourceTree = SOURCE_ROOT; };
 		A60000000000000000000006 /* ShadowSessionRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Racing Trainer/ShadowSessionRecorder.swift"; sourceTree = SOURCE_ROOT; };
@@ -238,6 +242,8 @@
 				AD1000000000000000000001 /* CornerTechnique.swift in Sources */,
 				AC0000000000000000000001 /* SteeringWheelMotion.swift in Sources */,
 				AC0000000000000000000003 /* RoadLineTracker.swift in Sources */,
+				AC0000000000000000000005 /* SetupChecklist.swift in Sources */,
+				AC0000000000000000000007 /* SetupScreenText.swift in Sources */,
 				A60000000000000000000001 /* ShadowCaptureState.swift in Sources */,
 				A60000000000000000000003 /* ShadowCapturePipeline.swift in Sources */,
 				A60000000000000000000005 /* ShadowSessionRecorder.swift in Sources */,

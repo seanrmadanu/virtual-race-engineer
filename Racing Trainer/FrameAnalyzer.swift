@@ -528,6 +528,8 @@ final class FrameAnalyzer:
 
         stateLock.lock()
 
+        if keepsLatestFrame { latestFrameStorage = pixelBuffer }
+
         capturedFrameCountStorage +=
             1
 
@@ -638,10 +640,32 @@ final class FrameAnalyzer:
         }
     }
 
+    // MARK: - Setup screen reading
+
+    // The newest frame, kept only while the setup checklist is reading the
+    // screen. It is never guidance evidence.
+    private var keepsLatestFrame = false
+    private var latestFrameStorage: CVPixelBuffer?
+
+    func setKeepsLatestFrame(_ keep: Bool) {
+        stateLock.lock()
+        keepsLatestFrame = keep
+        if !keep { latestFrameStorage = nil }
+        stateLock.unlock()
+    }
+
+    func latestFrame() -> CVPixelBuffer? {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        return latestFrameStorage
+    }
+
     // MARK: - Reset
 
     func reset() {
         stateLock.lock()
+
+        latestFrameStorage = nil
 
         generation +=
             1

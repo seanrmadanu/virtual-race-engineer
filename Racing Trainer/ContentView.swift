@@ -1438,6 +1438,15 @@ struct GameplayPreview: View {
                             )
                     )
                     .zIndex(10)
+
+                    // Above the HUD so its buttons and fields take clicks.
+                    SetupChecklistOverlay(
+                        analyzer:
+                            frameAnalyzer,
+                        containerSize:
+                            geometry.size
+                    )
+                    .zIndex(15)
                 }
 
                 // In the window, route status lives in the sidebar's
