@@ -138,3 +138,14 @@ nonisolated final class SteeringWheelMotion {
         return angle
     }
 }
+
+/// The clock the HUD judges a cue against. A paused recording sends no frames,
+/// so the wall clock would expire the last cue within a second. While paused,
+/// the cue is judged at the moment it was produced, which keeps the paused
+/// frame's instruction on screen. Live capture is never paused, so a frozen
+/// capture feed still clears its guidance.
+nonisolated enum GuidanceDisplayClock {
+    static func time(now: Double, guidance: LiveTurnGuidanceSnapshot, isPaused: Bool) -> Double {
+        isPaused ? max(guidance.cue.time, guidance.sourceFrameUptime) : now
+    }
+}

@@ -55,6 +55,8 @@ nonisolated struct SetupSignals: Equatable, Sendable {
     var speedReadable = false
     /// The last screen read saw a settings page, so the road HUD is covered.
     var gameMenuOpen = false
+    /// A test video is paused. No frames arrive, but nothing is wrong.
+    var paused = false
 }
 
 /// What the app has read from the game's screens (or, as a fallback, what the
@@ -133,10 +135,12 @@ nonisolated enum SetupChecklist {
             preferences.readFromScreen.contains(id) ? "read from the game" : "entered by you"
         }
 
-        let live = signals.receivingFrames
+        let live = signals.receivingFrames || signals.paused
         let hasSize = signals.frameWidth > 0 && signals.frameHeight > 0
         let size = "\(signals.frameWidth) × \(signals.frameHeight)"
-        if live {
+        if signals.paused {
+            add(.video, "Video signal", .done, "Video paused")
+        } else if live {
             add(.video, "Video signal", .done, hasSize ? "Receiving \(size)" : "Receiving video")
         } else {
             add(.video, "Video signal", .missing, "No new frames. Play the video or check the capture card.")

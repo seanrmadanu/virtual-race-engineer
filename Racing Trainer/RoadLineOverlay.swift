@@ -10,12 +10,14 @@ struct RoadLineOverlay: View {
     let time: Double
     let videoRect: CGRect
     var camera: RoadCameraMode = .chase
+    /// The recording is paused: keep the lines as they were drawn.
+    var isPaused = false
 
     @State private var animator = RoadOverlayAnimator()
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 60)) { _ in
-            let frame = animator.frame(for: observation, at: ProcessInfo.processInfo.systemUptime)
+            let frame = animator.frame(for: observation, at: ProcessInfo.processInfo.systemUptime, hold: isPaused)
             Canvas { context, _ in draw(frame, in: context) }
         }
         .allowsHitTesting(false)

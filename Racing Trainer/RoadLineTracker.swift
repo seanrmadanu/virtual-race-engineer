@@ -224,7 +224,10 @@ nonisolated final class RoadOverlayAnimator {
 
     func reset() { left = nil; right = nil; corridor = nil; others = []; ghosts = []; lastTime = nil }
 
-    func frame(for observation: RoadLineObservation, at time: Double) -> RoadOverlayFrame {
+    /// `hold` freezes the drawing at its last moment (a paused recording): no
+    /// fade advances and the lines are judged at the time they were last drawn.
+    func frame(for observation: RoadLineObservation, at time: Double, hold: Bool = false) -> RoadOverlayFrame {
+        let time = hold ? (lastTime ?? time) : time
         if let lastTime, time < lastTime { reset() }
         let dt = min(max(time - (lastTime ?? time), 0), 0.1)
         lastTime = time

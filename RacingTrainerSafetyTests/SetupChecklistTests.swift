@@ -79,6 +79,15 @@ final class SetupChecklistTests: XCTestCase {
         XCTAssertEqual(SetupChecklist.openCount(noWaypoint, required: true), 1)
     }
 
+    func testAPausedVideoIsNotAMissingSignal() {
+        var paused = signals(live: false)
+        paused.paused = true
+        let items = SetupChecklist.evaluate(signals: paused, preferences: confirmed)
+        XCTAssertEqual(status(.video, items), .done)
+        XCTAssertEqual(detail(.video, items), "Video paused")
+        XCTAssertTrue(SetupChecklist.isReady(items), "The last detections still stand while paused")
+    }
+
     func testAnOpenGameMenuIsNotReportedAsAFault() {
         var inMenu = signals(minimap: false, route: false, speed: false)
         inMenu.gameMenuOpen = true

@@ -1224,6 +1224,15 @@ struct GameplayPreview: View {
             .isReceivingVideo
     }
 
+    /// Only a test video can be paused. A stalled capture feed is not a pause.
+    private var isVideoPaused:
+        Bool {
+
+        isUsingVideoFile &&
+        videoFilePlayback.isReady &&
+        !videoFilePlayback.isPlaying
+    }
+
     private var errorMessage:
         String? {
 
@@ -1435,7 +1444,9 @@ struct GameplayPreview: View {
                             videoRect(
                                 in:
                                     geometry.size
-                            )
+                            ),
+                        isPaused:
+                            isVideoPaused
                     )
                     .zIndex(10)
 
@@ -1444,7 +1455,9 @@ struct GameplayPreview: View {
                         analyzer:
                             frameAnalyzer,
                         containerSize:
-                            geometry.size
+                            geometry.size,
+                        isPaused:
+                            isVideoPaused
                     )
                     .zIndex(15)
                 }

@@ -322,6 +322,8 @@ struct TrainerCoachHUD: View {
     /// Where the video sits in the container. The wheel is clipped to it so
     /// nothing of the wheel shows in the letterbox strip.
     let videoRect: CGRect
+    /// A test video is paused. The last instruction stays up, marked "Paused".
+    var isPaused = false
 
     @State private var sessionStart = Date()
     @State private var wheelTarget = SteeringWheelTargetFilter()
@@ -368,7 +370,10 @@ struct TrainerCoachHUD: View {
     @ViewBuilder
     private func content(currentUptime: TimeInterval, now: Date) -> some View {
         let liveTurn = analyzer.turnGuidance
-        let turnIsFresh = liveTurn.isFresh(at: currentUptime)
+        // Everything that judges the cue's age uses this clock, so the card and
+        // the wheel always agree on whether the cue is still showing.
+        let guidanceTime = GuidanceDisplayClock.time(now: currentUptime, guidance: liveTurn, isPaused: isPaused)
+        let turnIsFresh = liveTurn.isFresh(at: guidanceTime)
         let scale = Self.layoutScale(for: containerSize)
         let width = containerSize.width
         let height = containerSize.height
@@ -379,7 +384,7 @@ struct TrainerCoachHUD: View {
         ZStack {
             if showsPathHighlight {
                 RoadLineOverlay(observation: analyzer.roadDisplay, time: currentUptime, videoRect: videoRect,
-                                camera: RoadCameraMode(rawValue: pathRibbon.rawValue) ?? .chase)
+                                camera: RoadCameraMode(rawValue: pathRibbon.rawValue) ?? .chase, isPaused: isPaused)
                 .mask(alignment: .topLeading) {
                     Rectangle()
                         .frame(width: videoRect.width, height: videoRect.height)
@@ -391,7 +396,7 @@ struct TrainerCoachHUD: View {
             if showsSteeringWheel || editor.isAdjustingWheel {
                 SteeringWheelTargetView(
                     targetDegrees: wheelTarget.degrees(
-                        turn: liveTurn, route: analyzer.coachSnapshot, at: currentUptime),
+                        turn: liveTurn, route: analyzer.coachSnapshot, at: guidanceTime),
                     accent: turnIsFresh && liveTurn.cue.stage != .unavailable ? HUDPalette.amber : HUDPalette.inactive,
                     diameter: wheelDiameter,
                     rotationOverride: editor.isAdjustingWheel ? editor.testRotation : nil
@@ -414,7 +419,7 @@ struct TrainerCoachHUD: View {
             }
 
             if showsNavigationCard {
-                NavigationCardView(turnCue: turnIsFresh ? liveTurn.cue : nil)
+                NavigationCardView(turnCue: turnIsFresh ? liveTurn.cue : nil, isPaused: isPaused)
                     .fixedSize()
                     .overlayHighlight(.navigationCard, highlightsItems)
                     .scaleEffect(scale, anchor: .top)
@@ -543,6 +548,8 @@ private extension View {
 /// Preview and heads-up share wording; their internal distinction stays in review.
 private struct NavigationCardView: View {
     let turnCue: TurnGuidanceSample?
+    /// The video is paused, so this is the paused frame's instruction.
+    var isPaused = false
 
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
@@ -580,6 +587,15 @@ private struct NavigationCardView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            if isPaused {
+                Label("Paused", systemImage: "pause.fill")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(HUDPalette.label)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(HUDPalette.tile, in: Capsule())
+                    .fixedSize()
+            }
         }
         .foregroundStyle(foreground)
         .padding(.horizontal, 22)

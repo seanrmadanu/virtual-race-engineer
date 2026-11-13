@@ -7,6 +7,8 @@ import SwiftUI
 struct SetupChecklistOverlay: View {
     let analyzer: FrameAnalyzer
     let containerSize: CGSize
+    /// A test video is paused: not a missing signal.
+    var isPaused = false
 
     // The same keys the Guidance menu uses; a reading here changes it there.
     @AppStorage("guidance.speedUnit") private var speedUnit = "km/h"
@@ -59,7 +61,7 @@ struct SetupChecklistOverlay: View {
                 SetupChecklistPanel(
                     items: items,
                     preferences: Binding(get: { currentPreferences }, set: { store($0) }),
-                    hudProfile: $hudProfile, scale: scale, isWatching: signals.receivingFrames,
+                    hudProfile: $hudProfile, scale: scale, isWatching: signals.receivingFrames || signals.paused,
                     onInteraction: { presentation.userInteracted() },
                     onClose: { withAnimation(.easeOut(duration: 0.18)) { presentation.toggle() } })
                     .frame(maxHeight: available, alignment: .top)
@@ -97,6 +99,7 @@ struct SetupChecklistOverlay: View {
         raw.noWaypoint = analyzer.coachSnapshot.state == .noWaypoint
         raw.speedReadable = analyzer.detectedSpeed != nil
         raw.gameMenuOpen = gameMenuOpen
+        raw.paused = isPaused
         let held = stabilizer.update(raw, at: now)
         if held != signals { signals = held }
 

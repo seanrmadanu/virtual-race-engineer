@@ -128,6 +128,35 @@ final class RoadTrackingTests: XCTestCase {
         XCTAssertTrue(frame.corridors.isEmpty && frame.strokes.isEmpty)
     }
 
+    func testPausedVideoKeepsItsInstructionAndRoadLinesButLiveNeverDoes() {
+        func guidance(_ stage: TurnGuidanceStage, direction: String) -> LiveTurnGuidanceSnapshot {
+            LiveTurnGuidanceSnapshot(cue: TurnGuidanceSample(time: 10.02, stage: stage, direction: direction, reason: "fixture"),
+                                     sourceFrameUptime: 10, expiresAt: stage == .unavailable ? 10.02 : 10.65, sourceSessionID: 1)
+        }
+        let bend = guidance(.following, direction: "right")
+        // Thirty seconds later: expired on the wall clock, still shown while paused.
+        XCTAssertFalse(bend.isFresh(at: GuidanceDisplayClock.time(now: 40, guidance: bend, isPaused: false)))
+        let held = GuidanceDisplayClock.time(now: 40, guidance: bend, isPaused: true)
+        XCTAssertTrue(bend.isFresh(at: held))
+        XCTAssertEqual(bend.steering(at: held), .right)
+        // Pausing never invents guidance that was not there.
+        let none = guidance(.unavailable, direction: "unknown")
+        XCTAssertEqual(none.steering(at: GuidanceDisplayClock.time(now: 40, guidance: none, isPaused: true)), .unavailable)
+        XCTAssertEqual(LiveTurnGuidanceSnapshot.empty.steering(
+            at: GuidanceDisplayClock.time(now: 40, guidance: .empty, isPaused: true)), .unavailable)
+
+        let animator = RoadOverlayAnimator()
+        var time = 1.0
+        let last = lane(at: time + 20 * Self.frame)
+        for _ in 0..<20 { time += Self.frame; _ = animator.frame(for: lane(at: time), at: time) }
+        // Held: the same lines at full strength however long the pause lasts.
+        var frame = animator.frame(for: last, at: time + 30, hold: true)
+        XCTAssertEqual(frame.corridors.first?.opacity ?? 0, 1, accuracy: 0.001)
+        // Not held: the same stale observation fades away.
+        for step in 1...30 { frame = animator.frame(for: last, at: time + 30 + Double(step) * Self.frame) }
+        XCTAssertTrue(frame.corridors.isEmpty)
+    }
+
     func testBoundarySwitchCrossfadesAndSmallMovesFollowDirectly() {
         let animator = RoadOverlayAnimator()
         var time = 1.0
